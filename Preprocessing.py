@@ -71,4 +71,3 @@ def genTriple():
 def assignLambda(circuit, n):
     pass
 
-
