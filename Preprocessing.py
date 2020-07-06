@@ -12,23 +12,29 @@
 """
 
 import os
+import random
 
 """
     temporary/helper functions
 """
 
 # input: /
-# output: bytes
+# output: (bytes, bytes)
 # hardcode randomness epsilon and r
 # will be replaced later by Fiat.Shamir.py
 def hardcodeER():
-    pass
+    return (os.urandom(16), os.urandom(16))
 
 # input: integer, integer
 # output: list of integers
 # split val into n random shares
 def splitData(val, n):
-    pass
+    ret = []
+    for i in range(n-1):
+        ret.append(random.randint(val))
+    last = val - sum(ret)
+    ret.append(last)
+    return ret
 
 """
     function independent section
@@ -38,7 +44,7 @@ def splitData(val, n):
 # output: bytes
 # generate cryptographically secure randomness lambda
 def getLambda():
-    pass
+    return os.urandom(16)
 
 # input: list
 # output: boolean
@@ -47,7 +53,15 @@ def getLambda():
 # calculate v
 # output whether the final random linear combination equals 0
 def randomLC(vs):
-    pass
+    assert(len(vs)%2 == 0)
+    # TODO: replace randomness with Fiat-Shamir
+    (epsilon, r) = hardcodeER()
+    ret = False
+    # group triples into pairs
+    for (verified, sacrificed) in paired:
+        # epsilon trick
+    # random linear combination trick
+    return ret
 
 """
     function dependent section
