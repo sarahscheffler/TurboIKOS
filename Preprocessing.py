@@ -11,10 +11,7 @@
       3. split data for parties
 """
 
-import os
-import random
-from Cryptodome.Util.number import bytes_to_long
-import Value
+from Value import Value
 
 """
     temporary/helper functions
@@ -22,43 +19,32 @@ import Value
 
 """
 input: /
-output: (bytes, bytes)
+output: (int, int)
 
 hardcode randomness epsilon and r
 will be replaced later by Fiat.Shamir.py
 """
 def hardcodeER():
-    return (os.urandom(16), os.urandom(16))
-
-"""
-input: integer, integer
-output: list of integers
-
-split val into n random shares
-"""
-def splitData(val, n):
-    ret = []
-    for i in range(n-1):
-        ret.append(random.randint(0,val))
-    last = val - sum(ret)
-    ret.append(last)
-    return ret
+    e = Value()
+    r = Value()
+    e.getRand()
+    r.getRand()
+    return (e, r)
 
 """
     function independent section
 """
 
 """
-input: wire
-output: bytes
+input: /
+output: Value
 
 generate cryptographically secure randomness lambda
 """
 def getLambda():
-    # if !wire:
-        # wire.lambda = bytes_to_long(os.urandom(16))
-    # return wire.lambda
-    return Value.wrapLambda()
+    lam = Value()
+    lam.getRand()
+    return lam
 
 """
 input: list
@@ -70,20 +56,21 @@ calculate v
 output whether the final random linear combination equals 0
 """
 def randomLC(triples):
+    assert(len(triples)%2 == 0)
     # TODO: replace randomness with Fiat-Shamir
     (epsilon, r) = hardcodeER()
-    epsilon = bytes_to_long(epsilon)
-    r = bytes_to_long(r)
     ret = 0
-    for i in range(len(triples)):
-        (x, y, z) = genTriple(getLambda(), getLambda())
-        (a, b, c) = triples[i]
+    i = 0
+    while i <= (len(triples)//2):
+        (x, y, z) = triple[i]
+        (a, b, c) = triple[i+1]
         # epsilon trick
         d = epsilon*x + a
         e = y + b
-        v = epsilon * z - (d*e - d*b - e*a + c)
+        v = epsilon * z + (d*e + d*b + e*a + c)
         # random linear combination trick
-        ret += r*v
+        ret += (r*v).value
+        i += 2
     return (ret == 0)
 
 """
@@ -97,7 +84,7 @@ output: integer
 generate a Beaver's triple according to lambdas
 """
 def genTriple(lamA, lamB):
-    lamC = Value.wrapOperation(lamA, lamB)
+    lamC = lamA*lamB
     return (lamA, lamB, lamC)
 
 """

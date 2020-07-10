@@ -2,53 +2,48 @@
 """
     Value.py
     Wrapper for data type and operations
-    - Preprocessing.py
-      1. lambda data type
-      2. operation to generate Beaver triple
-      (3. gate type)
 """
 
 import os
 from Cryptodome.Util.number import bytes_to_long
-# import pylaurent
 
-"""
-    Preprocessing.py
-"""
+class Value:
+    def __init__(self, value=None):
+        self.value = value
 
-"""
-wrapper for lambda data type
-"""
-def wrapLambda():
+    """
+    override + and * with ^ and &
+    """
+    def __add__(self, other):
+        return Value(self.value ^ other.value)
+        
+    def __mul__(self, other):
+        return Value(self.value & other.value)
 
-    def arithLam():
-        return bytes_to_long(os.urandom(16))
+    """
+    support arithmetic operations
+    """
+    def add(self, num):
+        return self.value ^ num
     
-    return arithLam()
+    def mul(self, num):
+        return self.value & num
+    
+    """
+    generate a random number from 128 bit space
+    """
+    def getRand(self):
+        if (not self.value):
+            self.value = bytes_to_long(os.urandom(16))
 
-"""
-wrapper for operation to generate triple
-"""
-def wrapOperation(a, b):
-
-    def mul(a, b):
-        return a*b
-
-    return mul(a, b)
-
-"""
-    Gate.py
-"""
-
-"""
-wrapper for data calculation
-"""
-
-def wrapAdd():
-    # return pylaurent addition
-    pass
-
-def wrapMul():
-    # return pylaurent multiplication
-    pass
+    """
+    split val into n random shares
+    """
+    def splitVal(self, n):
+        ret = []
+        for i in range(n-1):
+            ret.append(bytes_to_long(os.urandom(16)))
+        last = val - sum(ret)
+        ret.append(last)
+        return ret
 
