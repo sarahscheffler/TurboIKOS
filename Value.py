@@ -5,9 +5,11 @@
 """
 
 import os
-import gmpy
-from gmpy import mpz
+import gmpy2
+from gmpy2 import mpz
 from Cryptodome.Util.number import bytes_to_long
+
+field = mpz(2**128)
 
 class Value:
     def __init__(self, value=None):
@@ -17,36 +19,44 @@ class Value:
     overload + and sum with ^, * with & for boolean circuit
     overload arithmetic operation with gmpy2 library
     """
-    def __add__(self, other, p = 1):
-        return Value(self.add(other.value))
+    def __add__(self, other, p = field):
+        return Value(self.add(other.value, p))
 
-    def __radd__(self, other, p = 1):
-        return Value(self.add(other))
+    def __radd__(self, other, p = field):
+        return Value(self.add(other, p))
         
-    def __sub__(self, other, p = 1):
-        return Value(self.sub(other.value))
+    def __sub__(self, other, p = field):
+        return Value(self.sub(other.value, p))
 
-    def __mul__(self, other, p = 1):
-        return Value(self.mul(other.value))
+    def __mul__(self, other, p = field):
+        return Value(self.mul(other.value, p))
 
     """
     support arithmetic operations
     """
-    def add(self, num, p = 1):
-        return self.value ^ num
+    def add(self, num, p = field):
+        # return self.value ^ num 
+        ret = gmpy2.add(self.value, num)
+        return gmpy2.f_mod(ret, p)
 
-    def sub(self, num, p = 1):
-        return self.value ^ num
+    def sub(self, num, p = field):
+        # return self.value ^ num
+        ret = gmpy2.sub(self.value, num)
+        return gmpy2.f_mod(ret, p)
     
-    def mul(self, num, p = 1):
-        return self.value & num
+    def mul(self, num, p = field):
+        # return self.value & num
+        ret = gmpy2.mul(self.value, num)
+        return gmpy2.f_mod(ret, p)
     
     """
     generate a random number from 128 bit space
     """
     def getRand(self):
         if (not self.value):
-            self.value = bytes_to_long(os.urandom(16))
+            # set randomness with seed
+            state = gmpy2.random_state(bytes_to_long(os.urandom(16)))
+            self.value = gmpy2.mpz_urandomb(state, 128)
 
     """
     split val into n random shares
@@ -61,5 +71,3 @@ class Value:
         ret.append(last)
         return ret
 
-
-            

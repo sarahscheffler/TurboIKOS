@@ -53,7 +53,7 @@ def randomLC(triples):
         # epsilon trick
         d = epsilon*x - a
         e = y - b
-        v = epsilon*z + (d*e + d*b + e*a + c)
+        v = epsilon*z - (d*e + d*b + e*a + c)
         # random linear combination trick
         # TODO: replace r with Fiat-Shamir
         r = getRandom()
@@ -67,13 +67,13 @@ def randomLC(triples):
 
 """
 input: Value, Value
-output: list
+output: tuple
 
 generate a Beaver's triple according to lambdas
 """
 def genTriple(lamA, lamB):
     lamC = lamA*lamB
-    return [lamA, lamB, lamC]
+    return (lamA, lamB, lamC)
 
 """
 input: list, integer
