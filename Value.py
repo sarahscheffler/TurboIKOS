@@ -18,7 +18,7 @@ class Value:
         return Value(self.add(other.value))
         
     def __sub__(self, other):
-        return Value(self.value - other.value)
+        return Value(self.sub(other.value))
 
     def __mul__(self, other):
         return Value(self.mul(other.value))
@@ -27,6 +27,9 @@ class Value:
     support arithmetic operations
     """
     def add(self, num):
+        return self.value ^ num
+
+    def sub(self, num):
         return self.value ^ num
     
     def mul(self, num):

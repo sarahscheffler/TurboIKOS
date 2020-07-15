@@ -62,11 +62,11 @@ def randomLC(triples):
     ret = 0
     i = 0
     while i <= (len(triples)//2):
-        (x, y, z) = triple[i]
-        (a, b, c) = triple[i+1]
+        (x, y, z) = triples[i]
+        (a, b, c) = triples[i+1]
         # epsilon trick
-        d = epsilon*x + a
-        e = y + b
+        d = epsilon*x - a
+        e = y - b
         v = epsilon * z + (d*e + d*b + e*a + c)
         # random linear combination trick
         ret += (r*v).value
@@ -105,7 +105,7 @@ def assignLambda(circuit, wire_data, n):
             wire_data[gate.x]['lambda'].getRand()
             wire_data[gate.y]['lambda'].getRand() 
             wire_data[gate.z]['lambda'] = wire_data[gate.x]['lambda'] + \
-                                               wire_data[gate.y]['lambda']
+                                          wire_data[gate.y]['lambda']
         elif gate.operation == "MUL" or gate.operation == "AND":
             wire_data[gate.x]['lambda'].getRand()
             wire_data[gate.y]['lambda'].getRand()
@@ -124,3 +124,19 @@ def assignLambda(circuit, wire_data, n):
         wire['lambda'] = wire['lambda'].splitVal(n)
     return (circuit, wire_data, triples)
 
+    
+class gate:
+	#input: 2 inputs, 3 triples/ 0's
+	def __init__(self, input1, input2, output,*, triple1 = Value(), triple2 = Value(), triple3 = Value(), operation = None):	
+		self.x = input1
+		self.y = input2
+		self.z = output
+		if operation == 'AND' or 'MUL':
+			self.a = triple1
+			self.b = triple2
+			self.c = triple3
+		if operation == 'XOR' or 'ADD':
+			self.a = None
+			self.b = None
+			self.c = None
+		self.operation = operation
