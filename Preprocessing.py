@@ -78,14 +78,14 @@ def randomLC(triples):
 """
 
 """
-input: integer, integer
-output: integer
+input: Value, Value
+output: list
 
 generate a Beaver's triple according to lambdas
 """
 def genTriple(lamA, lamB):
     lamC = lamA*lamB
-    return (lamA, lamB, lamC)
+    return [lamA, lamB, lamC]
 
 """
 input: list, integer
@@ -98,26 +98,29 @@ for output wires of mul gates, call genTriple()
 call splitData() to split the shares into n parties
 output the circuit with lambdas updated for each wire
 """
-def assignLambda(circuit, n):
-    # for gate in circuit:
-        # (TODO: wrapper on operation)
-        # if gate == add:
-            # getLambda(inputwire1)
-            # getLambda(inputwire2)
-            # outputwire.lambda = inputwire1.lambda + inputwire2.lambda
-        # else if gate == mul:
-            # getLambda(inputwire1)
-            # getLambda(inputwire2)
-            # triple = genTriple(inputwire1.lambda,inputwire2.lambda)
-            # triples.append(triple)
-            # outputwire.lambda = triple[2]
-        # else:
-            # try:
-                # pass
-            # except:
-                # print("Unrecognized gate type")
-    # for wire in circuit:
-        # splitData(wire.lambda, n)
-    # return (circuit, triples)
-    pass
-    
+def assignLambda(circuit, wire_data, n):
+    triples = []
+    for gate in circuit:
+        if gate.operation == "ADD" or gate.operation == "XOR":
+            wire_data[gate.x]['lambda'].getRand()
+            wire_data[gate.y]['lambda'].getRand() 
+            wire_data[gate.z]['lambda'] = wire_data[gate.x]['lambda'] + \
+                                               wire_data[gate.y]['lambda']
+        elif gate.operation == "MUL" or gate.operation == "AND":
+            wire_data[gate.x]['lambda'].getRand()
+            wire_data[gate.y]['lambda'].getRand()
+            wire_data[gate.z]['lambda'].getRand()
+            gate.a = wire_data[gate.x]['lambda']
+            gate.b = wire_data[gate.y]['lambda']
+            gate.c = genTriple(gate.a, gate.b)[2]
+            triples.append([gate.a, gate.b, gate.c])
+            triples.append(genTriple(getLambda(), getLambda()))
+        else:
+            try:
+                pass
+            except:
+                print("Unrecognized gate type")
+    for wire in wire_data:
+        wire['lambda'] = wire['lambda'].splitVal(n)
+    return (circuit, wire_data, triples)
+
