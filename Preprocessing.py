@@ -18,20 +18,6 @@ from Value import Value
 """
 
 """
-input: /
-output: (int, int)
-
-hardcode randomness epsilon and r
-will be replaced later by Fiat.Shamir.py
-"""
-def hardcodeER():
-    e = Value()
-    r = Value()
-    e.getRand()
-    r.getRand()
-    return (e, r)
-
-"""
     function independent section
 """
 
@@ -41,7 +27,7 @@ output: Value
 
 generate cryptographically secure randomness lambda
 """
-def getLambda():
+def getRandom():
     lam = Value()
     lam.getRand()
     return lam
@@ -57,8 +43,8 @@ output whether the final random linear combination equals 0
 """
 def randomLC(triples):
     assert(len(triples)%2 == 0)
-    # TODO: replace randomness with Fiat-Shamir
-    (epsilon, r) = hardcodeER()
+    # TODO: replace epsilon with Fiat-Shamir
+    epsilon = getRandom()
     ret = 0
     i = 0
     while i <= (len(triples)//2):
@@ -67,8 +53,10 @@ def randomLC(triples):
         # epsilon trick
         d = epsilon*x - a
         e = y - b
-        v = epsilon * z + (d*e + d*b + e*a + c)
+        v = epsilon*z + (d*e + d*b + e*a + c)
         # random linear combination trick
+        # TODO: replace r with Fiat-Shamir
+        r = getRandom()
         ret += (r*v).value
         i += 2
     return (ret == 0)
@@ -114,7 +102,7 @@ def assignLambda(circuit, wire_data, n):
             gate.b = wire_data[gate.y]['lambda']
             gate.c = genTriple(gate.a, gate.b)[2]
             triples.append([gate.a, gate.b, gate.c])
-            triples.append(genTriple(getLambda(), getLambda()))
+            triples.append(genTriple(getRandom(), getRandom()))
         else:
             try:
                 pass

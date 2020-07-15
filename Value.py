@@ -5,6 +5,8 @@
 """
 
 import os
+import gmpy
+from gmpy import mpz
 from Cryptodome.Util.number import bytes_to_long
 
 class Value:
@@ -12,27 +14,31 @@ class Value:
         self.value = value
 
     """
-    override + and * with ^ and &
+    overload + and sum with ^, * with & for boolean circuit
+    overload arithmetic operation with gmpy2 library
     """
-    def __add__(self, other):
+    def __add__(self, other, p = 1):
         return Value(self.add(other.value))
+
+    def __radd__(self, other, p = 1):
+        return Value(self.add(other))
         
-    def __sub__(self, other):
+    def __sub__(self, other, p = 1):
         return Value(self.sub(other.value))
 
-    def __mul__(self, other):
+    def __mul__(self, other, p = 1):
         return Value(self.mul(other.value))
 
     """
     support arithmetic operations
     """
-    def add(self, num):
+    def add(self, num, p = 1):
         return self.value ^ num
 
-    def sub(self, num):
+    def sub(self, num, p = 1):
         return self.value ^ num
     
-    def mul(self, num):
+    def mul(self, num, p = 1):
         return self.value & num
     
     """
@@ -48,8 +54,12 @@ class Value:
     def splitVal(self, n):
         ret = []
         for i in range(n-1):
-            ret.append(bytes_to_long(os.urandom(16)))
-        last = self.value - sum(ret)
+            temp = Value()
+            temp.getRand()
+            ret.append(temp)
+        last = self - sum(ret)
         ret.append(last)
         return ret
 
+
+            
