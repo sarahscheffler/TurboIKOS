@@ -14,10 +14,6 @@
 from Value import Value
 
 """
-    temporary/helper functions
-"""
-
-"""
     function independent section
 """
 
@@ -43,14 +39,14 @@ output whether the final random linear combination equals 0
 """
 def randomLC(triples):
     assert(len(triples)%2 == 0)
-    # TODO: replace epsilon with Fiat-Shamir
-    epsilon = getRandom()
     ret = 0
     i = 0
     while i <= (len(triples)//2):
         (x, y, z) = triples[i]
         (a, b, c) = triples[i+1]
         # epsilon trick
+        # TODO: replace epsilon with Fiat-Shamir
+        epsilon = getRandom()
         d = epsilon*x - a
         e = y - b
         v = epsilon*z - (d*e + d*b + e*a + c)
@@ -114,20 +110,3 @@ def assignLambda(circuit, wire_data, n):
         wire['lambda'] = wire['lambda'].splitVal(n)
     return (circuit, wire_data, triples)
 
-
-# TODO: delete after demo    
-class gate:
-	#input: 2 inputs, 3 triples/ 0's
-	def __init__(self, input1, input2, output,*, triple1 = Value(), triple2 = Value(), triple3 = Value(), operation = None):	
-		self.x = input1
-		self.y = input2
-		self.z = output
-		if operation == 'AND' or 'MUL':
-			self.a = triple1
-			self.b = triple2
-			self.c = triple3
-		if operation == 'XOR' or 'ADD':
-			self.a = None
-			self.b = None
-			self.c = None
-		self.operation = operation
