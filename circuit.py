@@ -63,24 +63,33 @@ def main():
 	input_stream = sys.argv[1]
 	with open(input_stream) as f:
 		first_line = f.readline().split()
+		global n_gate
 		n_gate = int(first_line[0])
+		global n_wire
 		n_wire = int(first_line[1])
 		second_line = f.readline().split()
+		global n_input
 		n_input = int(second_line[0])
 		#create list of number of wires for input values
+		global l_input
 		l_input = [None]*n_input
 		for i in range(n_input):
 			l_input[i] = int(second_line[i+1])
 		third_line = f.readline().split()
+		global n_output
 		n_output = int(third_line[0])
 		#create list of number of wires for output values
+		global l_output
 		l_output = [None]*n_output
 		for i in range(n_output):
 			l_output[i]=int(third_line[i+1])
 		#create list of gate
+		global circuit
 		circuit = parse(f, n_gate)	
-	#Create list of wire data	
+	#Create list of wire data
+	global n_parties	
 	n_parties = 3
+	global wire_data
 	wire_data = [{'e' : None, 'v': []*n_parties, 'lambda': []*n_parties} for i in range(n_wire)]
 if __name__ == '__main__':
      main()
