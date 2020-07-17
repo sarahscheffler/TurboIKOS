@@ -36,7 +36,7 @@ def getRandom():
 input: list
 output: boolean
 
-take a list of triples and randomly partition them into pairs
+take a list of triples and partition them into pairs
 call Fiat-Shamir.py to calculate each epsilon and r
 calculate v
 output whether the final random linear combination equals 0
@@ -76,15 +76,17 @@ def genTriple(lamA, lamB):
     return (lamA, lamB, lamC)
 
 """
-input: list, integer
-output: list, list
+input: list, list, integer
+output: list, list, list
 
-take the list representing the circuit
-for input wires, call getLambda()
+take the list respectively representing the circuit and the wire
+assign random lambda for input wires
 for output wires of add gates, propagate
 for output wires of mul gates, call genTriple()
-call splitData() to split the shares into n parties
-output the circuit with lambdas updated for each wire
+call splitData() to split the lambda into n parties on each wire
+output the circuit with triples updated for each gate,
+       the wires with lambdas updated,
+       and the triples used and generated
 """
 def assignLambda(circuit, wire_data, n):
     triples = []
@@ -112,7 +114,8 @@ def assignLambda(circuit, wire_data, n):
         wire['lambda'] = wire['lambda'].splitVal(n)
     return (circuit, wire_data, triples)
 
-    
+
+# TODO: delete after demo    
 class gate:
 	#input: 2 inputs, 3 triples/ 0's
 	def __init__(self, input1, input2, output,*, triple1 = Value(), triple2 = Value(), triple3 = Value(), operation = None):	
