@@ -76,6 +76,18 @@ class Wire:
         assert (index < self.n_wire) and (index > -1)
         self.data[index]['lambda'] = arr
         return 1
+
+    def lam_hat(self, index):
+	pass
+ 
+    def set_lam_hat(self, index, arr):
+	pass
+
+    def e_hat(self, index):
+	pass
+
+    def set_e_hat(self, index, val):
+	pass
     
 # def main():
 #     n_wires = 3
