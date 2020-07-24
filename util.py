@@ -28,14 +28,13 @@ with open(input_stream) as f:
     #circuit = parse(f, n_gate, gate)
     # Create list of wire data
     n_parties = 3
-    wire_data = [{'e': None, 'v': []*n_parties, 'lambda': Value()}
-                 for i in range(n_wires)]
+    wire_data = [{'e': None, 'v': []*n_parties, 'lambda': Value(), 'lam_hat':Value(), 'e_hat': None}
+                 for i in range(n_wires), ]
     Wire(wire_data, n_parties, n_wires)
     circuit = parse(f, n_gate, gate)
-    print(circuit[0])
     # Generate lambda
     preprocessing = p.assignLambda(circuit, wire_data, n_parties)
     circuit = preprocessing[0]
     wire_data = preprocessing[1]
     triples = preprocessing[2]
-    print(wire_data[0]['lambda'])
+    
