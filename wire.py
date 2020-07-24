@@ -65,7 +65,7 @@ class Wire:
     def lambda_val(self, index):  # cant be named lambda. naming to "l" may result in ambiguousness
         assert str(type(index)) == "<class 'int'>"
         assert (index < self.n_wire) and (index > -1)
-        return self.data[index]['v']
+        return self.data[index]['lambda']
 
     def set_lambda(self, index, arr):
         assert str(type(index)) == "<class 'int'>"
@@ -78,16 +78,16 @@ class Wire:
         return 1
 
     def lam_hat(self, index):
-	pass
+        pass
  
     def set_lam_hat(self, index, arr):
-	pass
+        pass
 
     def e_hat(self, index):
-	pass
+        pass
 
     def set_e_hat(self, index, val):
-	pass
+        pass
     
 # def main():
 #     n_wires = 3
