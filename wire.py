@@ -55,8 +55,8 @@ class Wire:
         assert str(type(index)) == "<class 'int'>"
         assert str(type(arr)) == "<class 'list'>"
         assert len(arr) == self.n_parties
-        for i in arr:
-            assert str(type(i)) == "<class 'int'>"
+        #for i in arr:
+            #assert str(type(i)) == "<class 'int'>"
         assert (index < self.n_wire) and (index > -1)
         self.data[index]['v'] = arr
 
@@ -71,23 +71,35 @@ class Wire:
         assert str(type(index)) == "<class 'int'>"
         assert str(type(arr)) == "<class 'list'>"
         assert len(arr) == self.n_parties
-        for i in arr:
-            assert str(type(i)) == "<class 'int'>"
+        #for i in arr:
+            #assert str(type(i)) == "<class 'int'>"
         assert (index < self.n_wire) and (index > -1)
         self.data[index]['lambda'] = arr
         return 1
 
     def lam_hat(self, index):
-        pass
- 
+        assert str(type(index)) == "<class 'int'>"
+        assert (index < self.n_wire) and (index > -1)
+        return self.data[index]['lam_hat']
+
     def set_lam_hat(self, index, arr):
-        pass
+        assert str(type(index)) == "<class 'int'>"
+        assert str(type(arr)) == "<class 'list'>"
+        assert len(arr) == self.n_parties
+        assert (index < self.n_wire) and (index > -1)
+        self.data[index]['lam_hat'] = arr
+        return 1
 
     def e_hat(self, index):
-        pass
+        assert str(type(index)) == "<class 'int'>"
+        assert (index < self.n_wire) and (index > -1)
+        return self.data[index]['e_hat']
 
     def set_e_hat(self, index, val):
-        pass
+        assert str(type(index)) == "<class 'int'>"
+        assert (index < self.n_wire) and (index > -1)
+        self.data[index]['e'] = val
+        return 1
     
 # def main():
 #     n_wires = 3
