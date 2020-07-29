@@ -61,15 +61,6 @@ def randomLC(triples):
         i += 2
     return (ret == 0)
 
-#input: circuit, wire structure, list of n_mul gate alphas
-#output: n_parties zeta shares
-def compute_zeta_share(circuit, wire):
-    pass
-
-#input: list of zetas
-#output: T/F 
-def check_triples(zeta):
-    pass
 
 """
     function dependent section
@@ -132,8 +123,8 @@ def assignLambda(circuit, wire, n_parties):
     triples = []
     for gate in circuit:
         if gate.operation == "ADD" or gate.operation == "XOR":
-            x_lam = get_Random()
-            y_lam = get_Random()
+            x_lam = getRandom()
+            y_lam = getRandom()
             wire.set_lambda(gate.x, x_lam.splitVal(n_parties))
             wire.set_lambda(gate.y, y_lam.splitVal(n_parties))
             z_lam_share = []
@@ -143,26 +134,27 @@ def assignLambda(circuit, wire, n_parties):
             wire.set_lambda(gate.z, z_lam_share)
         elif gate.operation == "MUL" or gate.operation == "AND":
             #set x_lam and y_lam if they are not set
-            if wire.lambda_val(gate.x) != None:
-                x_lam = get_Random()
+            if wire.lambda_val(gate.x).value == None:
+                x_lam = getRandom()
                 wire.set_lambda(gate.x, x_lam.splitVal(n_parties))
-            if wire.lambda_val(gate.y) != None:
-                y_lam = get_Random()
-                wire.set_lambda(gate.x, x_lam.splitVal(n_parties))
+            if wire.lambda_val(gate.y).value == None:
+                y_lam = getRandom()
+                wire.set_lambda(gate.y, y_lam.splitVal(n_parties))
+            
             #set y_lam_hat
-            y_lam_hat = get_Random()
+            y_lam_hat = getRandom()
             wire.set_lam_hat(gate.y, y_lam_hat.splitVal(n_parties))
             #set z_lam
-            z_lam = get_Random()
-            wire.set_lambda(self.z, z_lam.splitVal(n_parties))
+            z_lam = getRandom()
+            wire.set_lambda(gate.z, z_lam.splitVal(n_parties))
             #set z_lam_hat
-            z_lam_hat = get_Random()
-            wire.set_lam_hat(self.z, z_lam_hat.splitVal(n_parties))
+            z_lam_hat = getRandom()
+            wire.set_lam_hat(gate.z, z_lam_hat.splitVal(n_parties))
             #set triples
             gate.a = wire.lambda_val(gate.x)
-            gate.b = wire.lamb_hat(gate.y)
+            gate.b = wire.lam_hat(gate.y)
             gate.c = wire.lam_hat(gate.z)
-            triple.append([Value(sum(wire.lambda_val(gate.x).value)), y_lam_hat, z_lam_hat])
+            triples.append([sum(wire.lambda_val(gate.x)),y_lam_hat, z_lam_hat])
                        
         else:
             try:
