@@ -30,10 +30,13 @@ def test():
     for i in range(n_input):
         w.set_v(i, inputs[i].splitVal(n_parties))
     triples = p.assignLambda(Circuit, w, n_parties)  
-    print('0:', w.lambda_val(0))
-    print('1:', w.lambda_val(1))
-    print('2:', w.lambda_val(2))
-    print('3:', w.lambda_val(3))
+    alpha = circuit.compute_output
+    print('0:', w.v(0))
+    print('1:', w.v(1))
+    print('2:', w.v(2))
+    print('3:', w.v(3))
+    print('4:', w.v(4))
+    
     circuit.compute_e(Circuit, w, n_gate)     
 
 if __name__ == "__main__": 
