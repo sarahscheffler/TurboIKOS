@@ -56,23 +56,19 @@ def compute_output(circuit, epsilon_1, epsilon_2, wire, n_gate, n_parties):
     alpha_broadcast = []
     for i in range(n_gate):
         c = circuit[i]
-        print('x:', c.x)
-        print('y:', c.y)
         if c.operation == 'MUL' or c.operation == 'AND':
             c.w = wire
             c.mult()
-            print('z:', c.z)
 	    # calculate alpha share
             alpha_shares = [None]*n_parties
             for j in range(n_parties):
-                y_lam = wire.lambda_val(c.y)[i]
-                y_lamh = wire.lam_hat(c.y)[i]
+                y_lam = wire.lambda_val(c.y)[j]
+                y_lamh = wire.lam_hat(c.y)[j]
                 alpha_shares[j] = epsilon_1[i]*y_lam + (epsilon_2[i]*y_lamh)
             alpha_broadcast.append(alpha_shares)	
         if c.operation == 'ADD' or c.operation== 'XOR':
             c.w = wire
-            c.add()
-            print('z:', c.z)
+            c.add() 
     return alpha_broadcast
 
 #input: circuit, wire structure, list of n_mul gate alphas, and two epsilons
@@ -84,18 +80,16 @@ def compute_zeta_share(circuit, wire, alpha, epsilon_1, epsilon_2, n_parties):
         zeta = 0
         n = 0
         for j in range(len(circuit)):
-            if circuit[j].operation == 'AND' or 'MUL':
+            if circuit[j].operation == 'AND' or  circuit[j].operation == 'MUL':
                 x = circuit[j].x
                 y = circuit[j].y
                 z = circuit[j].z
-                A = alpha[n][i]
-                s = (epsilon_1[j] * wire.e(y) - A)* wire.lambda_val(x)[j] + \
-                    epsilon_1[j] * wire.e(x) * wire.lambda_val(y)[j] - \
-                    epsilon_2[j] * wire.e(z) - epsilon_2[j] * wire.lam_hat(z)[i]     
+                A = sum(alpha[n])
+                zeta += (epsilon_1[j] * wire.e(y) - A)* wire.lambda_val(x)[i] + \
+                    epsilon_1[j] * wire.e(x) * wire.lambda_val(y)[i] - \
+                    epsilon_1[j] * wire.lambda_val(z)[i] - epsilon_2[j] * wire.lam_hat(z)[i]     
                 n += 1
                 if i == 0:
-                    print('e_hat:', wire.e_hat(z))
-                    s += epsilon_1[j] * wire.e(z) - epsilon_1[j]*wire.e(x)*wire.e(y) + epsilon_2[j]*wire.e_hat(z)
-                zeta += s
+                    zeta += epsilon_1[j] * wire.e(z) - epsilon_1[j]*wire.e(x)*wire.e(y) + epsilon_2[j]*wire.e_hat(z)
         r[i] = (zeta)
     return r 
