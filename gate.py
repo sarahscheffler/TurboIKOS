@@ -153,8 +153,7 @@ class gate:
     # return e share for broadcast
     def mult(self):
         #alpha_broadcast = []*circuit.n_parties
-        z_v_arr = [None]*self.n_parties
-        print(self.w)
+        z_v_arr = [None]*self.n_parties 
         # calculate z_vi
         x_e = self.w.e(self.x)
         y_e = self.w.e(self.y)
@@ -168,20 +167,20 @@ class gate:
             y_lam = sum(self.w.lambda_val(self.y))
             y_e = (y_v + y_lam)
             self.w.set_e(self.y, y_e)
-
+        #Calculate z_e
+        z_v = sum(self.w.v(self.x)) * sum(self.w.v(self.y))
+        z_e = z_v + sum(self.w.lambda_val(self.z))
         # calculate and set z_eh
         z_eh = sum(self.w.lambda_val(self.x)) * sum(self.w.lam_hat(self.y)) + \
             sum(self.w.lam_hat(self.z))
         self.w.set_e_hat(self.z, z_eh)
         for i in range(self.n_parties):
             # calculate z_vi
-            print('xe:', x_e)
-            print('ye:', y_e)
-            print('a:', self.a)
-            print('b:', self.b)
-            print('c:', self.c)
-            z_v = x_e*y_e - (self.a[i] * y_e) - (self.b[i] * x_e) +  self.c[i]
-            z_v_arr[i] = z_v
+            if i == 0:
+                z_v_share = z_e - self.w.lambda_val(self.z)[i]
+            else:
+                z_v_share = Value(0)-self.w.lambda_val(self.z)[i]
+            z_v_arr[i] = z_v_share 
      
           
         self.w.set_v(self.z, z_v_arr)
