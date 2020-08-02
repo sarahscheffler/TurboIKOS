@@ -153,7 +153,7 @@ def assignLambda(circuit, wire, n_parties):
             #set triples
             gate.a = wire.lambda_val(gate.x)
             gate.b = wire.lam_hat(gate.y)
-            gate.c = sum(wire.lam_hat(gate.z)).splitVal(n_parties)
+            gate.c = wire.lam_hat(gate.z) 
             triples.append([sum(wire.lambda_val(gate.x)),y_lam_hat, z_lam_hat])
                        
         else:
