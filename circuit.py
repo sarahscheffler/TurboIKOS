@@ -6,7 +6,13 @@ from Value import Value
 
 
 # input: external file
-# output:in array of dictionaries.
+# output: circuit data struct (array of gate objects in topological order
+#         list of # wires of input 
+#         list of # wires of output
+#         numbers of gates
+#         numbers of wires
+#         number of outputs
+#         nymber of inputs
 # function:: parse external file
 
 
@@ -45,17 +51,21 @@ def parse(gate):
     """
 	index of array corresponds to topological order of circuit
     """
+# input: number of wires
+# output: wire data structure (array of dictionaries with keys 'e', 'v', 'lambda, 'lam_hat', 'e_hat' with index of wire#
 
 def wire_data(n_wires):
-    return [{'e': None, 'v': Value() , 'lambda': Value(), 'lam_hat':Value(), 'e_hat': None}
+    return [{'e': None, 'v': Value() , 'lambda': None, 'lam_hat':Value(), 'e_hat': None}
                  for i in range(n_wires)]
 
-#output: array of e broadcast 
-#Write v shares and e to output value
+#input: circuit object, epsilon1, epsilon2, wire data structure, number of gates, number of parties
+#output: array of array of alpha values. row# = mul gate#, col# = party# 
+#Write to output wires of each gate and compute alpha values.  
 def compute_output(circuit, epsilon_1, epsilon_2, wire, n_gate, n_parties):
     alpha_broadcast = []
     for i in range(n_gate):
         c = circuit[i]
+        #MUL gates
         if c.operation == 'MUL' or c.operation == 'AND':
             c.w = wire
             c.mult()
@@ -65,7 +75,8 @@ def compute_output(circuit, epsilon_1, epsilon_2, wire, n_gate, n_parties):
                 y_lam = wire.lambda_val(c.y)[j]
                 y_lamh = wire.lam_hat(c.y)[j]
                 alpha_shares[j] = epsilon_1[i]*y_lam + (epsilon_2[i]*y_lamh)
-            alpha_broadcast.append(alpha_shares)	
+            alpha_broadcast.append(alpha_shares)
+        # ADD gates	
         if c.operation == 'ADD' or c.operation== 'XOR':
             c.w = wire
             c.add() 
