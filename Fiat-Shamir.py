@@ -9,7 +9,7 @@ from random import sample, seed, getrandbits
 from Crypto.Util.number import bytes_to_long
 from gmpy2 import mpz, sub, t_mod
 
-field = mpz(2**127-1) #field value 
+field = mpz(2**127-1) #field value NOTE: get field value from Value.py 
 
 def make_epsilons(r2, num_mult_gates):
     """
@@ -123,5 +123,5 @@ def round4(round_1, round_3, t, n):
     else:
         list_parties = [x for x in range(field)]
         hash_value = bytes_to_long(sha(str(i).encode() + str(mid_value).encode() + r4))
-        seed(hash_value) #QUESTION i don't think this works? but wondering if something similar exists to set seed as value generated from hashed value 
+        seed(hash_value) 
         return sample(list_parties, t)
