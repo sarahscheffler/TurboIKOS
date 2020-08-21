@@ -43,13 +43,14 @@ def test():
         epsilon_2 = epsilon_2.splitVal(n_gate)
 
     alpha = circuit.compute_output(Circuit, epsilon_1, epsilon_2, w, n_gate, n_parties)
-
+    m = 0
     for i in range(n_gate):
-        n = 0
         g = Circuit[i]
         if g.operation == 'AND' or g.operation == 'MUL':
             for j in range(n_parties):
-                assert(alpha[i][j] == epsilon_1[i]*w.lambda_val(g.y)[j] + epsilon_2[i]*w.lam_hat(g.y)[j])
+                assert(alpha[m][j] == epsilon_1[i]*w.lambda_val(g.y)[j] + epsilon_2[i]*w.lam_hat(g.y)[j])
+            m = m + 1
+        
     for j in range(n_gate):
         g = Circuit[j]
         #ADD gate

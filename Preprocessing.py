@@ -123,10 +123,12 @@ def assignLambda(circuit, wire, n_parties):
     triples = []
     for gate in circuit:
         if gate.operation == "ADD" or gate.operation == "XOR":
-            x_lam = getRandom()
-            y_lam = getRandom()
-            wire.set_lambda(gate.x, x_lam.splitVal(n_parties))
-            wire.set_lambda(gate.y, y_lam.splitVal(n_parties))
+            if wire.lambda_val(gate.x) == None:
+                x_lam = getRandom()
+                wire.set_lambda(gate.x, x_lam.splitVal(n_parties))
+            if wire.lambda_val(gate.y) == None:
+                y_lam = getRandom()
+                wire.set_lambda(gate.y, y_lam.splitVal(n_parties))
             z_lam_share = []
             for i in range(n_parties):
                 z_lam_share.append(wire.lambda_val(gate.x)[i] + \
@@ -134,10 +136,10 @@ def assignLambda(circuit, wire, n_parties):
             wire.set_lambda(gate.z, z_lam_share)
         elif gate.operation == "MUL" or gate.operation == "AND":
             #set x_lam and y_lam if they are not set
-            if wire.lambda_val(gate.x).value == None:
+            if wire.lambda_val(gate.x) == None:
                 x_lam = getRandom()
                 wire.set_lambda(gate.x, x_lam.splitVal(n_parties))
-            if wire.lambda_val(gate.y).value == None:
+            if wire.lambda_val(gate.y) == None:
                 y_lam = getRandom()
                 wire.set_lambda(gate.y, y_lam.splitVal(n_parties))
             
