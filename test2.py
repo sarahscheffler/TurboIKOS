@@ -7,7 +7,7 @@ import sys
 import random
 import circuit 
 from gate import gate
-from gate import Wire 
+from wire import Wire 
 import Preprocessing as p
 from Value import Value
 import time
@@ -21,6 +21,8 @@ def test():
     n_input = Circuit[6]
     n_output = Circuit[5]
     l_output = Circuit[2]
+    n_addgate = Circuit[7]
+    n_mulgate = Circuit[8]
     Circuit = Circuit[0]
     n_parties = 3
     #repeat rep times
@@ -69,7 +71,8 @@ def test():
        
         run_time = time.clock() - start_time
         run_time_arr[t] = run_time
-    
+    print('number of add gates:', n_addgate)
+    print('number of mul gates:', n_mulgate)
     average_preprocessing_time = sum(preprocessing_arr) / rep
     print('average preprocessing time:', average_preprocessing_time, 'seconds')
 
@@ -78,7 +81,7 @@ def test():
     # Proof size = wire size + circuit size + alpha size + zeta size
     #TODO: modify after prover.py and fiatshamir.py with commitment sizes
     proof_size = sys.getsizeof(zeta) + sys.getsizeof(alpha) 
-    
-    print('proof size:', proof_size)
+    #TODO: check unit
+    print('proof size:', proof_size, 'bytes')
 if __name__ == "__main__": 
     test() 
