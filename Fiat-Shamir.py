@@ -86,9 +86,9 @@ def round2(round_1, num_mult_gates):
     """
     r2 = None
     if (type(round_1) == bytes): #checks that input is in the right format of <class 'bytes'>
-        r2 = sha256(round_1)
+        r2 = sha256(round_1).digest()
     else: #else, encodes round_1 to satisfy type requirement 
-        r2 = sha256(round_1.encode())
+        r2 = sha256(round_1.encode()).digest()
 
     return make_epsilons(r2, num_mult_gates)
 
@@ -107,14 +107,14 @@ def round4(round_1, round_3, t, n):
 
     #checks type of inputs for sha256 
     if type(round_1) == bytes and type(round_3) == bytes:
-        r4 = (sha256(round_1 + round_3)) #sha256 (round_1 || round_3)
+        r4 = (sha256(round_1 + round_3).digest()) #sha256 (round_1 || round_3)
     else:
         if type(round_1) == bytes and type(round_3) != bytes:
-            r4 = sha256(round_1 + round_3.encode())
+            r4 = sha256(round_1 + round_3.encode()).digest()
         elif type(round_1) != bytes and type(round_3) == bytes:
-            r4 = sha256(round_1.encode() + round_3) 
+            r4 = sha256(round_1.encode() + round_3).digest()
         else:
-            r4 = sha256(round_1.encode() + round_3.encode())
+            r4 = sha256(round_1.encode() + round_3.encode()).digest()
     
     #generate parties for round 5 
     if t == (n-1): 
