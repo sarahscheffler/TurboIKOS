@@ -113,12 +113,21 @@ def round_three_internal(n_parties, n_gate, n_input, circuit, wire, alpha, zeta)
     broadcast_commit = temp[1]
     return r, broadcast_commit, broadcast
 
+#input: output of round_one_internal
+#output: committed views
+# return round1 to send to verifier/ fiat shamir
 def round_one_external(round1):
     return round1[1]
 
+#input: output of round_three_internal
+#output: committed broadcast
+#return round three to send to verifier/ fiat shamir
 def round_three_external(round3):
     return round3[1]
 
+#input: output of round_one_internal, output of round_three_internal, list of parties to open
+#output: r of broadcast, broadcast, chosen r values of views, chosen views
+#generate round five
 def round_five(round1, round3, parties):
     v = []
     r = []
