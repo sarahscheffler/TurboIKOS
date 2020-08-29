@@ -57,19 +57,18 @@ def test():
         for i in range(n_input):
             w.set_v(i, inputs[i].splitVal(n_parties))
 
-        start_time_preprocessing = time.clock()
-        #Assign lambda and lambda hat values
+        start_time_preprocessing = time.process_time()
         triples = p.assignLambda(Circuit, w, n_parties)  
-        preprocessing_time = time.clock() - start_time_preprocessing
+        preprocessing_time = time.process_time() - start_time_preprocessing
         preprocessing_arr[t] = preprocessing_time
 
-        start_time = time.clock()
+        start_time = time.process_time()
         #Calculate alpha shares and write e values, v values, e hat values to output wires 
         alpha = circuit.compute_output(Circuit, epsilon_1, epsilon_2, w, n_gate, n_parties)
         #Compute zeta shares
         zeta = circuit.compute_zeta_share(Circuit, w, alpha, epsilon_1, epsilon_2, n_parties)
        
-        run_time = time.clock() - start_time
+        run_time = time.process_time() - start_time
         run_time_arr[t] = run_time
     print('number of add gates:', n_addgate)
     print('number of mul gates:', n_mulgate)
