@@ -37,9 +37,9 @@ def test():
         w.set_v(i, inputs[i].splitVal(n_parties))
     triples = p.assignLambda(Circuit, w, n_parties)
     #Commit round one
-    views = prover.round_one(n_parties, n_gate, n_input, Circuit, w)
-    views_commit = views[0]
-    views = views[1]
+    round1 = prover.round_one_internal(n_parties, n_gate, n_input, Circuit, w)
+    views_commit = prover.round_one_external(round1)
+    print(views_commit)
     #Generate epsilons TODO: replace with fiat shamir
     epsilon_1 = Value()
     epsilon_2 = Value()
@@ -89,9 +89,16 @@ def test():
     #Check zeta
     assert(sum(zeta).value == 0)
     #Commit to broadcast
-    broadcast = prover.round_three(n_parties, n_gate, n_input, Circuit, w, alpha, zeta)
-    broadcast_commit = broadcast[0]
-    broadcast = broadcast[1]
+    round3 = prover.round_three_internal(n_parties, n_gate, n_input, Circuit, w, alpha, zeta)
+    broadcast_commit = prover.round_three_external(round3)
+
+    parties = [0, 2]
+    #round 5
+    temp = prover.round_five(round1, round3, parties)
+    r_broadcast = temp[0]
+    broadcast = temp[1]
+    r_views = temp[2]
+    views = temp[3]
     print('test passed')
 if __name__ == "__main__": 
     test() 
