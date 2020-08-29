@@ -23,9 +23,10 @@ def open(r, v, commit):
 #inputs: number of parties, number of gates, circuit object, wire object
 #output: commit views, views
 #output first round    
-def round_one(n_parties, n_gate, n_input, circuit, wire):
+def round_one_internal(n_parties, n_gate, n_input, circuit, wire):
     views_commit = [None]*n_parties
     views = [None]*n_parties
+    r = [None]*n_parties
         
     # v output shares
     output_shares = wire.v(circuit[-1].z)
@@ -57,13 +58,15 @@ def round_one(n_parties, n_gate, n_input, circuit, wire):
                 lam_z_hat_str += long_to_bytes(wire.lam_hat(g.z)[j].value)
         views[j] = d
         views_str = input_str + input_lam_str + lam_z_str + lam_y_hat_str + lam_z_hat_str
-        views_commit[j] = commit(views_str)
+        temp = commit(views_str)
+        r[j] = temp[0]
+        views_commit[j] = temp[1]
             
-    return views_commit, views
+    return r, views_commit, views
 
 #input: number of gates, circuit object, wire object, alpha arry arr[#parties][#mulgates], zeta[#parties]
 #output: committed broadcast, broadcast
-def round_three(n_parties, n_gate, n_input, circuit, wire, alpha, zeta):
+def round_three_internal(n_parties, n_gate, n_input, circuit, wire, alpha, zeta):
     e_inputs = []
     e_input_str = b''
     e_z = []
@@ -105,8 +108,27 @@ def round_three(n_parties, n_gate, n_input, circuit, wire, alpha, zeta):
 
     broadcast = {'e inputs': e_inputs, 'e z': e_z, 'e z hat': e_z_hat, 'alpha': alpha, 'zeta': zeta, 'output shares': output_shares}
     broadcast_str = e_input_str + e_z_str + e_z_hat_str + alpha_str + zeta_str + output_shares_str
-    broadcast_commit = commit(broadcast_str)
-    return broadcast_commit, broadcast
+    temp = commit(broadcast_str)
+    r = temp[0]
+    broadcast_commit = temp[1]
+    return r, broadcast_commit, broadcast
+
+def round_one_external(round1):
+    return round1[1]
+
+def round_three_external(round3):
+    return round3[1]
+
+def round_five(round1, round3, parties):
+    v = []
+    r = []
+    views = round1[2]
+    r_views = round1[0]
+    for i in parties:
+        v.append(views[i])
+        r.append(r_views[i])
+    return round3[0], round3[2], r, v
+
                                                                                                                                        
     
 """
