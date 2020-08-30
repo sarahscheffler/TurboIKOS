@@ -6,6 +6,7 @@ from wire import Wire
 import Preprocessing as p
 from Value import Value
 import prover
+import Fiat-Shamir as fs
 
 def test():
     Circuit = circuit.parse(gate)
@@ -39,18 +40,12 @@ def test():
     #Commit round one
     round1 = prover.round_one_internal(n_parties, n_gate, n_input, Circuit, w)
     views_commit = prover.round_one_external(round1)
-    print(views_commit)
+    
     #Generate epsilons TODO: replace with fiat shamir
-    epsilon_1 = Value()
-    epsilon_2 = Value()
-    epsilon_1.getRand()
-    epsilon_2.getRand()
-    if n_mul == 1:
-        epsilon_1 = [epsilon_1]
-        epsilon_2 = [epsilon_2]
-    else:
-        epsilon_1 = epsilon_1.splitVal(n_mul)
-        epsilon_2 = epsilon_2.splitVal(n_mul)
+    r1 = ''.join(views_commit)
+    temp = fs.round2(r1, n_mul)
+    epsilon_1 = temp[0]
+    epsilon_2 = temp[1]
 
     alpha = circuit.compute_output(Circuit, epsilon_1, epsilon_2, w, n_gate, n_parties)
     m = 0
@@ -99,6 +94,34 @@ def test():
     broadcast = temp[1]
     r_views = temp[2]
     views = temp[3]
+    #full_view = viwes of all parties (for debugging)
+    full_views = round1[2]
+    #Test prover.py
+    #check broadcast and views
+    for i in range(n_input):
+        assert(w.e(i) == broadcast['e inputs'][i])
+        for j in range(n_parties):
+            assert(full_views[j]['input'][i] == w.v(i)[j])
+            assert(full_views[j]['input lambda'][i] == w.lambda_val(i)[j])
+    
+    m = 0
+    for i in range(n_gate):
+        c = Circuit[i]
+        if c.operation == 'MUL' or c.operation == 'AND':
+            for j in range(n_parties):
+                assert(full_views[j]['lambda z'][m] == w.lambda_val(c.z)[j])
+                assert(full_views[j]['lambda y hat'][m] == w.lam_hat(c.y)[j])
+                assert(full_views[j]['lambda z hat'][m] == w.lam_hat(c.z)[j])
+            
+            assert(broadcast['e z'][m] == w.e(c.z))
+            assert(broadcast['e z hat'][m] == w.e_hat(c.z))
+            m += 1
+
+    assert(w.v(Circuit[-1].z) == broadcast['output shares']) 
+    
+    #check commitment
+
+
     print('test passed')
 if __name__ == "__main__": 
     test() 
