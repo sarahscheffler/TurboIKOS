@@ -19,65 +19,21 @@ def make_epsilons(r2, num_mult_gates):
     inputs: r2 (from func round), num_mult_gates (number of mult gates for epsilon creation?) <-- either move this one to prover or get num of mult gates from another files
     outputs: 2*num_mult_gates epsilsons 
     """    
-    list_epsilon = [0]*num_mult_gates
+    epsilon_1 = [0]*num_mult_gates
+    epsilon_2 = [0]*num_mult_gates
 
-    #VERSION 2 : generate 128 random bits by using random.getrandbits, splice value 
+    #generate 128 random bits by using random.getrandbits, splice value 
     seed(r2)
 
     for i in range(num_mult_gates):
-        epsilon = bin(getrandbits(128))[:127]
-        epsilon_hat = bin(getrandbits(128))[:127]
-        list_epsilon[i] = [epsilon, epsilon_hat]
+        # include if all 1s try again
+        #make into Values
+        epsilon = bin(getrandbits(127))
+        epsilon_hat = bin(getrandbits(127))
+        epsilon_1[i] = epsilon
+        epsilon_2[i] = epsilon_hat
 
-    """
-    ---DRAFT VERSION 1.1----
-    for i in range(num_mult_gates):
-        mid_value_1 = 0
-        mid_value_2 = mid_value_1+1 
-
-        temp_1 = bytes_to_long(sha256(str(i).encode() + str(mid_value_1).encode() + r2)) #hash(i || mid_value_1 || r2) --> coverted to long 
-        temp_2 = bytes_to_long(sha256(str(i).encode() + str(mid_value_2).encode() + r2)) #hash(i || mid_value_2 || r2) --> coverted to long 
-
-        if bin(temp_1)[:127] == '0b' + ('1'*125):
-            epsilon = bin(temp_1)[127:254]
-        else: 
-            epsilon = bin(temp_1)[:127]
-        
-        if bin(temp_2)[:127] == '0b' + ('1'*125):
-            epsilon = bin(temp_2)[127:254]
-        else: 
-            epsilon = bin(temp_2)[:127]
-
-        list_epsilon[i] = [epsilon, epsilon_hat]
-    """
-
-
-    """
-    ---DRAFT VERSION 1----
-    for i in range(num_mult_gates):
-        mid_value_1 = 0
-        mid_value_2 = mid_value_1+1 
-
-        temp_1 = bytes_to_long(sha256(str(i).encode() + str(mid_value_1).encode() + r2)) #hash(i || mid_value_1 || r2) --> coverted to long 
-        temp_2 = bytes_to_long(sha256(str(i).encode() + str(mid_value_2).encode() + r2)) #hash(i || mid_value_2 || r2) --> coverted to long 
-
-        epsilon = t_mod(mpz(temp_1), field)
-        epsilon_hat = t_mod(mpz(temp_2), field)
-
-        while epsilon > reject_value: #REJECTION SAMPLE epsilon, will reject and find new value if epsilon is greater than desired distribution value 
-            mid_value_1 += 1
-            temp_1 = bytes_to_long(sha256(str(i).encode() + str(mid_value_1).encode() + r2)) #hash(i || mid_value_1 || r2) --> coverted to long 
-            epsilon = t_mod(mpz(temp_1), field)
-        
-        while epsilon_hat > reject_value: #REJECTION SAMPLE epsilon_hat, will reject and find new value if epsilon is greater than desired distribution value 
-            mid_value_2 += 1
-            temp_2 = bytes_to_long(sha256(str(i).encode() + str(mid_value_2).encode() + r2)) #hash(i || mid_value_1 || r2) --> coverted to long 
-            epsilon_hat = t_mod(mpz(temp_2), field)
-
-
-        list_epsilon[i] = [epsilon, epsilon_hat]
-    """
-    return list_epsilon
+    return epsilon_1, epsilon_2
 
 def round2(round_1, num_mult_gates):
     """"
@@ -86,9 +42,9 @@ def round2(round_1, num_mult_gates):
     """
     r2 = None
     if (type(round_1) == bytes): #checks that input is in the right format of <class 'bytes'>
-        r2 = sha256(round_1).digest()
+        r2 = sha256(round_1).hexdigest()
     else: #else, encodes round_1 to satisfy type requirement 
-        r2 = sha256(round_1.encode()).digest()
+        r2 = sha256(round_1.encode()).hexdigest()
 
     return make_epsilons(r2, num_mult_gates)
 
@@ -107,14 +63,14 @@ def round4(round_1, round_3, t, n):
 
     #checks type of inputs for sha256 
     if type(round_1) == bytes and type(round_3) == bytes:
-        r4 = (sha256(round_1 + round_3).digest()) #sha256 (round_1 || round_3)
+        r4 = (sha256(round_1 + round_3).hexdigest()) #sha256 (round_1 || round_3)
     else:
         if type(round_1) == bytes and type(round_3) != bytes:
-            r4 = sha256(round_1 + round_3.encode()).digest()
+            r4 = sha256(round_1 + round_3.encode()).hexdigest()
         elif type(round_1) != bytes and type(round_3) == bytes:
-            r4 = sha256(round_1.encode() + round_3).digest()
+            r4 = sha256(round_1.encode() + round_3).hexdigest()
         else:
-            r4 = sha256(round_1.encode() + round_3.encode()).digest()
+            r4 = sha256(round_1.encode() + round_3.encode()).hexdigest()
     
     #generate parties for round 5 
     if t == (n-1): 
