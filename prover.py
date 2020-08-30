@@ -85,12 +85,14 @@ def round_three_internal(n_parties, n_gate, n_input, circuit, wire, alpha, zeta)
         zeta_str += long_to_bytes(zeta[j].value)
 
     n_mul = 0
+
+    for i in range(n_input):
+        #e of inputs
+        e = wire.e(i) 
+        e_input_str += long_to_bytes(e.value)
+        e_inputs.append(e)
+
     for i in range(n_gate):
-        if i < n_input:
-            #e of inputs
-            e = wire.e(i)
-            e_input_str += long_to_bytes(e.value)
-            e_inputs.append(e)
         if circuit[i].operation == 'MUL' or circuit[i].operation == 'AND':
             g = circuit[i]
             #e_z
