@@ -7,10 +7,9 @@
 
 
 from Value import Value
-# noinspection DuplicatedCode
 class Wire:
     # Each assertion checks for expected type, length, value, and existence of an object
-    def __init__(self, wires, n_parties, n_wires): # recieve from circuit.py
+    def __init__(self, wire_data, n_parties, n_wires): # recieve from circuit.py
         '''    
         assert str(type(wires)) == "<class 'list'>"
         assert str(type(n_wires)) == "<class 'int'>"
@@ -30,7 +29,7 @@ class Wire:
                 assert str(type(wires[j]['lambda'][k])) == "<class 'int'>"
             assert str(type(wires[j]['lambda'])) == "<class 'list'>"
         '''
-        self.data = wires
+        self.data =wire_data
         self.n_wire = n_wires
         self.n_parties = n_parties
 
@@ -98,29 +97,5 @@ class Wire:
     def set_e_hat(self, index, val):
         assert str(type(index)) == "<class 'int'>"
         assert (index < self.n_wire) and (index > -1)
-        self.data[index]['e'] = val
+        self.data[index]['e_hat'] = val
         return 1
-    
-# def main():
-#     n_wires = 3
-#     n_parties = 3
-#     a = [{'e': 1, 'v': [22] * n_parties, 'lambda': [333] * n_parties}] * n_wires
-#     wiredb = Wire(a, n_parties, n_wires)
-#     print("Full db: ", wiredb.data)
-#     print("db len: ", wiredb.n_wire)
-#     teste0_1 = wiredb.e(0)
-#     print("e of the first wire: ", teste0_1)
-#     wiredb.set_e(0, 3)
-#     teste0_3 = wiredb.e(0)
-#     print("e of the first wire after using set_e to 3: ", teste0_3)
-#     testv0_22 = wiredb.v(0)
-#     print("v of first wire: ", testv0_22)
-#     wiredb.set_v(0, [44]*n_parties)
-#     print("v after wiredb.set_e(0, [44, 44, 44]): ", wiredb.v(0))
-#     test_lambda0 = wiredb.lambda_val(0)
-#     print("lambdas of the wire0: ", test_lambda0)
-#     wiredb.set_lambda(0, [55] * n_parties)
-#     test_lambda0_44 = wiredb.lambda_val(0)
-#     print("lambdas of the wire0 after setting to [55, 55, 55]: ", test_lambda0_44)
-# 
-# main()

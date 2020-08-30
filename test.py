@@ -2,9 +2,11 @@ import sys
 import random
 import circuit 
 from gate import gate
-from gate import Wire 
+from wire import Wire 
 import Preprocessing as p
 from Value import Value
+import prover
+import Fiat-Shamir as fs
 
 def test():
     Circuit = circuit.parse(gate)
@@ -14,12 +16,17 @@ def test():
     n_input = Circuit[6]
     n_output = Circuit[5]
     l_output = Circuit[2]
+    n_mul = Circuit[8]
     Circuit = Circuit[0]
    
     # Create list of wire data
     n_parties = 3    
     wire_data = circuit.wire_data(n_wires)
     w = Wire(wire_data, n_parties, n_wires)
+
+    #Preprocessing
+    triples = p.assignLambda(Circuit, w, n_parties)
+
     #Assign v values
     inputs = []
     for i in range(n_input):
@@ -29,18 +36,16 @@ def test():
        
     for i in range(n_input):
         w.set_v(i, inputs[i].splitVal(n_parties))
-    triples = p.assignLambda(Circuit, w, n_parties)  
-    #Generate epsilons
-    epsilon_1 = Value()
-    epsilon_2 = Value()
-    epsilon_1.getRand()
-    epsilon_2.getRand()
-    if n_gate == 1:
-        epsilon_1 = [epsilon_1]
-        epsilon_2 = [epsilon_2]
-    else:
-        epsilon_1 = epsilon_1.splitVal(n_gate)
-        epsilon_2 = epsilon_2.splitVal(n_gate)
+    triples = p.assignLambda(Circuit, w, n_parties)
+    #Commit round one
+    round1 = prover.round_one_internal(n_parties, n_gate, n_input, Circuit, w)
+    views_commit = prover.round_one_external(round1)
+    
+    #Generate epsilons TODO: replace with fiat shamir
+    r1 = ''.join(views_commit)
+    temp = fs.round2(r1, n_mul)
+    epsilon_1 = temp[0]
+    epsilon_2 = temp[1]
 
     alpha = circuit.compute_output(Circuit, epsilon_1, epsilon_2, w, n_gate, n_parties)
     m = 0
@@ -48,7 +53,7 @@ def test():
         g = Circuit[i]
         if g.operation == 'AND' or g.operation == 'MUL':
             for j in range(n_parties):
-                assert(alpha[m][j] == epsilon_1[i]*w.lambda_val(g.y)[j] + epsilon_2[i]*w.lam_hat(g.y)[j])
+                assert(alpha[m][j] == epsilon_1[m]*w.lambda_val(g.y)[j] + epsilon_2[m]*w.lam_hat(g.y)[j])
             m = m + 1
         
     for j in range(n_gate):
@@ -78,6 +83,45 @@ def test():
     zeta = circuit.compute_zeta_share(Circuit, w, alpha, epsilon_1, epsilon_2, n_parties)
     #Check zeta
     assert(sum(zeta).value == 0)
+    #Commit to broadcast
+    round3 = prover.round_three_internal(n_parties, n_gate, n_input, Circuit, w, alpha, zeta)
+    broadcast_commit = prover.round_three_external(round3)
+
+    parties = [0, 2]
+    #round 5
+    temp = prover.round_five(round1, round3, parties)
+    r_broadcast = temp[0]
+    broadcast = temp[1]
+    r_views = temp[2]
+    views = temp[3]
+    #full_view = viwes of all parties (for debugging)
+    full_views = round1[2]
+    #Test prover.py
+    #check broadcast and views
+    for i in range(n_input):
+        assert(w.e(i) == broadcast['e inputs'][i])
+        for j in range(n_parties):
+            assert(full_views[j]['input'][i] == w.v(i)[j])
+            assert(full_views[j]['input lambda'][i] == w.lambda_val(i)[j])
+    
+    m = 0
+    for i in range(n_gate):
+        c = Circuit[i]
+        if c.operation == 'MUL' or c.operation == 'AND':
+            for j in range(n_parties):
+                assert(full_views[j]['lambda z'][m] == w.lambda_val(c.z)[j])
+                assert(full_views[j]['lambda y hat'][m] == w.lam_hat(c.y)[j])
+                assert(full_views[j]['lambda z hat'][m] == w.lam_hat(c.z)[j])
+            
+            assert(broadcast['e z'][m] == w.e(c.z))
+            assert(broadcast['e z hat'][m] == w.e_hat(c.z))
+            m += 1
+
+    assert(w.v(Circuit[-1].z) == broadcast['output shares']) 
+    
+    #check commitment
+
+
     print('test passed')
 if __name__ == "__main__": 
     test() 

@@ -7,7 +7,7 @@ import sys
 import random
 import circuit 
 from gate import gate
-from gate import Wire 
+from wire import Wire 
 import Preprocessing as p
 from Value import Value
 import time
@@ -21,6 +21,8 @@ def test():
     n_input = Circuit[6]
     n_output = Circuit[5]
     l_output = Circuit[2]
+    n_addgate = Circuit[7]
+    n_mulgate = Circuit[8]
     Circuit = Circuit[0]
     n_parties = 3
     #repeat rep times
@@ -55,21 +57,21 @@ def test():
         for i in range(n_input):
             w.set_v(i, inputs[i].splitVal(n_parties))
 
-        start_time_preprocessing = time.clock()
-        #Assign lambda and lambda hat values
+        start_time_preprocessing = time.process_time()
         triples = p.assignLambda(Circuit, w, n_parties)  
-        preprocessing_time = time.clock() - start_time_preprocessing
+        preprocessing_time = time.process_time() - start_time_preprocessing
         preprocessing_arr[t] = preprocessing_time
 
-        start_time = time.clock()
+        start_time = time.process_time()
         #Calculate alpha shares and write e values, v values, e hat values to output wires 
         alpha = circuit.compute_output(Circuit, epsilon_1, epsilon_2, w, n_gate, n_parties)
         #Compute zeta shares
         zeta = circuit.compute_zeta_share(Circuit, w, alpha, epsilon_1, epsilon_2, n_parties)
        
-        run_time = time.clock() - start_time
+        run_time = time.process_time() - start_time
         run_time_arr[t] = run_time
-    
+    print('number of add gates:', n_addgate)
+    print('number of mul gates:', n_mulgate)
     average_preprocessing_time = sum(preprocessing_arr) / rep
     print('average preprocessing time:', average_preprocessing_time, 'seconds')
 
@@ -78,7 +80,7 @@ def test():
     # Proof size = wire size + circuit size + alpha size + zeta size
     #TODO: modify after prover.py and fiatshamir.py with commitment sizes
     proof_size = sys.getsizeof(zeta) + sys.getsizeof(alpha) 
-    
-    print('proof size:', proof_size)
+    #TODO: check unit
+    print('proof size:', proof_size, 'bytes')
 if __name__ == "__main__": 
     test() 
