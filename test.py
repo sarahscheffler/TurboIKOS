@@ -6,7 +6,8 @@ from wire import Wire
 import Preprocessing as p
 from Value import Value
 import prover
-import Fiat-Shamir as fs
+import Fiat_Shamir as fs
+from Crypto.Util.number import bytes_to_long, long_to_bytes
 
 def test():
     Circuit = circuit.parse(gate)
@@ -41,12 +42,12 @@ def test():
     round1 = prover.round_one_internal(n_parties, n_gate, n_input, Circuit, w)
     views_commit = prover.round_one_external(round1)
     
-    #Generate epsilons TODO: replace with fiat shamir
+    #Generate epsilonsir
     r1 = ''.join(views_commit)
     temp = fs.round2(r1, n_mul)
     epsilon_1 = temp[0]
     epsilon_2 = temp[1]
-
+    
     alpha = circuit.compute_output(Circuit, epsilon_1, epsilon_2, w, n_gate, n_parties)
     m = 0
     for i in range(n_gate):
@@ -86,8 +87,11 @@ def test():
     #Commit to broadcast
     round3 = prover.round_three_internal(n_parties, n_gate, n_input, Circuit, w, alpha, zeta)
     broadcast_commit = prover.round_three_external(round3)
-
-    parties = [0, 2]
+    r3 = broadcast_commit
+    #number of parties to be corrupted
+    t = 2 
+    parties = fs.round4(r1, r3, t, n_parties)
+    
     #round 5
     temp = prover.round_five(round1, round3, parties)
     r_broadcast = temp[0]
@@ -96,6 +100,8 @@ def test():
     views = temp[3]
     #full_view = viwes of all parties (for debugging)
     full_views = round1[2]
+    #r values of all views(for debuggint)
+    full_r_views = round1[0]
     #Test prover.py
     #check broadcast and views
     for i in range(n_input):
@@ -119,7 +125,49 @@ def test():
 
     assert(w.v(Circuit[-1].z) == broadcast['output shares']) 
     
-    #check commitment
+    #check commitment of broadcast
+    e_inputs_str = b''
+    e_z_str = b''
+    e_z_hat_str = b''
+    alpha_str = b''
+    zeta_str = b''
+    output_str = b''
+    
+    for i in range(n_input):
+        e_inputs_str += long_to_bytes(broadcast['e inputs'][i].value)
+    for i in range(n_mul):
+        e_z_str += long_to_bytes(broadcast['e z'][i].value)
+        e_z_hat_str += long_to_bytes(broadcast['e z hat'][i].value)
+    for i in range(n_parties):
+        for j in range(n_mul):
+            alpha_str += long_to_bytes(broadcast['alpha'][j][i].value)
+        zeta_str += long_to_bytes(broadcast['zeta'][i].value)
+        output_str += long_to_bytes(broadcast['output shares'][i].value)
+   
+    val = e_inputs_str + e_z_str + e_z_hat_str + alpha_str + zeta_str + output_str
+   
+    prover.open(r_broadcast, val, broadcast_commit)
+    
+    #check commitment of views
+    for n in range(n_parties):
+        input_str = b''
+        input_lam_str = b''
+        lam_z_str = b''
+        lam_y_hat_str = b''
+        lam_z_hat_str = b''
+        for i in range(n_input):
+            input_str += long_to_bytes(full_views[n]['input'][i].value)
+            input_lam_str += long_to_bytes(full_views[n]['input lambda'][i].value)
+        for i in range(n_mul):
+            lam_z_str += long_to_bytes(full_views[n]['lambda z'][i].value)
+            lam_y_hat_str += long_to_bytes(full_views[n]['lambda y hat'][i].value)
+            lam_z_hat_str += long_to_bytes(full_views[n]['lambda z hat'][i].value)
+        val = input_str + input_lam_str + lam_z_str + lam_y_hat_str + lam_z_hat_str
+        prover.open(full_r_views[n], val, views_commit[n])
+
+
+
+
 
 
     print('test passed')
