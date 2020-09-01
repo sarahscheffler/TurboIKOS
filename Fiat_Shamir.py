@@ -45,7 +45,7 @@ def round2(round_1, num_mult_gates):
     else: #else, encodes round_1 to satisfy type requirement 
         r2 = sha256(round_1.encode())
 
-    return make_epsilons(r2, num_mult_gates)
+    return make_epsilons(r2.digest(), num_mult_gates)
 
 
 def round4(round_1, round_3, t, n):
