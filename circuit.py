@@ -94,7 +94,7 @@ def compute_output(circuit, epsilon_1, epsilon_2, wire, n_gate, n_parties):
 #output: n_parties zeta shares
 def compute_zeta_share(circuit, wire, alpha, epsilon_1, epsilon_2, n_parties):
     r = [None]*n_parties
-    
+
     for i in range(n_parties):
         zeta = 0
         n = 0
@@ -104,6 +104,7 @@ def compute_zeta_share(circuit, wire, alpha, epsilon_1, epsilon_2, n_parties):
                 y = circuit[j].y
                 z = circuit[j].z
                 A = sum(alpha[n])
+
                 zeta += (epsilon_1[n] * wire.e(y) - A)* wire.lambda_val(x)[i] + \
                     epsilon_1[n] * wire.e(x) * wire.lambda_val(y)[i] - \
                     epsilon_1[n] * wire.lambda_val(z)[i] - epsilon_2[n] * wire.lam_hat(z)[i]     

@@ -22,67 +22,17 @@ def make_epsilons(r2, num_mult_gates):
     list_epsilon = [0]*num_mult_gates
     list_epsilon_hat = [0]*num_mult_gates
 
-    #VERSION 2 : generate 128 random bits by using random.getrandbits, splice value 
+    #generate 128 random bits by using random.getrandbits, splice value 
     seed(r2)
 
     for i in range(num_mult_gates):
-        epsilon = bin(getrandbits(128))[:127]
-        epsilon_hat = bin(getrandbits(128))[:127]
+        epsilon = bin(getrandbits(127))
+        epsilon_hat = bin(getrandbits(127))
         epsilon = Value(int(epsilon, 2))
         epsilon_hat = Value(int(epsilon_hat, 2))
         list_epsilon[i] = epsilon
         list_epsilon_hat[i] = epsilon_hat
     return list_epsilon, list_epsilon_hat
-
-    """
-    ---DRAFT VERSION 1.1----
-    for i in range(num_mult_gates):
-        mid_value_1 = 0
-        mid_value_2 = mid_value_1+1 
-
-        temp_1 = bytes_to_long(sha256(str(i).encode() + str(mid_value_1).encode() + r2)) #hash(i || mid_value_1 || r2) --> coverted to long 
-        temp_2 = bytes_to_long(sha256(str(i).encode() + str(mid_value_2).encode() + r2)) #hash(i || mid_value_2 || r2) --> coverted to long 
-
-        if bin(temp_1)[:127] == '0b' + ('1'*125):
-            epsilon = bin(temp_1)[127:254]
-        else: 
-            epsilon = bin(temp_1)[:127]
-        
-        if bin(temp_2)[:127] == '0b' + ('1'*125):
-            epsilon = bin(temp_2)[127:254]
-        else: 
-            epsilon = bin(temp_2)[:127]
-
-        list_epsilon[i] = [epsilon, epsilon_hat]
-    """
-
-
-    """
-    ---DRAFT VERSION 1----
-    for i in range(num_mult_gates):
-        mid_value_1 = 0
-        mid_value_2 = mid_value_1+1 
-
-        temp_1 = bytes_to_long(sha256(str(i).encode() + str(mid_value_1).encode() + r2)) #hash(i || mid_value_1 || r2) --> coverted to long 
-        temp_2 = bytes_to_long(sha256(str(i).encode() + str(mid_value_2).encode() + r2)) #hash(i || mid_value_2 || r2) --> coverted to long 
-
-        epsilon = t_mod(mpz(temp_1), field)
-        epsilon_hat = t_mod(mpz(temp_2), field)
-
-        while epsilon > reject_value: #REJECTION SAMPLE epsilon, will reject and find new value if epsilon is greater than desired distribution value 
-            mid_value_1 += 1
-            temp_1 = bytes_to_long(sha256(str(i).encode() + str(mid_value_1).encode() + r2)) #hash(i || mid_value_1 || r2) --> coverted to long 
-            epsilon = t_mod(mpz(temp_1), field)
-        
-        while epsilon_hat > reject_value: #REJECTION SAMPLE epsilon_hat, will reject and find new value if epsilon is greater than desired distribution value 
-            mid_value_2 += 1
-            temp_2 = bytes_to_long(sha256(str(i).encode() + str(mid_value_2).encode() + r2)) #hash(i || mid_value_1 || r2) --> coverted to long 
-            epsilon_hat = t_mod(mpz(temp_2), field)
-
-
-        list_epsilon[i] = [epsilon, epsilon_hat]
-    """
-    return list_epsilon
 
 def round2(round_1, num_mult_gates):
     """"
@@ -95,9 +45,8 @@ def round2(round_1, num_mult_gates):
     else: #else, encodes round_1 to satisfy type requirement 
         r2 = sha256(round_1.encode())
 
-    return make_epsilons(r2, num_mult_gates)
+    return make_epsilons(r2.digest(), num_mult_gates)
 
-    
 
 def round4(round_1, round_3, t, n):
     """

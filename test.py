@@ -8,6 +8,7 @@ from Value import Value
 import prover
 import Fiat_Shamir as fs
 from Crypto.Util.number import bytes_to_long, long_to_bytes
+import verifier as v
 
 def test():
     Circuit = circuit.parse(gate)
@@ -19,6 +20,8 @@ def test():
     l_output = Circuit[2]
     n_mul = Circuit[8]
     Circuit = Circuit[0]
+
+    # print("input:", n_input)
    
     # Create list of wire data
     n_parties = 3    
@@ -168,8 +171,23 @@ def test():
 
 
 
+    #verifier test
+    
+    #check commitments
+    rebuild = v.rebuild_commitments(Circuit, n_input, n_gate, parties, views, r_views, broadcast, r_broadcast)
+    v.check_commitments = v.check_commitments(parties, views_commit, rebuild[0], broadcast_commit, rebuild[1])
 
+    #verifier check zeta 
+    v.check_zeta(broadcast)
 
+    #verifier get epsilon 
+    creater1 = ''.join(views_commit)
+    v_epsilon = v.get_epsilons(creater1.encode(), n_mul)
+
+    #verifier recompute 
+    recompute = v.recompute(Circuit, n_wires, n_gate, n_parties, parties, views, v_epsilon[0], v_epsilon[1], broadcast)
+    checkrecompute = v.check_recompute(parties, n_mul, broadcast, recompute[0], recompute[1], recompute[2])
+    
     print('test passed')
 if __name__ == "__main__": 
     test() 
