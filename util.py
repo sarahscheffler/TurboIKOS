@@ -29,7 +29,7 @@ with open(input_stream) as f:
     # Create list of wire data
     n_parties = 3
     wire_data = [{'e': None, 'v': []*n_parties, 'lambda': Value(), 'lam_hat':Value(), 'e_hat': None}
-                 for i in range(n_wires), ]
+                 for i in range(n_wires)]
     Wire(wire_data, n_parties, n_wires)
     circuit = parse(f, n_gate, gate)
     # Generate lambda
