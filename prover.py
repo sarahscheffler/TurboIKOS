@@ -32,22 +32,18 @@ def round_one_internal(n_parties, n_gate, n_input, circuit, wire):
     for j in range(n_parties):
         d = {'input': [], 'input lambda': [], 'lambda z': [], 'lambda y hat': [], 'lambda z hat': []}
         views_str = b''
-        
+        input_str = b''
+        input_lam_str = b''
+        lam_z_str = b''
+        lam_y_hat_str = b''
+        lam_z_hat_str = b'' 
+        for i in range(n_input):
+            d['input'].append(wire.v(i)[j])
+            d['input lambda'].append(wire.lambda_val(i)[j])
+            input_str += long_to_bytes(wire.v(i)[j].value)
+            input_lam_str += long_to_bytes(wire.lambda_val(i)[j].value)
         for i in range(n_gate):
             g = circuit[i]
-            input_str = b''
-            input_lam_str = b''
-            lam_z_str = b''
-            lam_y_hat_str = b''
-            lam_z_hat_str = b''
-            if g.x < n_input:
-                d['input'].append(wire.v(g.x)[j])
-                d['input lambda'].append(wire.lambda_val(g.x)[j])
-                input_str += long_to_bytes(wire.v(g.x)[j].value)
-                input_lam_str += long_to_bytes(wire.lambda_val(g.x)[j].value)
-            if g.y < n_input:
-                d['input'].append(wire.v(g.y)[j])
-                d['input lambda'].append(wire.lambda_val(g.y)[j])
             if g.operation == 'MUL' or g.operation == 'AND':
                 d['lambda z'].append( wire.lambda_val(g.z)[j])
                 lam_z_str += long_to_bytes(wire.lambda_val(g.z)[j].value)
