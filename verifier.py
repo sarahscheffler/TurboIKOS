@@ -11,8 +11,9 @@ from gate import gate
 """
 ---check_commitments---
     inputs: 
-        committed_views: list of all committed views, received in round1
-        committed_broadcast: hashed broadcast, received in round 3
+        circuit: Circuit object
+        n_input: number of inputs 
+        n_gates: number of gates 
         parties: list of the party number opened by prover (generated from Fiat Shamir)
         list_rval: list the randomness used for each view commitment, same length as views, received in round 5
         views: list of opened party views, views[i] will correspond to parties[i] number, received in round 5
@@ -22,39 +23,38 @@ from gate import gate
     output: 
         returns 1 if all assertions pass, else get assertion error 
 """
-def check_commitments(committed_views, committed_broadcast, parties, views, list_rval, broadcast, broadcast_rval):
+def rebuild_commitments(circuit, n_input, n_gates, parties, views, list_rval, broadcast, broadcast_rval):
     #check that information from round 1 was not tampered with (views to committed_views)
-    check_views = [None]*len(parties) #list of views committed again via sha256 
+    rebuilt_views = [None]*len(parties) #list of views committed again via sha256 
 
     for i in range(len(views)):
+        party = views[i]
+        n_mul = 0
         input_str = b''
         input_lam_str = b''
         lam_z_str = b''
         lam_y_hat_str = b''
         lam_z_hat_str = b''
-        for party in views[i]:
-            for item in party:
-                if item == 'input':
-                    for item_value in item:
-                        input_str += long_to_bytes(item_value.value)
-                if item == 'input lambda':
-                    for item_value in item:
-                        input_lam_str += long_to_bytes(item_value.value)
-                if item == 'lambda z':
-                    for item_value in item:
-                        lam_z_str += long_to_bytes(item_value.value)
-                if item == 'lambda y hat':
-                    for item_value in item:
-                        lam_y_hat_str += long_to_bytes(item_value.value)
-                if item == 'lambda z hat':
-                    for item_value in item:
-                        lam_z_hat_str += long_to_bytes(item_value.value)
+        for j in range(n_gates):
+            c = circuit[j]
+            if c.x < n_input:
+                input_str += long_to_bytes(party['input'][c.x].value)
+                input_lam_str += long_to_bytes(party['input lambda'][c.x].value)
+            if c.y < n_input:
+                pass
+            if c.operation == 'MUL' or c.operation == 'AND':
+                lam_z_str += long_to_bytes(party['lambda z'][n_mul].value)
+                lam_y_hat_str += long_to_bytes(party['lambda y hat'][n_mul].value)
+                lam_z_hat_str += long_to_bytes(party['lambda z hat'][n_mul].value)
+                n_mul += 1
+                
+        view_str_test = input_str + input_lam_str + lam_z_str + lam_y_hat_str + lam_z_hat_str
         view_str = long_to_bytes(list_rval[i]) + input_str + input_lam_str + lam_z_str + lam_y_hat_str + lam_z_hat_str
-        check_views[i] = hashlib.sha256(view_str)
+        rebuilt_views[i] = hashlib.sha256(view_str).hexdigest()
             
 
     #check that information from round 3 was not tampered with (broadcast to committed_broadcast)
-    round_3_check = b''
+    rebuilt_broadcast = b''
     for item in broadcast:
         if item == 'alpha':
             alpha_array = broadcast['alpha']
@@ -62,18 +62,30 @@ def check_commitments(committed_views, committed_broadcast, parties, views, list
             m = len(alpha_array[0])
             for i in range(n):
                 for j in range(m):
-                    round_3_check += long_to_bytes(alpha_array[i][j].value)
+                    rebuilt_broadcast += long_to_bytes(alpha_array[i][j].value)
         else:
             for item_value in broadcast[item]:
-                round_3_check += long_to_bytes(item_value.value)
-    round_3_check = long_to_bytes(broadcast_rval) + round_3_check
+                rebuilt_broadcast += long_to_bytes(item_value.value)
+    rebuilt_broadcast = long_to_bytes(broadcast_rval) + rebuilt_broadcast
 
+    return rebuilt_views, rebuilt_broadcast
+
+"""
+---check_commitments---
+inputs: 
+    committed_views: received from prover from round1
+    rebuilt_views: rebuild_commitments()[0]
+    committed_broadcast: received from prover round 1
+    rebuilt_broadcast: rebuild_commitments()[1]
+"""
+
+def check_commitments(parties, committed_views, rebuilt_views, committed_broadcast, rebuilt_broadcast):
     #check views 
-    for i in range(len(check_views)):
-        assert(check_views[i].hexdigest() == committed_views[parties[i]])
+    for i in range(len(parties)):
+        assert(rebuilt_views[i] == committed_views[parties[i]])
 
     #check broadcast
-    assert (hashlib.sha256(round_3_check).hexdigest() == committed_broadcast) 
+    assert (hashlib.sha256(rebuilt_broadcast).hexdigest() == committed_broadcast)
 
     return 1
 
@@ -93,7 +105,8 @@ def check_zeta(broadcast):
 
 """
 ---get_epsilons---
-    
+    inputs: 
+        committed_views: committed views from round1 
 """
 def get_epsilons(committed_views, n_multgates):
     r2 = hashlib.sha256(committed_views)
@@ -118,9 +131,11 @@ def recompute(circuit, n_wires, n_gate, n_parties, parties, views, epsilon1, eps
     e_inputs = broadcast['e inputs']
     e_z = broadcast['e z']
     e_z_hat = broadcast['e z hat']
+    p_alpha = broadcast['alpha']
 
     for i in range(len(parties)):
         num_mult = 0
+        zeta = 0
         input_val = views[i]['input']
         lambda_val = views[i]['input lambda']
         lambda_z = views[i]['lambda z']
@@ -128,7 +143,6 @@ def recompute(circuit, n_wires, n_gate, n_parties, parties, views, epsilon1, eps
         lam_z_hat = views[i]['lambda z hat']
         wire_value = [input_val[i] if i < len(input_val) else Value(0) for i in range(n_wires)]        
         alpha_shares = []
-
 
         for j in range(n_gate):
             c = circuit[j]
@@ -146,15 +160,27 @@ def recompute(circuit, n_wires, n_gate, n_parties, parties, views, epsilon1, eps
                     z_v = Value(0) - lambda_z[num_mult]
                 wire_value[c.z] = z_v
 
-
                 y_lam = lambda_val[c.y]
                 y_lamh = lam_y_hat[num_mult]
                 alpha_to_share = epsilon1[num_mult]*y_lam + (epsilon2[num_mult] * y_lamh)
                 alpha_shares.append(alpha_to_share)
+                
+                x = c.x
+                y = c.y
+                z = c.z
+                A = sum(p_alpha[num_mult])
+                zeta += (epsilon1[num_mult] * e_inputs[y] - A)* lambda_val[x] + \
+                    epsilon1[num_mult] * e_inputs[x] * lambda_val[y] - \
+                        epsilon1[num_mult] * lambda_z[num_mult] - epsilon2[num_mult] * lam_z_hat[num_mult]
+                if i == 0: 
+                    zeta += epsilon1[num_mult] * e_z[num_mult] - epsilon1[num_mult] * e_inputs[x] * e_inputs[y] + epsilon2[num_mult] * e_z_hat[num_mult]
                 num_mult += 1
+        zeta_broadcast[i] = zeta
+
+        output_shares.append(wire_value[-1])
         alpha.append(alpha_shares)
 
-    return alpha, output_shares
+    return alpha, output_shares, zeta_broadcast
 
 """
 ---check_recompute---
@@ -163,15 +189,20 @@ inputs:
     n_multgate: number of mult gates
     broadcast: broadcast channel received in round 5 
     recomputed_alphas: recompute()[0], row # = party, column # = multgate 
-    recomputed_zetas: recompute()[1]
+    recomputed_output_shares = recompute()[1]
+    recomputed_zetas: recompute()[2]
 """
-def check_recompute(parties, n_multgate, broadcast, recomputed_alpha, output_shares):
+def check_recompute(parties, n_multgate, broadcast, recomputed_alpha, recompute_output_shares, recomputed_zeta):
     prover_alpha = broadcast['alpha']
+    prover_output = broadcast['output shares']
+    prover_zeta = broadcast['zeta']
     for i in range(len(parties)): 
         #check alphas 
         for j in range(n_multgate):
             assert (prover_alpha[j][parties[i]].value == recomputed_alpha[i][j].value)
-        
+        assert(recompute_output_shares[i].value == prover_output[parties[i]].value)
+        assert(recomputed_zeta[i].value == prover_zeta[parties[i]].value)
+
     return 1 
 
 
