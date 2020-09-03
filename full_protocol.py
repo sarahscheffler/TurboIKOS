@@ -11,22 +11,21 @@ import Fiat_Shamir as fs
 import math
 
 def full_protocol():
-    #Set number of parties
     n_parties = int(input('number of parties:'))
-    #read in parameter from console and calculate number of repition 
+    #read in parameter from console and calculate number of repition
     param = int(input('lambda:'))
     repetition = math.ceil(math.log(0.5**param, 1/n_parties))
-
     #parse circuit
-    Circuit = circuit.parse(gate)
-    n_wires = Circuit[4]
-    n_gate = Circuit[3]
-    l_input = Circuit[1]
-    n_input = Circuit[6]
-    n_output = Circuit[5]
-    l_output = Circuit[2]
-    n_mul = Circuit[8]
-    Circuit = Circuit[0]
+    temp = circuit.parse(gate, n_parties)
+    n_wires = temp[4]
+    n_gate = temp[3]
+    l_input = temp[1]
+    n_input = temp[6]
+    n_output = temp[5]
+    l_output = temp[2]
+    n_mul = temp[8]
+    n_parties = temp[9]
+    Circuit = temp[0]
     
     #create list of wire data
     wire_data = circuit.wire_data(n_wires)
@@ -34,7 +33,7 @@ def full_protocol():
     #round 1
     ret = [None]*repetition
     for rep in range(repetition):
-        a = []
+
         #Preprocessing
         triples = p.assignLambda(Circuit, w, n_parties)
 

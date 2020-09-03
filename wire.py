@@ -8,30 +8,13 @@
 
 from Value import Value
 class Wire:
+
     # Each assertion checks for expected type, length, value, and existence of an object
     def __init__(self, wire_data, n_parties, n_wires): # recieve from circuit.py
-        '''    
-        assert str(type(wires)) == "<class 'list'>"
-        assert str(type(n_wires)) == "<class 'int'>"
-        assert str(type(n_parties)) == "<class 'int'>"
-        assert len(wires) == n_wires
-        for j in range(0, n_wires):
-            for key in wires[j]:  # check that each party only has e and v and lambda
-                assert key == 'e' or key == 'v' or key == 'lambda'
-            assert str(type(wires[j])) == "<class 'dict'>"
-            assert str(type(wires[j]['e'])) == "<class 'int'>"
-            assert str(type(wires[j]['v'])) == "<class 'list'>"
-            assert str(type(wires[j]['lambda'])) == "<class 'list'>"
-            assert len(wires[j]['v']) == n_parties
-            assert len(wires[j]['lambda']) == n_parties
-            for k in range(0, n_parties):
-                assert str(type(wires[j]['v'][k])) == "<class 'int'>"
-                assert str(type(wires[j]['lambda'][k])) == "<class 'int'>"
-            assert str(type(wires[j]['lambda'])) == "<class 'list'>"
-        '''
         self.data =wire_data
         self.n_wire = n_wires
         self.n_parties = n_parties
+        print(n_parties)
 
 
     def e(self, index):

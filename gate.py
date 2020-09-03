@@ -11,9 +11,9 @@ from Value import Value
 
 class gate:
     # input: 2 inputs, 3 triples/ 0's
-    def __init__(self, input1, input2, output,*, wire = None, triple1=Value(), triple2=Value(), triple3=Value(), operation=None):
+    def __init__(self, input1, input2, output, n_parties, *, wire = None, triple1=Value(), triple2=Value(), triple3=Value(), operation=None):
         self.operation = operation
-        self.n_parties = 3
+        self.n_parties = n_parties
         self.w = wire
         self.x = input1
         self.y = input2

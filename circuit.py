@@ -16,20 +16,19 @@ from Value import Value
 # function:: parse external file
 
 
-def parse(gate):
+def parse(gate, n_parties):
     input_stream = sys.argv[1]
     n_mulgate = 0 
     n_addgate = 0
-    with open(input_stream) as f:
+    with open(input_stream, 'r') as f:
         first_line = f.readline().split()
         n_gate = int(first_line[0])
         n_wires = int(first_line[1])
         second_line = f.readline().split()
         n_input = int(second_line[0])
         # create list of number of wires for input value
-        l_input = [None]*n_input
-        for i in range(n_input):
-            l_input[i] = int(second_line[i+1])
+        l_input = [int(second_line[i+1]) for i in range(n_input)]
+    
         third_line = f.readline().split()
         n_output = int(third_line[0])
         # create list of number of wires for output values
@@ -47,12 +46,13 @@ def parse(gate):
                 n_addgate += 1
             else:
                 n_mulgate += 1
-            g = gate(input1, input2, output, operation=operation)
+            g = gate(input1, input2, output, n_parties, operation=operation)
             l[i] = g
             i = i + 1
             if i == n_gate:
                 break
-    return l, l_input, l_output, n_gate, n_wires, n_output, n_input, n_addgate, n_mulgate
+
+    return l, l_input, l_output, n_gate, n_wires, n_output, n_input, n_addgate, n_mulgate, n_parties
 
     """
 	index of array corresponds to topological order of circuit
