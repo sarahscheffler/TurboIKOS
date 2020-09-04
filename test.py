@@ -11,7 +11,8 @@ from Crypto.Util.number import bytes_to_long, long_to_bytes
 import verifier as v
 
 def test():
-    Circuit = circuit.parse(gate)
+    n_parties = 3
+    Circuit = circuit.parse(gate, n_parties)
     n_wires = Circuit[4]
     n_gate = Circuit[3]
     l_input = Circuit[1]
@@ -24,7 +25,7 @@ def test():
     # print("input:", n_input)
    
     # Create list of wire data
-    n_parties = 3    
+    
     wire_data = circuit.wire_data(n_wires)
     w = Wire(wire_data, n_parties, n_wires)
 
