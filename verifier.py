@@ -5,6 +5,7 @@ from Crypto.Util.number import bytes_to_long, long_to_bytes
 import Fiat_Shamir
 from wire import Wire
 from gate import gate
+from gmpy2 import mpz
 
 """
 ---check_commitments---
@@ -127,17 +128,20 @@ def recompute(circuit, n_wires, n_gate, n_parties, parties, views, epsilon1, eps
     zeta_broadcast = [None]*len(parties)
     output_shares = []
 
-    e_inputs = broadcast['e inputs']
+    to_concatenate = n_wires - len(views[0]['input'])
+
+    e_inputs = broadcast['e inputs'] + [Value(0)]*to_concatenate
     e_z = broadcast['e z']
-    e_z_hat = broadcast['e z hat']
+    e_z_hat = broadcast['e z hat'] + [Value(0)]*to_concatenate
     p_alpha = broadcast['alpha']
 
     for i in range(len(parties)):
         num_mult = 0
         zeta = 0
-        input_val = views[i]['input']
-        lambda_val = views[i]['input lambda']
-        lambda_z = views[i]['lambda z']
+        input_count = 0
+        input_val = views[i]['input'] 
+        lambda_val = views[i]['input lambda'] + ([Value(0)]*to_concatenate)
+        lambda_z = views[i]['lambda z'] 
         lam_y_hat = views[i]['lambda y hat']
         lam_z_hat = views[i]['lambda z hat']
         wire_value = [input_val[i] if i < len(input_val) else Value(0) for i in range(n_wires)]        
@@ -149,7 +153,12 @@ def recompute(circuit, n_wires, n_gate, n_parties, parties, views, epsilon1, eps
                 x_v = wire_value[c.x]
                 y_v = wire_value[c.y]
                 z_v = x_v + y_v
+                lamx = lambda_val[c.x]
+                lamy = lambda_val[c.y]
                 wire_value[c.z] = z_v
+                lambda_val[c.z] = lamx + lamy
+                x_e, y_e = e_inputs[c.x], e_inputs[c.y]
+                e_inputs[c.z] = x_e + y_e
             if c.operation == 'MUL' or c.operation == 'AND':
                 x_v = wire_value[c.x]
                 y_v = wire_value[c.y]
@@ -158,6 +167,9 @@ def recompute(circuit, n_wires, n_gate, n_parties, parties, views, epsilon1, eps
                 else:
                     z_v = Value(0) - lambda_z[num_mult]
                 wire_value[c.z] = z_v
+            
+                e_inputs[c.z] = e_z[num_mult]
+                lambda_val[c.z] = lambda_z[num_mult]
 
                 y_lam = lambda_val[c.y]
                 y_lamh = lam_y_hat[num_mult]
@@ -168,6 +180,7 @@ def recompute(circuit, n_wires, n_gate, n_parties, parties, views, epsilon1, eps
                 y = c.y
                 z = c.z
                 A = sum(p_alpha[num_mult])
+
                 zeta += (epsilon1[num_mult] * e_inputs[y] - A)* lambda_val[x] + \
                     epsilon1[num_mult] * e_inputs[x] * lambda_val[y] - \
                         epsilon1[num_mult] * lambda_z[num_mult] - epsilon2[num_mult] * lam_z_hat[num_mult]
@@ -195,6 +208,7 @@ def check_recompute(parties, n_multgate, broadcast, recomputed_alpha, recompute_
     prover_alpha = broadcast['alpha']
     prover_output = broadcast['output shares']
     prover_zeta = broadcast['zeta']
+
     for i in range(len(parties)): 
         #check alphas 
         for j in range(n_multgate):
@@ -220,8 +234,3 @@ def verifier(committed_views, committed_broadcast, parties, views, broadcast):
     n_parties = 3    
     wire_data = circuit.wire_data(n_wires)
     w = Wire(wire_data, n_parties, n_wires)
-
-
-
-    
-    
