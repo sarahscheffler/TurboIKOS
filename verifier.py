@@ -162,7 +162,7 @@ def recompute(circuit, n_wires, n_gate, n_parties, parties, views, epsilon1, eps
             if c.operation == 'MUL' or c.operation == 'AND':
                 x_v = wire_value[c.x]
                 y_v = wire_value[c.y]
-                if i == 0: 
+                if parties[i] == 0: 
                     z_v = e_z[num_mult] - lambda_z[num_mult]
                 else:
                     z_v = Value(0) - lambda_z[num_mult]
@@ -184,7 +184,7 @@ def recompute(circuit, n_wires, n_gate, n_parties, parties, views, epsilon1, eps
                 zeta += (epsilon1[num_mult] * e_inputs[y] - A)* lambda_val[x] + \
                     epsilon1[num_mult] * e_inputs[x] * lambda_val[y] - \
                         epsilon1[num_mult] * lambda_z[num_mult] - epsilon2[num_mult] * lam_z_hat[num_mult]
-                if i == 0: 
+                if parties[i] == 0: 
                     zeta += epsilon1[num_mult] * e_z[num_mult] - epsilon1[num_mult] * e_inputs[x] * e_inputs[y] + epsilon2[num_mult] * e_z_hat[num_mult]
                 num_mult += 1
         zeta_broadcast[i] = zeta
