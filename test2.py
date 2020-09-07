@@ -57,13 +57,12 @@ def test():
 
         start_time_preprocessing = time.process_time()
         triples = p.assignLambda(Circuit, w, n_parties)  
-        preprocessing_time = time.process_time() - start_time_preprocessing
-        preprocessing_arr[t] = preprocessing_time
         
         #commit round one
         round1 = prover.round_one_internal(n_parties, n_gate, n_input, Circuit, w)
         views_commit = prover.round_one_external(round1)
-
+        preprocessing_time = time.process_time() - start_time_preprocessing
+        preprocessing_arr[t] = preprocessing_time
         #Generate epsilons
         r1 = ''.join(views_commit)
         temp = fs.round2(r1, n_mulgate)
@@ -75,13 +74,13 @@ def test():
         alpha = circuit.compute_output(Circuit, epsilon_1, epsilon_2, w, n_gate, n_parties)
         #Compute zeta shares
         zeta = circuit.compute_zeta_share(Circuit, w, alpha, epsilon_1, epsilon_2, n_parties)
-        run_time = time.process_time() - start_time
-        run_time_arr[t] = run_time
-
+        
         #commit broadcast
         round3 = prover.round_three_internal(n_parties, n_gate, n_input, Circuit, w, alpha, zeta)
         broadcast_commit = prover.round_three_external(round3)
         r3 = broadcast_commit
+        run_time = time.process_time() - start_time
+        run_time_arr[t] = run_time
         
         #Generate parties to corrupt
         t = n_parties -1
