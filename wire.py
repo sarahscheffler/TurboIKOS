@@ -14,7 +14,6 @@ class Wire:
         self.data =wire_data
         self.n_wire = n_wires
         self.n_parties = n_parties
-        print(n_parties)
 
 
     def e(self, index):
@@ -53,8 +52,6 @@ class Wire:
         assert str(type(index)) == "<class 'int'>"
         assert str(type(arr)) == "<class 'list'>"
         assert len(arr) == self.n_parties
-        #for i in arr:
-            #assert str(type(i)) == "<class 'int'>"
         assert (index < self.n_wire) and (index > -1)
         self.data[index]['lambda'] = arr
         return 1

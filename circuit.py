@@ -13,10 +13,10 @@ from Value import Value
 #         numbers of wires
 #         number of outputs
 #         nymber of inputs
-# function:: parse external file
+# function:: parse external file in Bristol format
 
 
-def parse(gate, n_parties):
+def parse_bristol(gate, n_parties):
     input_stream = sys.argv[1]
     n_mulgate = 0 
     n_addgate = 0
@@ -57,6 +57,50 @@ def parse(gate, n_parties):
     """
 	index of array corresponds to topological order of circuit
     """
+
+def parse_pws(gate, n_parties):
+    input_stream = sys.argv[1]
+    n_mulgate = 0
+    n_addgate = 0
+    n_input = 0
+    n_output = 0
+    n_gate = 0
+    n_wires = 0
+    l_input = []
+    l_output = []
+    c = []
+    with open(input_stream, 'r') as f:
+        for line in f:
+            l = line.strip('\n').split(' ')
+            if l[0] == 'P':
+                if l[3][0] == 'I':
+                    n_wires += 1
+                    n_input += 1
+                    l_input.append(int(l[3][1:]))
+                elif l[1][0] == 'O':
+                    n_output += 1
+                    l_output.append(int(l[1][1:]))
+                else:
+                    n_wires += 1
+                    n_gate += 1
+                    input1, input2, output = int(l[3][1:]), int(l[5][1:]), int(l[1][1:])
+                    if l[4] == '*':
+                        n_mulgate += 1
+                        operation = 'MUL'
+                    elif l[4] == '+':
+                        n_addgate += 1
+                        operation = 'ADD'
+                    c.append(gate(input1, input2, output, n_parties, operation = operation))
+    return c, l_input, l_output, n_gate, n_wires, n_output, n_input, n_addgate, n_mulgate, n_parties
+
+def parse(gate, n_parties):
+    with open(sys.argv[1], 'r') as f:
+        first_ch = f.readline()[0]
+        if first_ch == 'P':
+            return parse_pws(gate, n_parties)
+        else:
+            return parse_bristol(gate, n_parties)
+
 # input: number of wires
 # output: wire data structure (array of dictionaries with keys 'e', 'v', 'lambda, 'lam_hat', 'e_hat' with index of wire#
 

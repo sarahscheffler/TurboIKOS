@@ -76,43 +76,6 @@ def genTriple(lamA, lamB):
     lamC = lamA*lamB
     return (lamA, lamB, lamC)
 
-"""
-input: list, integer
-output: list, list
-
-take the list representing the circuit
-for input wires, call getLambda()
-for output wires of add gates, propagate
-for output wires of mul gates, call genTriple()
-call splitData() to split the shares into n parties
-output the circuit with lambdas updated for each wire
-
-def assignLambda_old(circuit, wire_data, n):
-    triples = []
-    for gate in circuit:
-        if gate.operation == "ADD" or gate.operation == "XOR":
-            wire_data[gate.x]['lambda'].getRand()
-            wire_data[gate.y]['lambda'].getRand() 
-            wire_data[gate.z]['lambda'] = wire_data[gate.x]['lambda'] + \
-                                          wire_data[gate.y]['lambda']
-        elif gate.operation == "MUL" or gate.operation == "AND":
-            wire_data[gate.x]['lambda'].getRand()
-            wire_data[gate.y]['lambda'].getRand()
-            wire_data[gate.z]['lambda'].getRand()
-            gate.a = wire_data[gate.x]['lambda']
-            gate.b = wire_data[gate.y]['lambda']
-            gate.c = genTriple(gate.a, gate.b)[2]
-            triples.append([gate.a, gate.b, gate.c])
-            triples.append(genTriple(getRandom(), getRandom()))
-        else:
-            try:
-                pass
-            except:
-                print("Unrecognized gate type")
-    for wire in wire_data:
-        wire['lambda'] = wire['lambda'].splitVal(n)
-    return (circuit, wire_data, triples)
-"""
 
 #inputs: circuit, wire object, number of parties
 #output: list of triples
@@ -152,18 +115,13 @@ def assignLambda(circuit, wire, n_parties):
             #set z_lam_hat
             z_lam_hat = getRandom()
             wire.set_lam_hat(gate.z, z_lam_hat.splitVal(n_parties))
-            #set triples
-            gate.a = wire.lambda_val(gate.x)
-            gate.b = wire.lam_hat(gate.y)
-            gate.c = wire.lam_hat(gate.z) 
-            triples.append([sum(wire.lambda_val(gate.x)),y_lam_hat, z_lam_hat])
                        
         else:
             try:
                 pass
             except:
                 print("Unrecognized gate type")
-    return triples
+    return 1
    
 
 

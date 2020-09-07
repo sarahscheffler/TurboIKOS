@@ -24,8 +24,7 @@ def test():
 
     # print("input:", n_input)
    
-    # Create list of wire data
-    
+    # Create list of wire data    
     wire_data = circuit.wire_data(n_wires)
     w = Wire(wire_data, n_parties, n_wires)
 
@@ -72,11 +71,6 @@ def test():
                 assert(w.lambda_val(Circuit[j].x)[i] + w.lambda_val(Circuit[j].y)[i] == w.lambda_val(Circuit[j].z)[i])
         #MUL gate
         if g.operation == 'AND' or g.operation == 'MUL':
-            #Check tripple assignment
-            for i in range(n_parties):
-                assert(g.a[i] == w.lambda_val(g.x)[i])
-                assert(g.b[i] == w.lam_hat(g.y)[i])
-                assert(g.c[i] == w.lam_hat(g.z)[i])
             #Check e hat assignment
             assert(w.e_hat(g.z) == sum(w.lambda_val(g.x)) * sum(w.lam_hat(g.y)) + sum(w.lam_hat(g.z)))
             #Chck v value
