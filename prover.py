@@ -45,7 +45,6 @@ def round_one_internal(n_parties, n_gate, n_input, circuit, wire):
                 d['input'].append(wire.v(g.x)[j])
                 d['input lambda'].append(wire.lambda_val(g.x)[j])
                 input_str += long_to_bytes(wire.v(g.x)[j].value)
-                # print("pi", input_str)
                 input_lam_str += long_to_bytes(wire.lambda_val(g.x)[j].value)
             if g.y < n_input:
                 d['input'].append(wire.v(g.y)[j])
@@ -63,7 +62,6 @@ def round_one_internal(n_parties, n_gate, n_input, circuit, wire):
         r[j] = temp[0]
         views_commit[j] = temp[1]
         
-    # print(views_commit)        
     return r, views_commit, views
 
 #input: number of gates, circuit object, wire object, alpha arry arr[#parties][#mulgates], zeta[#parties]

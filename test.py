@@ -19,8 +19,6 @@ def test():
     l_output = Circuit[2]
     n_mul = Circuit[8]
     Circuit = Circuit[0]
-
-    # print("input:", n_input)
    
     # Create list of wire data
     n_parties = 3    
