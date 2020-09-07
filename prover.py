@@ -17,8 +17,7 @@ def commit(s):
 #output: true/false
 #check if v is correct
 def open(r, v, commit):
-    print( hashlib.sha256(long_to_bytes(r) + v).hexdigest())
-    return commit == hashlib.sha256(long_to_bytes(r) + v.encode()).hexdigest()
+    return commit == hashlib.sha256(long_to_bytes(r) + v).hexdigest()
 
 #inputs: number of parties, number of gates, circuit object, wire object
 #output: commit views, views
@@ -145,25 +144,17 @@ def round_five(round1, round3, parties):
 """
 m wires, n parties
 
-committed broadcast = e input of wire 1 +...+ e input of wire m + e z of wire 1 +...+ e z of wire m + 
-                      e z hat share of wire 1 +...+ e z hat share of wire m + alpha party 1 gate 1 + ... + alpha party 1 gate #mul gate +...+
+committed broadcast = e input of wire 1 +...+ e input of wire #inputs + e z of wire 1 +...+ e z of wire #mulgates + 
+                      e z hat share of wire 1 +...+ e z hat share of wire #mulgates + alpha party 1 gate 1 + ... + alpha party 1 gate #mul gate +...+
                       alpha party n gate 1 + ... + alpha party n gate #mulgate + zeta party 1 + ... + zeta party n + 
                       output share of party 1 +...+ output share of party n
 
-broadcast = dict{e inputs: arr[m], e z: arr[m], e z hat: arr[m], alpha: arr[n][m], zeta: arr[n], output shares:arr[n]
+broadcast = dict{e inputs: arr[#inputs], e z: arr[#mulgates], e z hat: arr[#mulgates], alpha: arr[#mulgates][n], zeta: arr[n], output shares:arr[n]}
  
 committed views[n] = input of wire 1 + ... input of wire #inputs + lambda of wire 1 + ... + lambda of wire #inputs +
                      lambda z 1 +... + #mult gates lambda z + lambda y hat 1 + ... + #mult gates lambda y hat +
-                     lambda y hat 1 + ... + lambda y hat #mult gates
+                     lambda y hat 1 + ... + lambda y hat #mult gates + lambda z hat 1  +... lambda z hat #mulgates
 
 views [n] = dict{input: arr[#inputs], input lambda: arr[#inputs], lambda z: arr[#mult gates], lambda y hat: arr[#mult gates], lambda z hat: arr[#mult gates]}
 """
 
-
-        
-            
-if __name__ == '__main__':
-    v = 'ziling'
-    c = (commit(v.encode()))
-    print(open(c[0], v.encode(), c[1]))
-  	
