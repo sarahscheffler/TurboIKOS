@@ -13,6 +13,7 @@ import prover
 import Fiat_Shamir as fs
 from Value import Value
 import time
+from objsize import get_deep_size
 
 def test():
     #Parse circuit
@@ -29,7 +30,7 @@ def test():
     Circuit = Circuit[0]
 
     #repeat rep times
-    rep = 1000
+    rep = 1
     #Store each run time in an array
     run_time_arr = [None]*rep
     preprocessing_arr = [None]*rep
@@ -102,7 +103,8 @@ def test():
     print('average run time:', average_run_time, 'seconds')
     # Proof size = wire size + circuit size + alpha size + zeta size
     
-    proof_size = sys.getsizeof(broadcast_commit) + sys.getsizeof(views_commit) + sys.getsizeof(broadcast) + sys.getsizeof(views)
+    proof_size = get_deep_size(broadcast_commit) + get_deep_size(views_commit) + get_deep_size(broadcast) + get_deep_size(views)
     print('proof size:', proof_size, 'bytes')
+
 if __name__ == "__main__": 
     test() 
