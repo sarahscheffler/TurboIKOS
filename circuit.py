@@ -16,8 +16,8 @@ from Value import Value
 # function:: parse external file in Bristol format
 
 
-def parse_bristol(gate, n_parties):
-    input_stream = sys.argv[1]
+def parse_bristol(gate, n_parties, i):
+    input_stream = sys.argv[i]
     n_mulgate = 0 
     n_addgate = 0
     with open(input_stream, 'r') as f:
@@ -58,8 +58,8 @@ def parse_bristol(gate, n_parties):
 	index of array corresponds to topological order of circuit
     """
 
-def parse_pws(gate, n_parties):
-    input_stream = sys.argv[1]
+def parse_pws(gate, n_parties, i):
+    input_stream = sys.argv[i]
     n_mulgate = 0
     n_addgate = 0
     n_input = 0
@@ -97,9 +97,17 @@ def parse(gate, n_parties):
     with open(sys.argv[1], 'r') as f:
         first_ch = f.readline()[0]
         if first_ch == 'P':
-            return parse_pws(gate, n_parties)
+            return parse_pws(gate, n_parties, 1)
         else:
-            return parse_bristol(gate, n_parties)
+            return parse_bristol(gate, n_parties, 1)
+
+def parse_test(gate, n_parties, i):
+    with open(sys.argv[i], 'r') as f:
+        first_ch = f.readline()[0]
+        if first_ch == 'P':
+            return parse_pws(gate, n_parties, i)
+        else:
+            return parse_bristol(gate, n_parties, i)
 
 # input: number of wires
 # output: wire data structure (array of dictionaries with keys 'e', 'v', 'lambda, 'lam_hat', 'e_hat' with index of wire#
