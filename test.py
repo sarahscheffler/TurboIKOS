@@ -173,7 +173,7 @@ class TestMPCInTheHead(unittest.TestCase):
                 
                 #check commitments
                 rebuild = v.rebuild_commitments(Circuit, n_input, n_gate, parties, views, r_views, broadcast, r_broadcast)
-                v.check_commitments = v.check_commitments(parties, views_commit, rebuild[0], broadcast_commit, rebuild[1])
+                check_commitments = v.check_commitments(parties, views_commit, rebuild[0], broadcast_commit, rebuild[1])
 
                 #verifier check zeta 
                 v.check_zeta(broadcast)

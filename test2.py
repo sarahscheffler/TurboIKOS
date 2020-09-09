@@ -103,8 +103,16 @@ def test():
     print('average run time:', average_run_time, 'seconds')
     # Proof size = wire size + circuit size + alpha size + zeta size
     
+    broadcastc_size = get_deep_size(broadcast_commit)
+    viewsc_size = get_deep_size(views_commit)
+    broadcast_size = get_deep_size(broadcast)
+    views_size = get_deep_size(views)
     proof_size = get_deep_size(broadcast_commit) + get_deep_size(views_commit) + get_deep_size(broadcast) + get_deep_size(views)
     print('proof size:', proof_size, 'bytes')
-
+    print('broadcast commit size:', broadcastc_size)
+    print('views commit size:', viewsc_size)
+    print('broadcast size:', broadcast_size)
+    print('views size:', views_size)
+    
 if __name__ == "__main__": 
     test() 
