@@ -1,15 +1,18 @@
 """
 Perform the Fiat-Shamir transformation with SHA256 for non-interactive proof 
 """
+import Value as v
 from Value import Value
 from binascii import hexlify
 from hashlib import sha256
 from random import sample, seed, getrandbits
-
+from Crypto.Util.Padding import pad
 from Crypto.Util.number import bytes_to_long
 from gmpy2 import mpz, sub, t_mod
 
-field = mpz(2**127-1) #field value NOTE: get field value from Value.py 
+# field = mpz(2**127-1) #field value NOTE: get field value from Value.py 
+
+field = v.getfield()
 
 def make_epsilons(r2, num_mult_gates):
     """

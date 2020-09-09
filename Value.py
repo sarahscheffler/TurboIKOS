@@ -86,3 +86,7 @@ class Value:
         ret.append(last)
         return ret
 
+#send field value 
+def getfield():
+    global field
+    return field
