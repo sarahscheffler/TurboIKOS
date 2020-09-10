@@ -1,54 +1,91 @@
-"""
-a construction of which gates wer will be using. This file is purely for writing functions in the form of logic gates. no data will be stored here)
-"""
+#ecrets import token_hex  # solid randomness for cryptographic use
 
-import Value
-#import wire
-import circuit
+
+
+
+# think about optimizing space. e.g shrink randomness from 256-bits to 128-bits used if appropriate.
+# change terminology to match circuit.py
+
+
+from Value import Value 
+
 class gate:
-	#input: 2 inputs, 3 triples/ 0's
-	def __init__(self, input1, input2, output,*, triple1 = Value(), triple2 = Value(), triple3 = Value(), operation = None):	
-                self.operation = operation
-		self.x = input1
-		self.y = input2
-		self.z = output
-		if operation == 'AND' or 'MUL':
-			self.a = triple1
-			self.b = triple2
-			self.c = triple3
-		if operation == 'XOR' or 'ADD':
-			self.a = None
-			self.b = None
-			self.c = None
-
-	#Assigns v values z = x + y for each party
-	#Assign e value on output wire
-	def add(self):
-		for i in range(circuit.n_parties):
-			x_v = Value.Value(wire.acceess_wire(self.x, v, i)
-			y_v = wire.acceess_wire(self.y, v, i)
-			z_v = x_v.add(y_v)
-			wire.insert_wire(self.z, z,v,i)
-		z_e = x_e + y_e
-		wire.insert_wire(self.z, z_e) 
-
-	#Assigns v values  z = x*y for each party
-	#assign e value on output wire
-	#return e share for broadcast
-	def mult(self):
-		e_broadcast = []*circuit.n_parties
-		e = 0
-		for i in range(circuit.n_parties):
-			x_e = Value.Value(wire.acceess_wire(self.x, e))
-			y_e = Value.Value(wire.acceess_wire(self.y, e))
-			xy_e = Value.Value(x_e*y_e)
-			ay_e = Value.Value(y_e.mul(self.a[i]))
-			bx_e = Value.Value(x_e.mul(self.b[i]))
-			c = Value.Value(self.c[i])
-			z = xy_e - ay_e - bx_e + c
-			wire.insert_wire(self.z, z,v,i)
-			e_broadcast[i] = z + wire.acceess_wire(self.z, lambda, i)
-			e = e + e_broadcast[i]
-		wire.insert_wire(self,z, e)
-		return e_broadcast
-                                          
+    # input: 2 inputs, 3 triples/ 0's
+    def __init__(self, input1, input2, output, n_parties, *, wire = None, operation=None):
+        self.operation = operation
+        self.n_parties = n_parties
+        self.w = wire
+        self.x = input1
+        self.y = input2
+        self.z = output
+    
+    def __repr__(self):
+        return 'operation:' + str(self.operation) + ' x:' + str(self.x) + ' y:' + str(self.y) + ' z:' + str(self.z)
+    # Assigns v values z = x + y for each party
+    # Assign e value on output wire
+    def add(self):
+        z_v_arr = [None]*self.n_parties
+        # calculate z_v
+        for i in range(self.n_parties):
+            x_v = self.w.v(self.x)[i]
+            y_v = self.w.v(self.y)[i]
+            z_v = x_v + y_v
+            z_v_arr[i] = z_v
+        # set z_v
+        self.w.set_v(self.z, z_v_arr)
+        # calculate z_e
+        x_e = self.w.e(self.x)
+        y_e = self.w.e(self.y)
+        if not x_e:
+            x_v = sum(self.w.v(self.x))
+            x_lam = sum(self.w.lambda_val(self.x)) 
+            x_e = (x_v + x_lam)
+            self.w.set_e(self.x, x_e)
+        if not y_e:
+            y_v = sum(self.w.v(self.y))
+            y_lam = sum(self.w.lambda_val(self.y))
+            y_e = (y_v + y_lam)  
+            self.w.set_e(self.y, y_e)
+        z_e = x_e + y_e
+        # set z_e
+        self.w.set_e(self.z, z_e)
+    # Assigns v values  z = x*y for each party
+    # assign e value on output wire
+    # return e share for broadcast
+    def mult(self):
+        #alpha_broadcast = []*circuit.n_parties
+        z_v_arr = [None]*self.n_parties 
+        # calculate z_vi
+        x_e = self.w.e(self.x)
+        y_e = self.w.e(self.y)
+        if not x_e:
+            x_v = sum(self.w.v(self.x))
+            x_lam = sum(self.w.lambda_val(self.x))
+            x_e = (x_v + x_lam)
+            self.w.set_e(self.x, x_e)
+        if not y_e:
+            y_v = sum(self.w.v(self.y))
+            y_lam = sum(self.w.lambda_val(self.y))
+            y_e = (y_v + y_lam)
+            self.w.set_e(self.y, y_e)
+        #Calculate z_e
+        z_v = sum(self.w.v(self.x)) * sum(self.w.v(self.y))
+        z_e = z_v + sum(self.w.lambda_val(self.z))
+        # calculate and set z_eh
+        z_eh = sum(self.w.lambda_val(self.x)) * sum(self.w.lam_hat(self.y)) + \
+            sum(self.w.lam_hat(self.z))
+        self.w.set_e_hat(self.z, z_eh)
+        for i in range(self.n_parties):
+            # calculate z_vi
+            if i == 0:
+                z_v_share = z_e - self.w.lambda_val(self.z)[i]
+            else:
+                z_v_share = Value(0)-self.w.lambda_val(self.z)[i]
+            z_v_arr[i] = z_v_share 
+     
+          
+        self.w.set_v(self.z, z_v_arr)
+        # calculate and set z_e
+        z_e = sum(self.w.v(self.z)) + sum(self.w.lambda_val(self.z))
+        self.w.set_e(self.z, z_e)
+       
