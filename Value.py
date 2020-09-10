@@ -12,6 +12,10 @@ from Cryptodome.Util.number import bytes_to_long
 field = mpz(2**127-1)
 r_state = gmpy2.random_state(bytes_to_long(os.urandom(16)))
 
+def getfield():
+    global field
+    return field
+
 class Value:
     def __init__(self, value=None):
         self.value = value

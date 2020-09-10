@@ -36,18 +36,14 @@ def round_one_internal(n_parties, n_gate, n_input, circuit, wire):
         input_lam_str = b''
         lam_z_str = b''
         lam_y_hat_str = b''
-        lam_z_hat_str = b''
-        
+        lam_z_hat_str = b'' 
+        for i in range(n_input):
+            d['input'].append(wire.v(i)[j])
+            d['input lambda'].append(wire.lambda_val(i)[j])
+            input_str += long_to_bytes(wire.v(i)[j].value)
+            input_lam_str += long_to_bytes(wire.lambda_val(i)[j].value)
         for i in range(n_gate):
             g = circuit[i]
-            if g.x < n_input:
-                d['input'].append(wire.v(g.x)[j])
-                d['input lambda'].append(wire.lambda_val(g.x)[j])
-                input_str += long_to_bytes(wire.v(g.x)[j].value)
-                input_lam_str += long_to_bytes(wire.lambda_val(g.x)[j].value)
-            if g.y < n_input:
-                d['input'].append(wire.v(g.y)[j])
-                d['input lambda'].append(wire.lambda_val(g.y)[j])
             if g.operation == 'MUL' or g.operation == 'AND':
                 d['lambda z'].append( wire.lambda_val(g.z)[j])
                 lam_z_str += long_to_bytes(wire.lambda_val(g.z)[j].value)
@@ -60,7 +56,7 @@ def round_one_internal(n_parties, n_gate, n_input, circuit, wire):
         temp = commit(views_str)
         r[j] = temp[0]
         views_commit[j] = temp[1]
-        
+            
     return r, views_commit, views
 
 #input: number of gates, circuit object, wire object, alpha arry arr[#parties][#mulgates], zeta[#parties]
@@ -143,18 +139,14 @@ def round_five(round1, round3, parties):
     
 """
 m wires, n parties
-
 committed broadcast = e input of wire 1 +...+ e input of wire #inputs + e z of wire 1 +...+ e z of wire #mulgates + 
                       e z hat share of wire 1 +...+ e z hat share of wire #mulgates + alpha party 1 gate 1 + ... + alpha party 1 gate #mul gate +...+
                       alpha party n gate 1 + ... + alpha party n gate #mulgate + zeta party 1 + ... + zeta party n + 
                       output share of party 1 +...+ output share of party n
-
 broadcast = dict{e inputs: arr[#inputs], e z: arr[#mulgates], e z hat: arr[#mulgates], alpha: arr[#mulgates][n], zeta: arr[n], output shares:arr[n]}
  
 committed views[n] = input of wire 1 + ... input of wire #inputs + lambda of wire 1 + ... + lambda of wire #inputs +
                      lambda z 1 +... + #mult gates lambda z + lambda y hat 1 + ... + #mult gates lambda y hat +
                      lambda y hat 1 + ... + lambda y hat #mult gates + lambda z hat 1  +... lambda z hat #mulgates
-
 views [n] = dict{input: arr[#inputs], input lambda: arr[#inputs], lambda z: arr[#mult gates], lambda y hat: arr[#mult gates], lambda z hat: arr[#mult gates]}
 """
-

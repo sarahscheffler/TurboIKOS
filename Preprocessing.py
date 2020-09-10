@@ -129,15 +129,14 @@ def assignLambda(circuit, wire, n_parties):
                 print("Unrecognized gate type")
     return triples
    
-def generateNum(seed, lambda_type, index):
-    cipher = AES.new(seed, AES.MODE_ECB)
+def generateNum(cipher, lambda_type, index):
     assert(lambda_type == 'lambda' or lambda_type == 'lambda y hat' or lambda_type == 'lambda z hat'), "Lambda type is invalid"
     number = cipher.encrypt(pad(lambda_type + str(index), AES.block_size))
     return Value(number)
 
 def rebuildlambda(party, seed, circuit, wire, n_parties):
-    cipher = AES.new(seed, AES.MODE_ECB)
-    none_arr = [None*n_parties]
+    seed = AES.new(seed, AES.MODE_ECB)
+    none_arr = [None]*n_parties
     n_mult = 0
     for gate in circuit:
         if gate.operation == "ADD" or gate.operation == "XOR":
@@ -182,6 +181,7 @@ def rebuildlambda(party, seed, circuit, wire, n_parties):
 
 #pseudorandom assignment for lambdas 
 def PRassignLambda(circuit, wire, n_parties):
+    # cipher = AES.new(seed, AES.MODE_ECB)
     party_master_seed_value = [getRandom() for i in range(n_parties)]
     party_master_seed = [(long_to_bytes(i.value)) for i in party_master_seed_value] 
     triples = []
