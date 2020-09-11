@@ -1,21 +1,21 @@
 """
 Perform the Fiat-Shamir transformation with SHA256 for non-interactive proof 
 """
+import Value as v
 from Value import Value
 from binascii import hexlify
 from hashlib import sha256
 from random import sample, seed, getrandbits
-
-from Cryptodome.Util.number import bytes_to_long
+from Crypto.Util.Padding import pad
+from Crypto.Util.number import bytes_to_long
 from gmpy2 import mpz, sub, t_mod
 
-field = mpz(2**127-1) #field value NOTE: get field value from Value.py 
+field = v.getfield()
 
 def make_epsilons(r2, num_mult_gates):
     """
     function will generate epsilsons for round2. verifier can call make epsilons to check that prover is not cheating, which is why make_epsilons is a separate 
     function rather than being nested in round2 
-
     inputs: r2 (from func round), num_mult_gates (number of mult gates for epsilon creation?) <-- either move this one to prover or get num of mult gates from another files
     outputs: 2*num_mult_gates epsilsons 
     """    
@@ -56,7 +56,7 @@ def round4(round_1, round_3, t, n):
         t: number of parties to be corrupted 
         n: number of all parties 
     output: 
-        list of parties #NOTE temporarily will use an array to send back, change after checking w prover 
+        list of parties 
     """
 
     #checks type of inputs for sha256 

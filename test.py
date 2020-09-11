@@ -168,6 +168,11 @@ class TestMPCInTheHead(unittest.TestCase):
 
 
 
+                #verifier test
+                
+                #check commitments
+                rebuild = v.rebuild_commitments(Circuit, c_info, parties, views, r_views, broadcast, r_broadcast)
+                v.check_commitments = v.check_commitments(parties, views_commit, rebuild[0], broadcast_commit, rebuild[1])
 
                 #verifier test
                 
@@ -187,6 +192,7 @@ class TestMPCInTheHead(unittest.TestCase):
                 checkrecompute = v.check_recompute(parties, n_mul, broadcast, recompute[0], recompute[1], recompute[2])
     
                 print('test passed')
+
 if __name__ == "__main__": 
     unittest.main(argv=[sys.argv[0]])
     
