@@ -11,22 +11,16 @@ from Value import Value
 
 class gate:
     # input: 2 inputs, 3 triples/ 0's
-    def __init__(self, input1, input2, output,*, wire = None, triple1=Value(), triple2=Value(), triple3=Value(), operation=None):
+    def __init__(self, input1, input2, output, n_parties, *, wire = None, operation=None):
         self.operation = operation
-        self.n_parties = 3
+        self.n_parties = n_parties
         self.w = wire
         self.x = input1
         self.y = input2
         self.z = output
-        if operation == 'AND' or 'MUL':
-            self.a = triple1
-            self.b = triple2
-            self.c = triple3
-        if operation == 'XOR' or 'ADD':
-            self.a = None
-            self.b = None
-            self.c = None
-
+    
+    def __repr__(self):
+        return 'operation:' + str(self.operation) + ' x:' + str(self.x) + ' y:' + str(self.y) + ' z:' + str(self.z)
     # Assigns v values z = x + y for each party
     # Assign e value on output wire
     def add(self):

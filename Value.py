@@ -51,7 +51,12 @@ class Value:
         left = gmpy2.f_mod(self.value, p)
         right = gmpy2.f_mod(other.value, p)
         return left != right
-        
+    '''
+    overload print
+    '''
+    def __repr__(self):
+        return str(self.value)
+
     """
     support arithmetic operations
     """

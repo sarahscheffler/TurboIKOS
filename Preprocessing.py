@@ -78,6 +78,7 @@ def genTriple(lamA, lamB):
     lamC = lamA*lamB
     return (lamA, lamB, lamC)
 
+
 #inputs: circuit, wire object, number of parties
 #output: list of triples
 #function: assign lambda x, lambda y, lambda z for add gates 
@@ -116,18 +117,13 @@ def assignLambda(circuit, wire, n_parties):
             #set z_lam_hat
             z_lam_hat = getRandom()
             wire.set_lam_hat(gate.z, z_lam_hat.splitVal(n_parties))
-            #set triples
-            gate.a = wire.lambda_val(gate.x)
-            gate.b = wire.lam_hat(gate.y)
-            gate.c = wire.lam_hat(gate.z) 
-            triples.append([sum(wire.lambda_val(gate.x)),y_lam_hat, z_lam_hat])
                        
         else:
             try:
                 pass
             except:
                 print("Unrecognized gate type")
-    return triples
+    return 1
    
 def generateNum(cipher, lambda_type, index):
     assert(lambda_type == 'lambda' or \
