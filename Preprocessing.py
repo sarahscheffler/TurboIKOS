@@ -141,7 +141,7 @@ def rebuildlambda(party, seed, circuit, c_info):
     n_ouput = c_info['n_output']
     c_nmul = c_info['n_mul']
 
-    cipher = AES.new(long_to_bytes(seed.value), AES.MODE_ECB)
+    cipher = AES.new(pad(long_to_bytes(seed.value), AES.block_size), AES.MODE_ECB)
     n_mult = 0
 
     lambda_val = [None]*n_input
@@ -191,7 +191,7 @@ def make_party_seeds(n_parties):
 #pseudorandom assignment for lambdas 
 def PRassignLambda(circuit, wire, n_parties):
     party_master_seed_value = make_party_seeds(n_parties)
-    party_master_seed = [AES.new(long_to_bytes(i.value), AES.MODE_ECB) for i in party_master_seed_value] 
+    party_master_seed = [AES.new(pad(long_to_bytes(i.value), AES.block_size), AES.MODE_ECB) for i in party_master_seed_value] 
     triples = []
     n_mult = 0
     for gate in circuit:

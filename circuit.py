@@ -13,23 +13,22 @@ from Value import Value
 #         numbers of wires
 #         number of outputs
 #         nymber of inputs
-# function:: parse external file
+# function:: parse external file in Bristol format
 
 
-def parse(gate):
-    input_stream = sys.argv[1]
+def parse_bristol(gate, n_parties, i):
+    input_stream = sys.argv[i]
     n_mulgate = 0 
     n_addgate = 0
-    with open(input_stream) as f:
+    with open(input_stream, 'r') as f:
         first_line = f.readline().split()
         n_gate = int(first_line[0])
         n_wires = int(first_line[1])
         second_line = f.readline().split()
         n_input = int(second_line[0])
         # create list of number of wires for input value
-        l_input = [None]*n_input
-        for i in range(n_input):
-            l_input[i] = int(second_line[i+1])
+        l_input = [int(second_line[i+1]) for i in range(n_input)]
+    
         third_line = f.readline().split()
         n_output = int(third_line[0])
         # create list of number of wires for output values
@@ -47,30 +46,72 @@ def parse(gate):
                 n_addgate += 1
             else:
                 n_mulgate += 1
+            # g = gate(input1, input2, output, n_parties, operation=operation)
             g = gate(input1, input2, output, operation=operation)
             l[i] = g
             i = i + 1
             if i == n_gate:
                 break
-    c_info = {'l': l, 'l input': l_input, 'n_gate': n_gate, 'n_wires': n_wires, 'n_output': n_output, 'n_input': n_input, 'n_addgate': n_addgate, 'n_mul': n_mulgate}
-    return l, l_input, l_output, n_gate, n_wires, n_output, n_input, n_addgate, n_mulgate, c_info
 
-    """
-    c_info 
-        l
-        l input
-        n_gate
-        n_wires
-        n_output
-        n_input
-        n_addgate
-        n_mul    
-    """
-
+    c_info = {'l input': l_input, 'n_gate': n_gate, 'n_wires': n_wires, 'n_output': n_output, 'n_input': n_input, 'n_addgate': n_addgate, 'n_mul': n_mulgate}
+    return l, l_input, l_output, n_gate, n_wires, n_output, n_input, n_addgate, n_mulgate, n_parties, c_info
 
     """
 	index of array corresponds to topological order of circuit
     """
+
+def parse_pws(gate, n_parties, i):
+    input_stream = sys.argv[i]
+    n_mulgate = 0
+    n_addgate = 0
+    n_input = 0
+    n_output = 0
+    n_gate = 0
+    n_wires = 0
+    l_input = []
+    l_output = []
+    c = []
+    with open(input_stream, 'r') as f:
+        for line in f:
+            l = line.strip('\n').split(' ')
+            if l[0] == 'P':
+                if l[3][0] == 'I':
+                    n_wires += 1
+                    n_input += 1
+                    l_input.append(int(l[3][1:]))
+                elif l[1][0] == 'O':
+                    n_output += 1
+                    l_output.append(int(l[1][1:]))
+                else:
+                    n_wires += 1
+                    n_gate += 1
+                    input1, input2, output = int(l[3][1:]), int(l[5][1:]), int(l[1][1:])
+                    if l[4] == '*':
+                        n_mulgate += 1
+                        operation = 'MUL'
+                    elif l[4] == '+':
+                        n_addgate += 1
+                        operation = 'ADD'
+                    c.append(gate(input1, input2, output, n_parties, operation = operation))
+    c_info = {'l input': l_input, 'n_gate': n_gate, 'n_wires': n_wires, 'n_output': n_output, 'n_input': n_input, 'n_addgate': n_addgate, 'n_mul': n_mulgate}
+    return c, l_input, l_output, n_gate, n_wires, n_output, n_input, n_addgate, n_mulgate, n_parties, c_info
+
+def parse(gate, n_parties):
+    with open(sys.argv[1], 'r') as f:
+        first_ch = f.readline()[0]
+        if first_ch == 'P':
+            return parse_pws(gate, n_parties, 1)
+        else:
+            return parse_bristol(gate, n_parties, 1)
+
+def parse_test(gate, n_parties, i):
+    with open(sys.argv[i], 'r') as f:
+        first_ch = f.readline()[0]
+        if first_ch == 'P':
+            return parse_pws(gate, n_parties, i)
+        else:
+            return parse_bristol(gate, n_parties, i)
+
 # input: number of wires
 # output: wire data structure (array of dictionaries with keys 'e', 'v', 'lambda, 'lam_hat', 'e_hat' with index of wire#
 
@@ -108,7 +149,7 @@ def compute_output(circuit, epsilon_1, epsilon_2, wire, n_gate, n_parties):
 #output: n_parties zeta shares
 def compute_zeta_share(circuit, wire, alpha, epsilon_1, epsilon_2, n_parties):
     r = [None]*n_parties
-
+    
     for i in range(n_parties):
         zeta = 0
         n = 0
@@ -118,7 +159,6 @@ def compute_zeta_share(circuit, wire, alpha, epsilon_1, epsilon_2, n_parties):
                 y = circuit[j].y
                 z = circuit[j].z
                 A = sum(alpha[n])
-
                 zeta += (epsilon_1[n] * wire.e(y) - A)* wire.lambda_val(x)[i] + \
                     epsilon_1[n] * wire.e(x) * wire.lambda_val(y)[i] - \
                     epsilon_1[n] * wire.lambda_val(z)[i] - epsilon_2[n] * wire.lam_hat(z)[i]     
@@ -127,4 +167,4 @@ def compute_zeta_share(circuit, wire, alpha, epsilon_1, epsilon_2, n_parties):
                     zeta += epsilon_1[n] * wire.e(z) - epsilon_1[n]*wire.e(x)*wire.e(y) + epsilon_2[n]*wire.e_hat(z)
                 n += 1
         r[i] = (zeta)
-    return r 
+    return r
