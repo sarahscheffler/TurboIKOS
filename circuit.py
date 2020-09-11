@@ -52,7 +52,21 @@ def parse(gate):
             i = i + 1
             if i == n_gate:
                 break
-    return l, l_input, l_output, n_gate, n_wires, n_output, n_input, n_addgate, n_mulgate
+    c_info = {'l': l, 'l input': l_input, 'n_gate': n_gate, 'n_wires': n_wires, 'n_output': n_output, 'n_input': n_input, 'n_addgate': n_addgate, 'n_mul': n_mulgate}
+    return l, l_input, l_output, n_gate, n_wires, n_output, n_input, n_addgate, n_mulgate, c_info
+
+    """
+    c_info 
+        l
+        l input
+        n_gate
+        n_wires
+        n_output
+        n_input
+        n_addgate
+        n_mul    
+    """
+
 
     """
 	index of array corresponds to topological order of circuit

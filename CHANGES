@@ -1,0 +1,6 @@
+CHANGES MADE TO NOTE 
+- included a dictionary of items in circuit.py 
+- verifier and prover files use the pseudorandom functions in Preprocessing 
+- prover has a new input party_seeds 
+- test with testpr.py not test.py
+    - testpr.py has small changes that account for the pseudorandom lambdas

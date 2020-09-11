@@ -18,7 +18,10 @@ def getfield():
 
 class Value:
     def __init__(self, value=None):
-        self.value = value
+        if value == None:
+            self.value = None
+        else:
+            self.value = mpz(value)
 
     """
     overload + and sum with ^, * with & for boolean circuit
@@ -89,6 +92,12 @@ class Value:
         last = self - sum(ret)
         ret.append(last)
         return ret
+
+    # def __str__(self):
+    #     return (self.value)
+
+    # def __repr__(self):
+    #     return (self.value)
 
 #send field value 
 def getfield():

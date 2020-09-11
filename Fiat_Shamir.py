@@ -10,8 +10,6 @@ from Crypto.Util.Padding import pad
 from Crypto.Util.number import bytes_to_long
 from gmpy2 import mpz, sub, t_mod
 
-# field = mpz(2**127-1) #field value NOTE: get field value from Value.py 
-
 field = v.getfield()
 
 def make_epsilons(r2, num_mult_gates):
@@ -59,7 +57,7 @@ def round4(round_1, round_3, t, n):
         t: number of parties to be corrupted 
         n: number of all parties 
     output: 
-        list of parties #NOTE temporarily will use an array to send back, change after checking w prover 
+        list of parties 
     """
 
     #checks type of inputs for sha256 
