@@ -4,7 +4,7 @@ Commit to views and broadcast
 
 import hashlib
 from Value import Value
-from Crypto.Util.number import bytes_to_long, long_to_bytes
+from Cryptodome.Util.number import bytes_to_long, long_to_bytes
 #input: byte string to commit
 #output: random value in mpz format, commited data in hexadecimal format
 #commit data 

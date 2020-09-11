@@ -6,8 +6,8 @@ from Value import Value
 from binascii import hexlify
 from hashlib import sha256
 from random import sample, seed, getrandbits
-from Crypto.Util.Padding import pad
-from Crypto.Util.number import bytes_to_long
+from Cryptodome.Util.Padding import pad
+from Cryptodome.Util.number import bytes_to_long
 from gmpy2 import mpz, sub, t_mod
 
 field = v.getfield()

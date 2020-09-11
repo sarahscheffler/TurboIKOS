@@ -12,12 +12,9 @@
 """
 
 from Value import Value
-<<<<<<< HEAD
-=======
-from Crypto.Cipher import AES
-from Crypto.Util.Padding import pad
-from Crypto.Util.number import long_to_bytes, bytes_to_long
->>>>>>> f84a259763b4a73c2cfe25ad33b6f1593c1dd049
+from Cryptodome.Cipher import AES
+from Cryptodome.Util.Padding import pad
+from Cryptodome.Util.number import long_to_bytes, bytes_to_long
 
 """
     temporary/helper functions
@@ -65,10 +62,6 @@ def randomLC(triples):
         i += 2
     return (ret == 0)
 
-<<<<<<< HEAD
-
-=======
->>>>>>> f84a259763b4a73c2cfe25ad33b6f1593c1dd049
 """
     function dependent section
 """
@@ -128,8 +121,6 @@ def assignLambda(circuit, wire, n_parties):
             except:
                 print("Unrecognized gate type")
     return 1
-<<<<<<< HEAD
-=======
    
 def generateNum(cipher, lambda_type, index):
     assert(lambda_type == 'lambda' or \
@@ -238,4 +229,3 @@ def PRassignLambda(circuit, wire, n_parties):
                 print("Unrecognized gate type")
 
     return triples, party_master_seed_value
->>>>>>> f84a259763b4a73c2cfe25ad33b6f1593c1dd049

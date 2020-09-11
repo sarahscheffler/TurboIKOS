@@ -32,6 +32,7 @@ class TestMPCInTheHead(unittest.TestCase):
 
                 #Preprocessing
                 triples = p.assignLambda(Circuit, w, n_parties)
+                party_seeds = assign_lambda[1]
 
                 #Assign v values
                 inputs = []
@@ -45,7 +46,7 @@ class TestMPCInTheHead(unittest.TestCase):
                     w.set_v(i, inputs[i].splitVal(n_parties))
                 triples = p.assignLambda(Circuit, w, n_parties)
                 #Commit round one
-                round1 = prover.round_one_internal(n_parties, n_gate, n_input, Circuit, w)
+                round1 = prover.round_one_internal(n_parties, n_gate, n_input, Circuit, w, party_seeds)
                 views_commit = prover.round_one_external(round1)
     
                 #Generate epsilonsir

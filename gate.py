@@ -1,12 +1,3 @@
-#ecrets import token_hex  # solid randomness for cryptographic use
-
-
-
-
-# think about optimizing space. e.g shrink randomness from 256-bits to 128-bits used if appropriate.
-# change terminology to match circuit.py
-
-
 from Value import Value 
 
 class gate:
@@ -21,6 +12,7 @@ class gate:
     
     def __repr__(self):
         return 'operation:' + str(self.operation) + ' x:' + str(self.x) + ' y:' + str(self.y) + ' z:' + str(self.z)
+
     # Assigns v values z = x + y for each party
     # Assign e value on output wire
     def add(self):
@@ -49,6 +41,7 @@ class gate:
         z_e = x_e + y_e
         # set z_e
         self.w.set_e(self.z, z_e)
+
     # Assigns v values  z = x*y for each party
     # assign e value on output wire
     # return e share for broadcast
@@ -80,7 +73,7 @@ class gate:
             if i == 0:
                 z_v_share = z_e - self.w.lambda_val(self.z)[i]
             else:
-                z_v_share = Value(0)-self.w.lambda_val(self.z)[i]
+                z_v_share = Value(0) - self.w.lambda_val(self.z)[i]
             z_v_arr[i] = z_v_share 
      
           
