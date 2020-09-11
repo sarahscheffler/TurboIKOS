@@ -19,15 +19,20 @@ def test():
     n_output = Circuit[5]
     l_output = Circuit[2]
     n_mul = Circuit[8]
+    c_info = Circuit[9]
     Circuit = Circuit[0]
-   
+
     # Create list of wire data
     n_parties = 3    
     wire_data = circuit.wire_data(n_wires)
     w = Wire(wire_data, n_parties, n_wires)
 
     #Preprocessing
-    triples = p.assignLambda(Circuit, w, n_parties)
+    # triples = p.assignLambda(Circuit, w, n_parties)
+
+    assign_lambda = p.PRassignLambda(Circuit, w, n_parties)
+    triples = assign_lambda[0]
+    party_seeds = assign_lambda[1]
 
     #Assign v values
     inputs = []
@@ -38,9 +43,9 @@ def test():
        
     for i in range(n_input):
         w.set_v(i, inputs[i].splitVal(n_parties))
-    triples = p.assignLambda(Circuit, w, n_parties)
+    # triples = p.assignLambda(Circuit, w, n_parties)
     #Commit round one
-    round1 = prover.round_one_internal(n_parties, n_gate, n_input, Circuit, w)
+    round1 = prover.round_one_internal(n_parties, n_gate, n_input, Circuit, w, party_seeds)
     views_commit = prover.round_one_external(round1)
     
     #Generate epsilonsir
@@ -108,17 +113,19 @@ def test():
     for i in range(n_input):
         assert(w.e(i) == broadcast['e inputs'][i])
         for j in range(n_parties):
-            assert(full_views[j]['input'][i] == w.v(i)[j])
-            assert(full_views[j]['input lambda'][i] == w.lambda_val(i)[j])
+            # assert(full_views[j]['input'][i] == w.v(i)[j])
+            # assert(full_views[j]['input lambda'][i] == w.lambda_val(i)[j])
+            pass
     
     m = 0
     for i in range(n_gate):
         c = Circuit[i]
         if c.operation == 'MUL' or c.operation == 'AND':
             for j in range(n_parties):
-                assert(full_views[j]['lambda z'][m] == w.lambda_val(c.z)[j])
-                assert(full_views[j]['lambda y hat'][m] == w.lam_hat(c.y)[j])
-                assert(full_views[j]['lambda z hat'][m] == w.lam_hat(c.z)[j])
+                # assert(full_views[j]['lambda z'][m] == w.lambda_val(c.z)[j])
+                # assert(full_views[j]['lambda y hat'][m] == w.lam_hat(c.y)[j])
+                # assert(full_views[j]['lambda z hat'][m] == w.lam_hat(c.z)[j])
+                pass
             
             assert(broadcast['e z'][m] == w.e(c.z))
             assert(broadcast['e z hat'][m] == w.e_hat(c.z))
@@ -158,33 +165,28 @@ def test():
         lam_z_hat_str = b''
         for i in range(n_input):
             input_str += long_to_bytes(full_views[n]['input'][i].value)
-            input_lam_str += long_to_bytes(full_views[n]['input lambda'][i].value)
+            # input_lam_str += long_to_bytes(full_views[n]['input lambda'][i].value)
         for i in range(n_mul):
-            lam_z_str += long_to_bytes(full_views[n]['lambda z'][i].value)
-            lam_y_hat_str += long_to_bytes(full_views[n]['lambda y hat'][i].value)
-            lam_z_hat_str += long_to_bytes(full_views[n]['lambda z hat'][i].value)
+            # lam_z_str += long_to_bytes(full_views[n]['lambda z'][i].value)
+            # lam_y_hat_str += long_to_bytes(full_views[n]['lambda y hat'][i].value)
+            # lam_z_hat_str += long_to_bytes(full_views[n]['lambda z hat'][i].value)
+            pass
         val = input_str + input_lam_str + lam_z_str + lam_y_hat_str + lam_z_hat_str
         prover.open(full_r_views[n], val, views_commit[n])
-
-
 
 
     #verifier test
     
     #check commitments
-    rebuild = v.rebuild_commitments(Circuit, n_input, n_gate, parties, views, r_views, broadcast, r_broadcast)
+    rebuild = v.rebuild_commitments(Circuit, c_info, parties, views, r_views, broadcast, r_broadcast)
     v.check_commitments = v.check_commitments(parties, views_commit, rebuild[0], broadcast_commit, rebuild[1])
 
     #verifier check zeta 
     v.check_zeta(broadcast)
 
-    #verifier get epsilon 
-    creater1 = ''.join(views_commit)
-    v_epsilon = v.get_epsilons(creater1.encode(), n_mul)
-
     #verifier recompute 
-    recompute = v.recompute(Circuit, n_wires, n_gate, n_parties, parties, views, v_epsilon[0], v_epsilon[1], broadcast)
-    checkrecompute = v.check_recompute(parties, n_mul, broadcast, recompute[0], recompute[1], recompute[2])
+    recompute = v.recompute(Circuit, c_info, n_parties, parties, views_commit, views, broadcast)
+    checkrecompute = v.check_recompute(c_info, parties, broadcast, recompute[0], recompute[1], recompute[2])
     
     print('test passed')
 if __name__ == "__main__": 
