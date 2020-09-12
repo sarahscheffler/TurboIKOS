@@ -74,7 +74,7 @@ def check_commitments(parties, committed_views, rebuilt_views, committed_broadca
 
     #check broadcast
     assert (hashlib.sha256(rebuilt_broadcast).hexdigest() == committed_broadcast), "Committed broadcast does not match open broadcast"
-    print("Prover's committed views and broadcast match the opened views and broadcast")
+    # print("Prover's committed views and broadcast match the opened views and broadcast")
     return 1
 
 """
@@ -89,7 +89,7 @@ def check_zeta(broadcast):
     check_zero = Value(0)
     zeta = broadcast['zeta']
     assert(sum(zeta) == check_zero), "Zeta does not sum to zero"
-    print("Zetas in prover's broadcast sums to 0")
+    # print("Zetas in prover's broadcast sums to 0")
     return 
 
 """
@@ -221,7 +221,7 @@ def check_recompute(c_info, parties, broadcast, recomputed_alpha, recompute_outp
         assert(recompute_output_shares[i].value == prover_output[parties[i]].value), "Verifier's recomputed output shares does not match prover's output shares."
         assert(recomputed_zeta[i].value == prover_zeta[parties[i]].value), "Verifier's recomputd zetas does not match prover's zetas."
 
-    print("Verifier's alphas, zetas, and output matches prover's.")
+    # print("Verifier's alphas, zetas, and output matches prover's.")
     return 
 
 

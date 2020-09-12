@@ -32,6 +32,9 @@ generate cryptographically secure randomness lambda
 def getRandom():
     lam = Value()
     lam.getRand()
+    while len(long_to_bytes(lam.value)) != 16:
+        lam = Value()
+        lam.getRand()
     return lam
 
 """
