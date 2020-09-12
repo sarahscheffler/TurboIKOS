@@ -13,7 +13,6 @@ import unittest
 import verifier as v
 from Cryptodome.Util.number import bytes_to_long, long_to_bytes
 import math
-# import drawTable
 
 class TestMPCInTheHead(unittest.TestCase):
     def test_seed(self):
@@ -303,7 +302,6 @@ class TestMPCInTheHead(unittest.TestCase):
                 print('views commit size:', viewsc_size)
                 print('broadcast size:', broadcast_size)
                 print('views size:', views_size)
-                # drawTable.tableCompare("%.2f" % (proof_size/1000), "%.3f" % average_run_time, "%.3f" % (sum(verifier_time_arr)/rep), views_size/1000)
                 print('timing test passed')
                 
     def test_repeat(self):

@@ -9,10 +9,10 @@ def tableCompare(circuit_size, p_time, v_time, memory):
     ax = fig.add_subplot(111)
     row = ['Proof Size', 'Prover Time', 'Verifier Time', 'Memory Used']
     col = ['libSNARK','This work']
-    values=[['0.13KB', circuit_size+'KB'],
+    values=[['0.13KB', circuit_size+'MB'],
             ['360s', p_time+'s'],
             ['0.002s', v_time+'s'],
-            ['\u2265 10GB', memory+'KB']]
+            ['\u2265 10GB', memory+'MB']]
     table = plt.table(cellText = values,
                       rowLabels = row,
                       colLabels = col,
@@ -28,19 +28,27 @@ def tableCompare(circuit_size, p_time, v_time, memory):
     plt.show()
 
 
-def plotTable(p, v, s):
+def plotTable(p, v, s, m):
     fig, axs = plt.subplots(2, 2, constrained_layout=True)
     plotSize(axs[0, 0],range(1, 81),s)
     plotPTime(axs[0, 1],range(1, 81),p)
     plotVTime(axs[1, 0],range(1, 81),v)
+    plotMemory(axs[1, 1],range(1, 81),m)
     plt.show()
 
 
 def plotSize(ax, x, y):
     ax.plot(log2arr(x), y)
     ax.set_xlabel('log2 # repetitions', fontsize=12)
-    ax.set_ylabel('proof size (in KB)', fontsize=12)
+    ax.set_ylabel('proof size (in MB)', fontsize=12)
     ax.set_title('Proof Size', fontsize=14)
+
+
+def plotMemory(ax, x, y):
+    ax.plot(log2arr(x), y)
+    ax.set_xlabel('log2 # repetitions', fontsize=12)
+    ax.set_ylabel('memory usage (in MB)', fontsize=12)
+    ax.set_title('Memory Usage', fontsize=14)
 
     
 def plotPTime(ax, x, y):

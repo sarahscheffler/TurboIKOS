@@ -217,6 +217,8 @@ def check_recompute(c_info, parties, broadcast, recomputed_alpha, recompute_outp
     for i in range(len(parties)): 
         #check alphas 
         for j in range(n_multgate):
+            print(prover_alpha[j][parties[i]].value)
+            print(recomputed_alpha[i][j].value)
             assert (prover_alpha[j][parties[i]].value == recomputed_alpha[i][j].value), "Verifier's recomputed alphas does not match prover's alphas."
         assert(recompute_output_shares[i].value == prover_output[parties[i]].value), "Verifier's recomputed output shares does not match prover's output shares."
         assert(recomputed_zeta[i].value == prover_zeta[parties[i]].value), "Verifier's recomputd zetas does not match prover's zetas."

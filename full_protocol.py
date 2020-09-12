@@ -14,11 +14,15 @@ import verifier as v
 from Cryptodome.Util.number import bytes_to_long, long_to_bytes
 import drawTable
 
-
+COMMIT_BYTES = 32
+VALUE_BYTES = 16
+SEED_BYTES = int(256/8)
+            
 def full_protocol():
     prover_time_total = [None]*80
     verifier_time_total = [None]*80
     proof_total = [None]*80
+    memory_total = [None]*80
 
     n_parties = 3
     Circuit = circuit.parse(gate, n_parties)
@@ -39,6 +43,8 @@ def full_protocol():
         run_time_arr = 0
         verifier_time_arr = 0
         proof_size = 0
+        memory = 0
+        
         for repetition in range(rep):
 
             # Create list of wire data    
@@ -56,6 +62,7 @@ def full_protocol():
             preprocessing_time = time.process_time() - start_time_preprocessing
             preprocessing_arr += preprocessing_time
 
+            start_time = time.process_time()
             #Assign v values
             inputs = []
             for i in range(n_input):
@@ -76,7 +83,6 @@ def full_protocol():
             epsilon_1 = temp[0]
             epsilon_2 = temp[1]
 
-            start_time = time.process_time()
             #Calculate alpha shares and write e values, v values, e hat values to output wires 
             alpha = circuit.compute_output(Circuit, epsilon_1, epsilon_2, w, n_gate, n_parties)
             #Compute zeta shares
@@ -105,17 +111,27 @@ def full_protocol():
             verifier_time = time.process_time() - start_time
             verifier_time_arr += verifier_time
 
-            proof_size += get_deep_size(broadcast_commit) + get_deep_size(views_commit) + get_deep_size(broadcast) + get_deep_size(views)
+            broadcastc_size = 0
+            viewsc_size = 0
+            broadcast_size = 0
+            
+            broadcastc_size += COMMIT_BYTES
+            viewsc_size += COMMIT_BYTES*len(views_commit)
+            broadcast_size += sum([sum([VALUE_BYTES for v in broadcast[k]]) for k in broadcast if k!= "alpha"])+sum([VALUE_BYTES for v in broadcast["alpha"] for i in range(n_mulgate)])
+            views_size_PR = sum([sum([VALUE_BYTES for v in views[i]["input"]]) for i in range(n_corrupt)]) + SEED_BYTES*n_corrupt
 
-        prover_time_total[rep-1] = (preprocessing_arr + run_time_arr)/1000
+            memory += get_deep_size(broadcast_commit) + get_deep_size(broadcast) + get_deep_size(views_commit) + get_deep_size(views)
+            proof_size += broadcastc_size + viewsc_size + broadcast_size + views_size_PR
+            
+        prover_time_total[rep-1] = preprocessing_arr + run_time_arr
         verifier_time_total[rep-1] = verifier_time_arr
-        proof_total[rep-1] = proof_size
+        proof_total[rep-1] = proof_size/(10**6)
+        memory_total[rep-1] = memory/(10**6)
 
+    drawTable.tableCompare("%.2f" % proof_total[0], "%.3f" % prover_time_total[0], "%.3f" % verifier_time_total[0], "%.2f" % memory_total[0])
+    drawTable.plotTable(prover_time_total, verifier_time_total, proof_total, memory_total)
 
-    drawTable.tableCompare("%.2f" % (proof_total[0]/1000), "%.3f" % prover_time_total[0], "%.3f" % verifier_time_total[0], '/')
-    drawTable.plotTable(prover_time_total, verifier_time_total, proof_total)
-
-    return prover_time_total, verifier_time_total, proof_total
+    return prover_time_total, verifier_time_total, proof_total, memory_total
 
 
 if __name__ == '__main__':
