@@ -103,8 +103,3 @@ class Value:
 
     # def __repr__(self):
     #     return (self.value)
-
-#send field value 
-def getfield():
-    global field
-    return field
