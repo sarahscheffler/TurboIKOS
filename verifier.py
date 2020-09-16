@@ -98,11 +98,12 @@ def check_commitments(parties, committed_views, rebuilt_views, committed_broadca
     output: 
         return 1 if sum(zeta) == 0, else assertion error 
 """
-def check_zeta(broadcast): 
+def check_zeta(broadcast, n_epsilons): 
     #check \zeta == 0
     check_zero = Value(0)
-    zeta = broadcast['zeta']
-    assert(sum(zeta) == check_zero), "Zeta does not sum to zero"
+    for e in range(n_epsilons):
+        zeta = broadcast['zeta'][e]
+        assert(sum(zeta) == check_zero), "Zeta does not sum to zero"
     print("Zetas in prover's broadcast sums to 0")
     return 
 
@@ -112,9 +113,9 @@ def check_zeta(broadcast):
         committed_views: committed views from round1 
         n_multgates: number of mult gates 
 """
-def get_epsilons(committed_views, n_multgates):
+def get_epsilons(committed_views, n_multgates, n_epsilons):
     r2 = hashlib.sha256(committed_views)
-    return Fiat_Shamir.make_epsilons(r2.digest(), n_multgates)
+    return Fiat_Shamir.make_epsilons(r2.digest(), n_multgates, n_epsilons)
 
 """
 ---recompute---

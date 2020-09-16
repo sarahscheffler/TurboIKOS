@@ -78,7 +78,6 @@ def round_three_internal(n_parties, n_gate, n_input, n_epsilons, circuit, wire, 
 
             zeta_str += long_to_bytes(zeta[e][j].value)
 
-    n_mul = 0
 
     for i in range(n_input):
         #e of inputs
@@ -89,6 +88,7 @@ def round_three_internal(n_parties, n_gate, n_input, n_epsilons, circuit, wire, 
     alphap = []
     print(len(alpha), len(alpha[1]))
     for e in range(n_epsilons):
+        n_mul = 0
         for i in range(n_gate):
             if circuit[i].operation == 'MUL' or circuit[i].operation == 'AND':
                 print(n_mul, e)
@@ -107,7 +107,7 @@ def round_three_internal(n_parties, n_gate, n_input, n_epsilons, circuit, wire, 
                     alpha_str += long_to_bytes(alpha[n_mul][e][j].value)   
                 n_mul += 1
 
-    broadcast = {'e inputs': e_inputs, 'e z': e_z, 'e z hat': e_z_hat, 'alphap': alpha, 'zeta': zeta, 'output shares': output_shares}
+    broadcast = {'e inputs': e_inputs, 'e z': e_z, 'e z hat': e_z_hat, 'alpha': alphap, 'zeta': zeta, 'output shares': output_shares}
     broadcast_str = e_input_str + e_z_str + e_z_hat_str + alpha_str + zeta_str + output_shares_str
     temp = commit(broadcast_str)
     r = temp[0]
