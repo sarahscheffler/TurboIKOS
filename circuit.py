@@ -120,7 +120,7 @@ def wire_data(n_wires):
 #input: circuit object, epsilon1, epsilon2, wire data structure, number of gates, number of parties
 #output: array of array of alpha values. row# = mul gate#, col# = party# 
 #Write to output wires of each gate and compute alpha values.  
-def compute_output(circuit, epsilon_1, epsilon_2, wire, n_gate, n_parties):
+def compute_output(circuit, epsilon_1, epsilon_2, wire, n_gate, n_parties, n_epsilons):
     alpha_broadcast = []
     m = 0
     for i in range(n_gate):
@@ -130,11 +130,12 @@ def compute_output(circuit, epsilon_1, epsilon_2, wire, n_gate, n_parties):
             c.w = wire
             c.mult()
 	    # calculate alpha share
-            alpha_shares = [None]*n_parties
+            alpha_shares = [[None]*n_parties]*n_epsilons
             for j in range(n_parties):
                 y_lam = wire.lambda_val(c.y)[j]
                 y_lamh = wire.lam_hat(c.y)[j]
-                alpha_shares[j] = epsilon_1[m]*y_lam + (epsilon_2[m]*y_lamh)
+                for e in range(n_epsilons):
+                    alpha_shares[e][j] = epsilon_1[e][m]*y_lam + (epsilon_2[e][m]*y_lamh)
             alpha_broadcast.append(alpha_shares)
             m += 1
         # ADD gates	
@@ -145,9 +146,8 @@ def compute_output(circuit, epsilon_1, epsilon_2, wire, n_gate, n_parties):
 
 #input: circuit, wire structure, list of n_mul gate alphas, and two epsilons
 #output: n_parties zeta shares
-def compute_zeta_share(circuit, wire, alpha, epsilon_1, epsilon_2, n_parties):
-    r = [None]*n_parties
-    
+def compute_zeta_share(circuit, wire, alpha, epsilon_1, epsilon_2, n_parties, n_epsilons):
+    r = [[None]*n_parties]*n_epsilons
     for i in range(n_parties):
         zeta = 0
         n = 0
@@ -156,14 +156,17 @@ def compute_zeta_share(circuit, wire, alpha, epsilon_1, epsilon_2, n_parties):
                 x = circuit[j].x
                 y = circuit[j].y
                 z = circuit[j].z
-                A = sum(alpha[n])
-                zeta += (epsilon_1[n] * wire.e(y) - A)* wire.lambda_val(x)[i] + \
-                    epsilon_1[n] * wire.e(x) * wire.lambda_val(y)[i] - \
-                    epsilon_1[n] * wire.lambda_val(z)[i] - epsilon_2[n] * wire.lam_hat(z)[i]     
+                for e in range(n_epsilons):
+                    A = sum(alpha[n][e])
+                    zeta += (epsilon_1[e][n] * wire.e(y) - A)* wire.lambda_val(x)[i] + \
+                        epsilon_1[e][n] * wire.e(x) * wire.lambda_val(y)[i] - \
+                        epsilon_1[e][n] * wire.lambda_val(z)[i] - epsilon_2[e][n] * wire.lam_hat(z)[i]     
+                    
+                    if i == 0:
+                        zeta += epsilon_1[e][n] * wire.e(z) - epsilon_1[e][n]*wire.e(x)*wire.e(y) + epsilon_2[e][n]*wire.e_hat(z)
+                n+= 1   
+            if j== len(circuit)-1:
+                r[e][i] = (zeta)
                 
-                if i == 0:
-                    zeta += epsilon_1[n] * wire.e(z) - epsilon_1[n]*wire.e(x)*wire.e(y) + epsilon_2[n]*wire.e_hat(z)
-                n += 1
-        r[i] = (zeta)
     return r
 
