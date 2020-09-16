@@ -15,7 +15,7 @@ from Value import Value
 #         nymber of inputs
 # function:: parse external file in Bristol format
 
-
+n_epsilons = 2
 def parse_bristol(gate, n_parties, i):
     input_stream = sys.argv[i]
     n_mulgate = 0 
@@ -51,8 +51,8 @@ def parse_bristol(gate, n_parties, i):
             i = i + 1
             if i == n_gate:
                 break
-
-    return l, l_input, l_output, n_gate, n_wires, n_output, n_input, n_addgate, n_mulgate, n_parties
+    c_info = {'l': l, 'l input': l_input, 'n_gate': n_gate, 'n_wires': n_wires, 'n_output': n_output, 'n_input': n_input, 'n_addgate': n_addgate, 'n_mul': n_mulgate, 'n_parties': n_parties}
+    return l, l_input, l_output, n_gate, n_wires, n_output, n_input, n_addgate, n_mulgate, n_parties, c_info
 
     """
 	index of array corresponds to topological order of circuit
@@ -91,7 +91,8 @@ def parse_pws(gate, n_parties, i):
                         n_addgate += 1
                         operation = 'ADD'
                     c.append(gate(input1, input2, output, n_parties, operation = operation))
-    return c, l_input, l_output, n_gate, n_wires, n_output, n_input, n_addgate, n_mulgate, n_parties
+    c_info = {'l input': l_input, 'n_gate': n_gate, 'n_wires': n_wires, 'n_output': n_output, 'n_input': n_input, 'n_addgate': n_addgate, 'n_mul': n_mulgate, 'n_parties': n_parties}
+    return c, l_input, l_output, n_gate, n_wires, n_output, n_input, n_addgate, n_mulgate, n_parties, c_info
 
 def parse(gate, n_parties):
     with open(sys.argv[1], 'r') as f:
@@ -164,4 +165,5 @@ def compute_zeta_share(circuit, wire, alpha, epsilon_1, epsilon_2, n_parties):
                     zeta += epsilon_1[n] * wire.e(z) - epsilon_1[n]*wire.e(x)*wire.e(y) + epsilon_2[n]*wire.e_hat(z)
                 n += 1
         r[i] = (zeta)
-    return r 
+    return r
+
