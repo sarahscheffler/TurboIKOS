@@ -1,7 +1,6 @@
 import sys
 import random
 import circuit 
-from circuit import n_epsilons
 from gate import gate
 from wire import Wire 
 import Preprocessing as p
@@ -12,6 +11,7 @@ import time
 from objsize import get_deep_size
 import unittest
 import verifier as v
+from circuit import n_epsilons
 from Cryptodome.Util.number import bytes_to_long, long_to_bytes
 import math
 
@@ -66,9 +66,8 @@ class TestMPCInTheHead(unittest.TestCase):
                 for i in range(n_gate):
                     g = Circuit[i]
                     if g.operation == 'AND' or g.operation == 'MUL':
-                        for e in range(n_epsilons):
-                            for j in range(n_parties):
-                                assert(alpha[m][e][j] == epsilon_1[e][m]*w.lambda_val(g.y)[j] + epsilon_2[e][m]*w.lam_hat(g.y)[j])
+                        for j in range(n_parties):
+                            assert(alpha[m][j] == epsilon_1[m]*w.lambda_val(g.y)[j] + epsilon_2[m]*w.lam_hat(g.y)[j])
                         m = m + 1
                 
                 for j in range(n_gate):
@@ -82,6 +81,11 @@ class TestMPCInTheHead(unittest.TestCase):
                             assert(w.lambda_val(Circuit[j].x)[i] + w.lambda_val(Circuit[j].y)[i] == w.lambda_val(Circuit[j].z)[i])
                     #MUL gate
                     if g.operation == 'AND' or g.operation == 'MUL':
+                        #Check tripple assignment
+                        for i in range(n_parties):
+                            assert(g.a[i] == w.lambda_val(g.x)[i])
+                            assert(g.b[i] == w.lam_hat(g.y)[i])
+                            assert(g.c[i] == w.lam_hat(g.z)[i])
                         #Check e hat assignment
                         assert(w.e_hat(g.z) == sum(w.lambda_val(g.x)) * sum(w.lam_hat(g.y)) + sum(w.lam_hat(g.z)))
                         #Chck v value
@@ -90,12 +94,11 @@ class TestMPCInTheHead(unittest.TestCase):
                 for i in range(n_wires):
                     assert(w.e(i) == sum(w.lambda_val(i)) + sum(w.v(i)))
 
-                zeta = circuit.compute_zeta_share(Circuit, w, alpha, epsilon_1, epsilon_2, n_parties, n_epsilons)
+                zeta = circuit.compute_zeta_share(Circuit, w, alpha, epsilon_1, epsilon_2, n_parties)
                 #Check zeta
-                for e in range(n_epsilons):
-                    assert(sum(zeta[e]).value == 0)
+                assert(sum(zeta).value == 0)
                 #Commit to broadcast
-                round3 = prover.round_three_internal(n_parties, n_gate, n_input, n_epsilons, Circuit, w, alpha, zeta)
+                round3 = prover.round_three_internal(n_parties, n_gate, n_input, Circuit, w, alpha, zeta)
                 broadcast_commit = prover.round_three_external(round3)
                 r3 = broadcast_commit
                 #number of parties to be corrupted
