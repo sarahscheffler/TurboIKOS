@@ -67,7 +67,8 @@ class TestMPCInTheHead(unittest.TestCase):
                     g = Circuit[i]
                     if g.operation == 'AND' or g.operation == 'MUL':
                         for j in range(n_parties):
-                            assert(alpha[m][j] == epsilon_1[m]*w.lambda_val(g.y)[j] + epsilon_2[m]*w.lam_hat(g.y)[j])
+                            for e in range(n_epsilons):
+                                assert(alpha[m][e][j] == epsilon_1[e][m]*w.lambda_val(g.y)[j] + epsilon_2[e][m]*w.lam_hat(g.y)[j])
                         m = m + 1
                 
                 for j in range(n_gate):
@@ -94,9 +95,10 @@ class TestMPCInTheHead(unittest.TestCase):
                 for i in range(n_wires):
                     assert(w.e(i) == sum(w.lambda_val(i)) + sum(w.v(i)))
 
-                zeta = circuit.compute_zeta_share(Circuit, w, alpha, epsilon_1, epsilon_2, n_parties)
+                zeta = circuit.compute_zeta_share(Circuit, w, alpha, epsilon_1, epsilon_2, n_parties, n_epsilons)
                 #Check zeta
-                assert(sum(zeta).value == 0)
+                for e in range(n_epsilons):
+                    assert(sum(zeta[e]).value == 0)
                 #Commit to broadcast
                 round3 = prover.round_three_internal(n_parties, n_gate, n_input, Circuit, w, alpha, zeta)
                 broadcast_commit = prover.round_three_external(round3)
