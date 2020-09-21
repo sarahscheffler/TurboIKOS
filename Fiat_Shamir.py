@@ -21,13 +21,12 @@ def make_epsilons(r2, num_mult_gates, n_epsilons):
     inputs: r2 (from func round), num_mult_gates (number of mult gates for epsilon creation?) <-- either move this one to prover or get num of mult gates from another files
     outputs: 2*num_mult_gates epsilsons*num_epsilons 
     """    
-    list_epsilon = [[0]*num_mult_gates]*n_epsilons
-    list_epsilon_hat = [[0]*num_mult_gates]*n_epsilons
-
-    #generate 128 random bits by using random.getrandbits, splice value 
+    list_epsilon = [[0 for x in range(num_mult_gates)] for x in range(n_epsilons)]  
+    list_epsilon_hat = [[0 for x in range(num_mult_gates)] for x in range(n_epsilons)]
     seed(r2)
-
+    #generate 128 random bits by using random.getrandbits, splice value 
     for j in range(n_epsilons):
+        #seed(r2+(j.to_bytes(16, byteorder = 'big')))
         for i in range(num_mult_gates):
             epsilon = bin(getrandbits(127))
             epsilon_hat = bin(getrandbits(127))
