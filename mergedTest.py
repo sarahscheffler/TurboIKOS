@@ -55,12 +55,11 @@ class TestMPCInTheHead(unittest.TestCase):
                 round1 = prover.round_one_internal(n_parties, n_gate, n_input, Circuit, w, party_seeds)
                 views_commit = prover.round_one_external(round1)
             
-                #Generate epsilonsir
+                #Generate epsilons
                 r1 = ''.join(views_commit)
                 temp = fs.round2(r1, n_mul, n_epsilons)
                 epsilon_1 = temp[0]
                 epsilon_2 = temp[1]
-            
                 alpha = circuit.compute_output(Circuit, epsilon_1, epsilon_2, w, n_gate, n_parties, n_epsilons)
                 m = 0
                 for i in range(n_gate):
@@ -82,11 +81,6 @@ class TestMPCInTheHead(unittest.TestCase):
                             assert(w.lambda_val(Circuit[j].x)[i] + w.lambda_val(Circuit[j].y)[i] == w.lambda_val(Circuit[j].z)[i])
                     #MUL gate
                     if g.operation == 'AND' or g.operation == 'MUL':
-                        #Check tripple assignment
-                        for i in range(n_parties):
-                            assert(g.a[i] == w.lambda_val(g.x)[i])
-                            assert(g.b[i] == w.lam_hat(g.y)[i])
-                            assert(g.c[i] == w.lam_hat(g.z)[i])
                         #Check e hat assignment
                         assert(w.e_hat(g.z) == sum(w.lambda_val(g.x)) * sum(w.lam_hat(g.y)) + sum(w.lam_hat(g.z)))
                         #Chck v value
@@ -100,7 +94,7 @@ class TestMPCInTheHead(unittest.TestCase):
                 for e in range(n_epsilons):
                     assert(sum(zeta[e]).value == 0)
                 #Commit to broadcast
-                round3 = prover.round_three_internal(n_parties, n_gate, n_input, Circuit, w, alpha, zeta)
+                round3 = prover.round_three_internal(n_parties, n_gate, n_input, n_epsilons, Circuit, w, alpha, zeta)
                 broadcast_commit = prover.round_three_external(round3)
                 r3 = broadcast_commit
                 #number of parties to be corrupted
@@ -155,11 +149,13 @@ class TestMPCInTheHead(unittest.TestCase):
                 for i in range(n_mul):
                     e_z_str += long_to_bytes(broadcast['e z'][i].value)
                     e_z_hat_str += long_to_bytes(broadcast['e z hat'][i].value)
-                for i in range(n_parties):
-                    for j in range(n_mul):
-                        alpha_str += long_to_bytes(broadcast['alpha'][j][i].value)
-                    zeta_str += long_to_bytes(broadcast['zeta'][i].value)
-                    output_str += long_to_bytes(broadcast['output shares'][i].value)
+                for e in range(n_epsilons):
+                    for i in range(n_parties):
+                        for j in range(n_mul):
+                            alpha_str += long_to_bytes(broadcast['alpha'][j][e][i].value)
+                        zeta_str += long_to_bytes(broadcast['zeta'][e][i].value)
+                        if e == 0:
+                            output_str += long_to_bytes(broadcast['output shares'][i].value)
            
                 val = e_inputs_str + e_z_str + e_z_hat_str + alpha_str + zeta_str + output_str
            
@@ -185,7 +181,7 @@ class TestMPCInTheHead(unittest.TestCase):
 
 
                 #verifier test
-                v.verifier(Circuit, c_info, n_parties, parties, views_commit, views, r_views, broadcast_commit, broadcast, r_broadcast)
+                v.verifier(Circuit, c_info, n_parties, parties, views_commit, views, r_views, broadcast_commit, broadcast, r_broadcast, n_epsilons)
                 print('prover test passed')
 
 
@@ -281,7 +277,7 @@ class TestMPCInTheHead(unittest.TestCase):
                     views = temp[3]
 
                     start_time = time.process_time()
-                    v.verifier(Circuit, c_info, n_parties, parties, views_commit, views, r_views, broadcast_commit, broadcast, r_broadcast)
+                    v.verifier(Circuit, c_info, n_parties, parties, views_commit, views, r_views, broadcast_commit, broadcast, r_broadcast, n_epsilons)
                     verifier_time = time.process_time() - start_time
                     verifier_time_arr[repetition] = verifier_time
 
@@ -393,7 +389,7 @@ class TestMPCInTheHead(unittest.TestCase):
                     views = temp[3]
 
                     start_time = time.process_time()
-                    v.verifier(Circuit, c_info, n_parties, parties, views_commit, views, r_views, broadcast_commit, broadcast, r_broadcast)
+                    v.verifier(Circuit, c_info, n_parties, parties, views_commit, views, r_views, broadcast_commit, broadcast, r_broadcast, n_epsilons)
                     verifier_time = time.process_time() - start_time
                     verifier_time_arr[repetition] = verifier_time
 
