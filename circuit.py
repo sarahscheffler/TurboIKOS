@@ -130,7 +130,7 @@ def compute_output(circuit, epsilon_1, epsilon_2, wire, n_gate, n_parties, n_eps
             c.w = wire
             c.mult()
 	    # calculate alpha share
-            alpha_shares = [[None]*n_parties]*n_epsilons
+            alpha_shares = [[None for x in range(n_parties)] for x in range (n_epsilons)]
             for j in range(n_parties):
                 y_lam = wire.lambda_val(c.y)[j]
                 y_lamh = wire.lam_hat(c.y)[j]
@@ -141,7 +141,7 @@ def compute_output(circuit, epsilon_1, epsilon_2, wire, n_gate, n_parties, n_eps
         # ADD gates	
         if c.operation == 'ADD' or c.operation== 'XOR':
             c.w = wire
-            c.add() 
+            c.add()
     return alpha_broadcast
 
 #input: circuit, wire structure, list of n_mul gate alphas, and two epsilons
