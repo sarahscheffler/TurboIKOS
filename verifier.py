@@ -131,8 +131,8 @@ def recompute(circuit, c_info, n_parties, parties, comitted_views, open_views, b
     epsilon1 = temp_epsilon[0]
     epsilon2 = temp_epsilon[1]
     #initialize empty lists and other information 
-    alpha = []
-    zeta_broadcast = [None]*len(parties)
+    alpha = [[[None for x in range(len(parties))] for x in range(n_epsilons)] for x in range(n_mult)]
+    zeta_broadcast = [[None for x in range (len(parties))] for x in range(n_epsilons)]
     output_shares = []
     to_concatenate = n_wires - len(open_views[0]['input'])
 
@@ -158,7 +158,7 @@ def recompute(circuit, c_info, n_parties, parties, comitted_views, open_views, b
         lam_y_hat = rebuild_lam[2]
         lam_z_hat = rebuild_lam[3]
         alpha_shares = []
-  
+ 
         for j in range(n_gate):
             c = circuit[j]
             if c.operation == 'ADD' or c.operation == 'XOR':
@@ -188,7 +188,7 @@ def recompute(circuit, c_info, n_parties, parties, comitted_views, open_views, b
                 
                 for e in range(n_epsilons):
                     alpha_to_share = epsilon1[e][num_mult]*y_lam + (epsilon2[e][num_mult] * y_lamh)
-                    alpha_shares.append(alpha_to_share)
+                    alpha[num_mult][e][i] = alpha_to_share
                 
                 x = c.x
                 y = c.y
@@ -200,13 +200,12 @@ def recompute(circuit, c_info, n_parties, parties, comitted_views, open_views, b
                         epsilon1[e][num_mult] * e_inputs[x] * lambda_val[y] - \
                         epsilon1[e][num_mult] * lambda_z[num_mult] - epsilon2[e][num_mult] * lam_z_hat[num_mult]
                     if parties[i] == 0: 
-                        zeta += epsilon1[e][num_mult] * e_z[num_mult] - epsilon1[e][num_mult] * e_inputs[x] * e_inputs[y] + epsilon2[num_mult] * e_z_hat[num_mult]
+                        zeta += epsilon1[e][num_mult] * e_z[num_mult] - epsilon1[e][num_mult] * e_inputs[x] * e_inputs[y] + epsilon2[e][num_mult] * e_z_hat[num_mult]
                         if j == n_gate:
-                            zeta_broadcast[i] = zeta
+                            zeta_broadcast[e][i] = zeta
                 num_mult += 1
         output_shares.append(wire_value[-1])
-        alpha.append(alpha_shares)
-
+    
     return alpha, output_shares, zeta_broadcast
 
 """
@@ -219,18 +218,21 @@ inputs:
     recomputed_output_shares = recompute()[1]
     recomputed_zetas: recompute()[2]
 """
-def check_recompute(c_info, parties, broadcast, recomputed_alpha, recompute_output_shares, recomputed_zeta):
+def check_recompute(c_info, parties, broadcast, recomputed_alpha, recompute_output_shares, recomputed_zeta, n_epsilons):
     n_multgate = c_info['n_mul']
     prover_alpha = broadcast['alpha']
     prover_output = broadcast['output shares']
     prover_zeta = broadcast['zeta']
-
+    print(recomputed_alpha)
+    print('')
+    print(prover_alpha)
     for i in range(len(parties)): 
         #check alphas 
-        for j in range(n_multgate):
-            assert (prover_alpha[j][parties[i]].value == recomputed_alpha[i][j].value), "Verifier's recomputed alphas does not match prover's alphas."
         assert(recompute_output_shares[i].value == prover_output[parties[i]].value), "Verifier's recomputed output shares does not match prover's output shares."
-        assert(recomputed_zeta[i].value == prover_zeta[parties[i]].value), "Verifier's recomputd zetas does not match prover's zetas."
+        for e in range(n_epsilons):
+            for j in range(n_multgate):
+                assert (prover_alpha[j][e][parties[i]].value == recomputed_alpha[j][e][i].value), "Verifier's recomputed alphas does not match prover's alphas."
+                assert(recomputed_zeta[e][i].value == prover_zeta[e][parties[i]].value), "Verifier's recomputd zetas does not match prover's zetas."
 
     print("Verifier's alphas, zetas, and output matches prover's.")
     return 
@@ -246,4 +248,4 @@ def verifier(circuit, c_info, n_parties, parties, committed_views, open_views, r
 
     #verifier recompute 
     v_recompute = recompute(circuit, c_info, n_parties, parties, committed_views, open_views, broadcast, n_epsilons)
-    checkrecompute = check_recompute(c_info, parties, broadcast, v_recompute[0], v_recompute[1], v_recompute[2])
+    checkrecompute = check_recompute(c_info, parties, broadcast, v_recompute[0], v_recompute[1], v_recompute[2], n_epsilons)
