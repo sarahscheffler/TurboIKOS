@@ -6,8 +6,8 @@ from Value import Value
 from binascii import hexlify
 from hashlib import sha256
 from random import sample, seed, getrandbits
-from Crypto.Util.Padding import pad
-from Crypto.Util.number import bytes_to_long
+from Cryptodome.Util.Padding import pad
+from Cryptodome.Util.number import bytes_to_long
 from gmpy2 import mpz, sub, t_mod
 
 field = v.getfield()
@@ -16,7 +16,6 @@ def make_epsilons(r2, num_mult_gates):
     """
     function will generate epsilsons for round2. verifier can call make epsilons to check that prover is not cheating, which is why make_epsilons is a separate 
     function rather than being nested in round2 
-
     inputs: r2 (from func round), num_mult_gates (number of mult gates for epsilon creation?) <-- either move this one to prover or get num of mult gates from another files
     outputs: 2*num_mult_gates epsilsons 
     """    

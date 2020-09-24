@@ -1,7 +1,7 @@
 import sys
 import hashlib
 from Value import Value
-from Crypto.Util.number import bytes_to_long, long_to_bytes
+from Cryptodome.Util.number import bytes_to_long, long_to_bytes
 import Fiat_Shamir
 from wire import Wire
 from gate import gate
@@ -74,7 +74,7 @@ def check_commitments(parties, committed_views, rebuilt_views, committed_broadca
 
     #check broadcast
     assert (hashlib.sha256(rebuilt_broadcast).hexdigest() == committed_broadcast), "Committed broadcast does not match open broadcast"
-    print("Prover's committed views and broadcast match the opened views and broadcast")
+    # print("Prover's committed views and broadcast match the opened views and broadcast")
     return 1
 
 """
@@ -89,7 +89,7 @@ def check_zeta(broadcast):
     check_zero = Value(0)
     zeta = broadcast['zeta']
     assert(sum(zeta) == check_zero), "Zeta does not sum to zero"
-    print("Zetas in prover's broadcast sums to 0")
+    # print("Zetas in prover's broadcast sums to 0")
     return 
 
 """
@@ -191,6 +191,11 @@ def recompute(circuit, c_info, n_parties, parties, comitted_views, open_views, b
                 if parties[i] == 0: 
                     zeta += epsilon1[num_mult] * e_z[num_mult] - epsilon1[num_mult] * e_inputs[x] * e_inputs[y] + epsilon2[num_mult] * e_z_hat[num_mult]
                 num_mult += 1
+            if c.operation == 'INV' or c.operation == 'NOT':
+                if current_party == 0:
+                    wire_value[c.z] = wire_value[c.x] + Value(1)    
+                else:
+                    wire_value[c.z] = wire_value[c.x]
         zeta_broadcast[i] = zeta
 
         output_shares.append(wire_value[-1])
@@ -217,11 +222,13 @@ def check_recompute(c_info, parties, broadcast, recomputed_alpha, recompute_outp
     for i in range(len(parties)): 
         #check alphas 
         for j in range(n_multgate):
+            print(prover_alpha[j][parties[i]].value)
+            print(recomputed_alpha[i][j].value)
             assert (prover_alpha[j][parties[i]].value == recomputed_alpha[i][j].value), "Verifier's recomputed alphas does not match prover's alphas."
         assert(recompute_output_shares[i].value == prover_output[parties[i]].value), "Verifier's recomputed output shares does not match prover's output shares."
         assert(recomputed_zeta[i].value == prover_zeta[parties[i]].value), "Verifier's recomputd zetas does not match prover's zetas."
 
-    print("Verifier's alphas, zetas, and output matches prover's.")
+    # print("Verifier's alphas, zetas, and output matches prover's.")
     return 
 
 

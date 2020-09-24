@@ -4,7 +4,7 @@ Commit to views and broadcast
 
 import hashlib
 from Value import Value
-from Crypto.Util.number import bytes_to_long, long_to_bytes
+from Cryptodome.Util.number import bytes_to_long, long_to_bytes
 #input: byte string to commit
 #output: random value in mpz format, commited data in hexadecimal format
 #commit data 
@@ -29,14 +29,14 @@ def round_one_internal(n_parties, n_gate, n_input, circuit, wire, party_seeds):
     r = [None]*n_parties
         
     # v output shares
-    output_shares = wire.v(circuit[-1].z)
+    # output_shares = wire.v(circuit[-1].z)
     for j in range(n_parties):
         d = {'input': [], 'party seed': None}
         views_str = b''
         input_str = b''
         seed_str = b''
         d['party seed'] = party_seeds[j]
-        seed_str += long_to_bytes(party_seeds[j].value)
+        seed_str += long_to_bytes(party_seeds[j])
         for i in range(n_input):
             d['input'].append(wire.v(i)[j])
             # d['party seed'].append(party_seeds[j])
