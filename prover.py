@@ -57,7 +57,7 @@ def round_one_internal(n_parties, n_gate, n_input, circuit, wire, party_seeds):
 
 #input: number of gates, circuit object, wire object, alpha arry arr[#parties][#mulgates], zeta[#parties]
 #output: committed broadcast, broadcast
-def round_three_internal(n_parties, n_gate, n_input, circuit, wire, alpha, zeta):
+def round_three_internal(n_parties, n_gate, n_input, n_epsilons, circuit, wire, alpha, zeta):
     e_inputs = []
     e_input_str = b''
     e_z = []
@@ -71,34 +71,36 @@ def round_three_internal(n_parties, n_gate, n_input, circuit, wire, alpha, zeta)
 
     # v output shares
     output_shares = wire.v(circuit[-1].z)
-    for j in range(n_parties):
-        output_shares_str += long_to_bytes(wire.v(circuit[-1].z)[j].value)
-        zeta_str += long_to_bytes(zeta[j].value)
+    for e in range(n_epsilons):     
+        for j in range(n_parties):
+            if e == 0:
+                output_shares_str += long_to_bytes(wire.v(circuit[-1].z)[j].value)
 
-    n_mul = 0
+            zeta_str += long_to_bytes(zeta[e][j].value)
 
     for i in range(n_input):
         #e of inputs
         e = wire.e(i) 
         e_input_str += long_to_bytes(e.value)
         e_inputs.append(e)
-
-    for i in range(n_gate):
-        if circuit[i].operation == 'MUL' or circuit[i].operation == 'AND':
-            g = circuit[i]
-            #e_z
-            val = wire.e(g.z)
-            e_z_str += long_to_bytes(val.value)
-            e_z.append(val)
-            #ez hat
-            val = wire.e_hat(g.z)
-            e_z_hat_str += long_to_bytes(val.value)
-            e_z_hat.append(val)
-            #alpha
-            for j in range(n_parties):
-                alpha_str += long_to_bytes(alpha[n_mul][j].value)   
-            n_mul += 1
-
+    
+    for e in range(n_epsilons):
+        n_mul = 0
+        for i in range(n_gate):
+            if circuit[i].operation == 'MUL' or circuit[i].operation == 'AND':
+                g = circuit[i]
+                #e_z
+                val = wire.e(g.z)
+                e_z_str += long_to_bytes(val.value)
+                e_z.append(val)
+                #ez hat
+                val = wire.e_hat(g.z)
+                e_z_hat_str += long_to_bytes(val.value)
+                e_z_hat.append(val)
+                #alpha
+                for j in range(n_parties):
+                    alpha_str += long_to_bytes(alpha[n_mul][e][j].value)   
+                n_mul += 1
     broadcast = {'e inputs': e_inputs, 'e z': e_z, 'e z hat': e_z_hat, 'alpha': alpha, 'zeta': zeta, 'output shares': output_shares}
     broadcast_str = e_input_str + e_z_str + e_z_hat_str + alpha_str + zeta_str + output_shares_str
     temp = commit(broadcast_str)

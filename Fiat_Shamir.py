@@ -6,35 +6,36 @@ from Value import Value
 from binascii import hexlify
 from hashlib import sha256
 from random import sample, seed, getrandbits
-from Cryptodome.Util.Padding import pad
-from Cryptodome.Util.number import bytes_to_long
+from Crypto.Util.Padding import pad
+from Crypto.Util.number import bytes_to_long
 from gmpy2 import mpz, sub, t_mod
+from circuit import n_epsilons
 
 field = v.getfield()
 
-def make_epsilons(r2, num_mult_gates):
+def make_epsilons(r2, num_mult_gates, n_epsilons):
     """
     function will generate epsilsons for round2. verifier can call make epsilons to check that prover is not cheating, which is why make_epsilons is a separate 
     function rather than being nested in round2 
     inputs: r2 (from func round), num_mult_gates (number of mult gates for epsilon creation?) <-- either move this one to prover or get num of mult gates from another files
-    outputs: 2*num_mult_gates epsilsons 
+    outputs: 2*num_mult_gates epsilsons*num_epsilons 
     """    
-    list_epsilon = [0]*num_mult_gates
-    list_epsilon_hat = [0]*num_mult_gates
-
-    #generate 128 random bits by using random.getrandbits, splice value 
+    list_epsilon = [[0 for x in range(num_mult_gates)] for x in range(n_epsilons)]  
+    list_epsilon_hat = [[0 for x in range(num_mult_gates)] for x in range(n_epsilons)]
     seed(r2)
-
-    for i in range(num_mult_gates):
-        epsilon = bin(getrandbits(127))
-        epsilon_hat = bin(getrandbits(127))
-        epsilon = Value(int(epsilon, 2))
-        epsilon_hat = Value(int(epsilon_hat, 2))
-        list_epsilon[i] = epsilon
-        list_epsilon_hat[i] = epsilon_hat
+    #generate 128 random bits by using random.getrandbits, splice value 
+    for j in range(n_epsilons):
+        #seed(r2+(j.to_bytes(16, byteorder = 'big')))
+        for i in range(num_mult_gates):
+            epsilon = bin(getrandbits(127))
+            epsilon_hat = bin(getrandbits(127))
+            epsilon = Value(int(epsilon, 2))
+            epsilon_hat = Value(int(epsilon_hat, 2))
+            list_epsilon[j][i] = epsilon
+            list_epsilon_hat[j][i] = epsilon_hat
     return list_epsilon, list_epsilon_hat
 
-def round2(round_1, num_mult_gates):
+def round2(round_1, num_mult_gates, n_epsilons):
     """"
     inputs: round_1 (byte string of everything in round 1), num_mult_gates (int, utilized for calling make_epsilons)
     output: list of epsilons for round 3 
@@ -45,7 +46,7 @@ def round2(round_1, num_mult_gates):
     else: #else, encodes round_1 to satisfy type requirement 
         r2 = sha256(round_1.encode())
 
-    return make_epsilons(r2.digest(), num_mult_gates)
+    return make_epsilons(r2.digest(), num_mult_gates, n_epsilons)
 
 
 def round4(round_1, round_3, t, n):

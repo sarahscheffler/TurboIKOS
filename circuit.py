@@ -15,12 +15,11 @@ from Value import Value
 #         nymber of inputs
 # function:: parse external file in Bristol format
 
-
+n_epsilons = 2
 def parse_bristol(gate, n_parties, i):
     input_stream = sys.argv[i]
     n_mulgate = 0 
     n_addgate = 0
-    n_notgate = 0
     with open(input_stream, 'r') as f:
         first_line = f.readline().split()
         n_gate = int(first_line[0])
@@ -41,17 +40,12 @@ def parse_bristol(gate, n_parties, i):
         i = 0
         for line in f:
             n = line.strip('\n').split(' ')
-            input1, input2, output, operation = None, None, None, None
-            if n[0] == '2': 
-                input1, input2, output, operation = int(n[2]), int(n[3]), int(n[4]), n[5]
-            if n[0] == '1': 
-                input1, input2, output, operation = int(n[2]), None, int(n[3]), n[4]
+            input1, input2, output, operation = int(
+            n[2]), int(n[3]), int(n[4]), n[5]
             if operation == 'ADD' or operation == 'XOR':
                 n_addgate += 1
-            elif operation =='MUL' or operation == 'AND':
+            else:
                 n_mulgate += 1
-            elif operation == 'INV' or operation == 'NOT': 
-                n_notgate += 1
             g = gate(input1, input2, output, n_parties, operation=operation)
             l[i] = g
             i = i + 1
@@ -68,7 +62,6 @@ def parse_pws(gate, n_parties, i):
     input_stream = sys.argv[i]
     n_mulgate = 0
     n_addgate = 0
-    n_notgate = 0
     n_input = 0
     n_output = 0
     n_gate = 0
@@ -127,7 +120,7 @@ def wire_data(n_wires):
 #input: circuit object, epsilon1, epsilon2, wire data structure, number of gates, number of parties
 #output: array of array of alpha values. row# = mul gate#, col# = party# 
 #Write to output wires of each gate and compute alpha values.  
-def compute_output(circuit, epsilon_1, epsilon_2, wire, n_gate, n_parties):
+def compute_output(circuit, epsilon_1, epsilon_2, wire, n_gate, n_parties, n_epsilons):
     alpha_broadcast = []
     m = 0
     for i in range(n_gate):
@@ -137,27 +130,24 @@ def compute_output(circuit, epsilon_1, epsilon_2, wire, n_gate, n_parties):
             c.w = wire
             c.mult()
 	    # calculate alpha share
-            alpha_shares = [None]*n_parties
+            alpha_shares = [[None for x in range(n_parties)] for x in range (n_epsilons)]
             for j in range(n_parties):
                 y_lam = wire.lambda_val(c.y)[j]
                 y_lamh = wire.lam_hat(c.y)[j]
-                alpha_shares[j] = epsilon_1[m]*y_lam + (epsilon_2[m]*y_lamh)
+                for e in range(n_epsilons):
+                    alpha_shares[e][j] = epsilon_1[e][m]*y_lam + (epsilon_2[e][m]*y_lamh)
             alpha_broadcast.append(alpha_shares)
             m += 1
         # ADD gates	
         if c.operation == 'ADD' or c.operation== 'XOR':
             c.w = wire
-            c.add() 
-        # if c.operation == 'INV' or c.operation == 'NOT': 
-        #     c.w = wire
-        #     c.inv()
+            c.add()
     return alpha_broadcast
 
 #input: circuit, wire structure, list of n_mul gate alphas, and two epsilons
 #output: n_parties zeta shares
-def compute_zeta_share(circuit, wire, alpha, epsilon_1, epsilon_2, n_parties):
-    r = [None]*n_parties
-    
+def compute_zeta_share(circuit, wire, alpha, epsilon_1, epsilon_2, n_parties, n_epsilons):
+    r = [[None]*n_parties]*n_epsilons
     for i in range(n_parties):
         zeta = 0
         n = 0
@@ -166,13 +156,16 @@ def compute_zeta_share(circuit, wire, alpha, epsilon_1, epsilon_2, n_parties):
                 x = circuit[j].x
                 y = circuit[j].y
                 z = circuit[j].z
-                A = sum(alpha[n])
-                zeta += (epsilon_1[n] * wire.e(y) - A)* wire.lambda_val(x)[i] + \
-                    epsilon_1[n] * wire.e(x) * wire.lambda_val(y)[i] - \
-                    epsilon_1[n] * wire.lambda_val(z)[i] - epsilon_2[n] * wire.lam_hat(z)[i]     
+                for e in range(n_epsilons):
+                    A = sum(alpha[n][e])
+                    zeta += (epsilon_1[e][n] * wire.e(y) - A)* wire.lambda_val(x)[i] + \
+                        epsilon_1[e][n] * wire.e(x) * wire.lambda_val(y)[i] - \
+                        epsilon_1[e][n] * wire.lambda_val(z)[i] - epsilon_2[e][n] * wire.lam_hat(z)[i]     
+                    
+                    if i == 0:
+                        zeta += epsilon_1[e][n] * wire.e(z) - epsilon_1[e][n]*wire.e(x)*wire.e(y) + epsilon_2[e][n]*wire.e_hat(z)
+                n+= 1   
+            if j== len(circuit)-1:
+                r[e][i] = (zeta)
                 
-                if i == 0:
-                    zeta += epsilon_1[n] * wire.e(z) - epsilon_1[n]*wire.e(x)*wire.e(y) + epsilon_2[n]*wire.e_hat(z)
-                n += 1
-        r[i] = (zeta)
     return r

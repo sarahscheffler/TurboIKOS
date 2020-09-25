@@ -31,7 +31,7 @@ def rebuild_commitments(circuit, c_info, parties, open_views, list_rval, broadca
         n_mul = 0
         input_str = b''
         lambda_seed = b''
-        lambda_seed += long_to_bytes(party['party seed'].value)
+        lambda_seed += long_to_bytes(party['party seed'])
         for j in range(n_input):
             input_str += long_to_bytes(party['input'][j].value)
                 
@@ -46,10 +46,18 @@ def rebuild_commitments(circuit, c_info, parties, open_views, list_rval, broadca
         if item == 'alpha':
             alpha_array = broadcast['alpha']
             n = len(alpha_array)
-            m = len(alpha_array[0])
-            for i in range(n):
-                for j in range(m):
-                    rebuilt_broadcast += long_to_bytes(alpha_array[i][j].value)
+            l = len(alpha_array[0])
+            m = len(alpha_array[0][0])
+            print(n, l, m)
+            for e in range(l):
+                for i in range(n):
+                    for j in range(m):
+                        rebuilt_broadcast += long_to_bytes(alpha_array[i][e][j].value)
+        elif item == 'zeta':
+            zeta_array = broadcast['zeta']
+            for i in range(len(zeta_array)):
+                for j in range(len(zeta_array[0])):
+                    rebuilt_broadcast += long_to_bytes(zeta_array[i][j].value)
         else:
             for item_value in broadcast[item]:
                 rebuilt_broadcast += long_to_bytes(item_value.value)
@@ -88,8 +96,9 @@ def check_zeta(broadcast):
     #check \zeta == 0
     check_zero = Value(0)
     zeta = broadcast['zeta']
-    assert(sum(zeta) == check_zero), "Zeta does not sum to zero"
-    # print("Zetas in prover's broadcast sums to 0")
+    for e in range(len(zeta)):
+        assert(sum(zeta[e]) == check_zero), "Zeta does not sum to zero"
+    print("Zetas in prover's broadcast sums to 0")
     return 
 
 """
@@ -98,9 +107,9 @@ def check_zeta(broadcast):
         committed_views: committed views from round1 
         n_multgates: number of mult gates 
 """
-def get_epsilons(committed_views, n_multgates):
+def get_epsilons(committed_views, n_multgates, n_epsilons):
     r2 = hashlib.sha256(committed_views)
-    return Fiat_Shamir.make_epsilons(r2.digest(), n_multgates)
+    return Fiat_Shamir.make_epsilons(r2.digest(), n_multgates, n_epsilons)
 
 """
 ---recompute---
@@ -113,17 +122,17 @@ def get_epsilons(committed_views, n_multgates):
         open_views: views opened by prover (parties[i] is the opened view[i])
         broadcast: open broadcast received in round 5
 """
-def recompute(circuit, c_info, n_parties, parties, comitted_views, open_views, broadcast):
+def recompute(circuit, c_info, n_parties, parties, comitted_views, open_views, broadcast, n_epsilons):
     #get info from c_info
     n_wires, n_gate, n_mult = c_info['n_wires'], c_info['n_gate'], c_info['n_mul']
     #get epsilons 
     temp_str = ''.join(comitted_views)
-    temp_epsilon = get_epsilons(temp_str.encode(), n_mult)
+    temp_epsilon = get_epsilons(temp_str.encode(), n_mult, n_epsilons)
     epsilon1 = temp_epsilon[0]
     epsilon2 = temp_epsilon[1]
     #initialize empty lists and other information 
-    alpha = []
-    zeta_broadcast = [None]*len(parties)
+    alpha = [[[None for x in range(len(parties))] for x in range(n_epsilons)] for x in range(n_mult)]
+    zeta_broadcast = [[None for x in range (len(parties))] for x in range(n_epsilons)]
     output_shares = []
     to_concatenate = n_wires - len(open_views[0]['input'])
 
@@ -150,6 +159,7 @@ def recompute(circuit, c_info, n_parties, parties, comitted_views, open_views, b
         lam_z_hat = rebuild_lam[3]
         alpha_shares = []
   
+ 
         for j in range(n_gate):
             c = circuit[j]
             if c.operation == 'ADD' or c.operation == 'XOR':
@@ -176,31 +186,33 @@ def recompute(circuit, c_info, n_parties, parties, comitted_views, open_views, b
 
                 y_lam = lambda_val[c.y]
                 y_lamh = lam_y_hat[num_mult]
-
-                alpha_to_share = epsilon1[num_mult]*y_lam + (epsilon2[num_mult] * y_lamh)
-                alpha_shares.append(alpha_to_share)
+                
+                for e in range(n_epsilons):
+                    alpha_to_share = epsilon1[e][num_mult]*y_lam + (epsilon2[e][num_mult] * y_lamh)
+                    alpha[num_mult][e][i] = alpha_to_share
                 
                 x = c.x
                 y = c.y
                 z = c.z
-                A = sum(p_alpha[num_mult])
+                for e in range(n_epsilons):
+                    A = sum(p_alpha[num_mult][e])
 
-                zeta += (epsilon1[num_mult] * e_inputs[y] - A)* lambda_val[x] + \
-                    epsilon1[num_mult] * e_inputs[x] * lambda_val[y] - \
-                        epsilon1[num_mult] * lambda_z[num_mult] - epsilon2[num_mult] * lam_z_hat[num_mult]
-                if parties[i] == 0: 
-                    zeta += epsilon1[num_mult] * e_z[num_mult] - epsilon1[num_mult] * e_inputs[x] * e_inputs[y] + epsilon2[num_mult] * e_z_hat[num_mult]
+                    zeta += (epsilon1[e][num_mult] * e_inputs[y] - A)* lambda_val[x] + \
+                        epsilon1[e][num_mult] * e_inputs[x] * lambda_val[y] - \
+                        epsilon1[e][num_mult] * lambda_z[num_mult] - epsilon2[e][num_mult] * lam_z_hat[num_mult]
+                    if parties[i] == 0: 
+                        zeta += epsilon1[e][num_mult] * e_z[num_mult] - epsilon1[e][num_mult] * e_inputs[x] * e_inputs[y] + epsilon2[e][num_mult] * e_z_hat[num_mult]
+                    if j == n_gate: #why this line
+                        zeta_broadcast[e][i] = zeta
                 num_mult += 1
             if c.operation == 'INV' or c.operation == 'NOT':
                 if current_party == 0:
                     wire_value[c.z] = wire_value[c.x] + Value(1)    
                 else:
                     wire_value[c.z] = wire_value[c.x]
-        zeta_broadcast[i] = zeta
 
         output_shares.append(wire_value[-1])
-        alpha.append(alpha_shares)
-
+    
     return alpha, output_shares, zeta_broadcast
 
 """
@@ -213,26 +225,27 @@ inputs:
     recomputed_output_shares = recompute()[1]
     recomputed_zetas: recompute()[2]
 """
-def check_recompute(c_info, parties, broadcast, recomputed_alpha, recompute_output_shares, recomputed_zeta):
+def check_recompute(c_info, parties, broadcast, recomputed_alpha, recompute_output_shares, recomputed_zeta, n_epsilons):
     n_multgate = c_info['n_mul']
     prover_alpha = broadcast['alpha']
     prover_output = broadcast['output shares']
     prover_zeta = broadcast['zeta']
-
+    print(recomputed_alpha)
+    print('')
+    print(prover_alpha)
     for i in range(len(parties)): 
         #check alphas 
-        for j in range(n_multgate):
-            print(prover_alpha[j][parties[i]].value)
-            print(recomputed_alpha[i][j].value)
-            assert (prover_alpha[j][parties[i]].value == recomputed_alpha[i][j].value), "Verifier's recomputed alphas does not match prover's alphas."
         assert(recompute_output_shares[i].value == prover_output[parties[i]].value), "Verifier's recomputed output shares does not match prover's output shares."
-        assert(recomputed_zeta[i].value == prover_zeta[parties[i]].value), "Verifier's recomputd zetas does not match prover's zetas."
+        for e in range(n_epsilons):
+            for j in range(n_multgate):
+                assert (prover_alpha[j][e][parties[i]].value == recomputed_alpha[j][e][i].value), "Verifier's recomputed alphas does not match prover's alphas."
+                assert(recomputed_zeta[e][i].value == prover_zeta[e][parties[i]].value), "Verifier's recomputd zetas does not match prover's zetas."
 
     # print("Verifier's alphas, zetas, and output matches prover's.")
     return 
 
 
-def verifier(circuit, c_info, n_parties, parties, committed_views, open_views, r_views, committed_broadcast, broadcast, r_broadcast):
+def verifier(circuit, c_info, n_parties, parties, committed_views, open_views, r_views, committed_broadcast, broadcast, r_broadcast, n_epsilons):
     #check commitments
     rebuild = rebuild_commitments(circuit, c_info, parties, open_views, r_views, broadcast, r_broadcast)
     check_commitment = check_commitments(parties, committed_views, rebuild[0], committed_broadcast, rebuild[1])
@@ -241,5 +254,5 @@ def verifier(circuit, c_info, n_parties, parties, committed_views, open_views, r
     check_zeta(broadcast)
 
     #verifier recompute 
-    v_recompute = recompute(circuit, c_info, n_parties, parties, committed_views, open_views, broadcast)
-    checkrecompute = check_recompute(c_info, parties, broadcast, v_recompute[0], v_recompute[1], v_recompute[2])
+    v_recompute = recompute(circuit, c_info, n_parties, parties, committed_views, open_views, broadcast, n_epsilons)
+    checkrecompute = check_recompute(c_info, parties, broadcast, v_recompute[0], v_recompute[1], v_recompute[2], n_epsilons)

@@ -192,21 +192,10 @@ def rebuildlambda(party, seed, circuit, c_info):
             z_lam_hat = generateNum(cipher, 'lambda z hat', n_mult)
             lam_z_hat[n_mult] = z_lam_hat
             n_mult += 1
-        elif gate.operation == 'INV' or gate.operation == ' NOT':
-            if x < n_input:
-                x_lam = generateNum(cipher, 'lambda', x)
-                lambda_val[x] = x_lam
-            if y < n_input:
-                y_lam = generateNum(cipher, 'lambda', y)
-                lambda_val[y] = y_lam
-            if party == 0:
-                z_lam = x_lam + Value(1)
-            else: 
-                z_lam = x_lam
     return lambda_val, lambda_z, lam_y_hat, lam_z_hat
 
-def make_party_seeds(n_parties): #TODO: incorporate getrand into this function 
-    party_master_seed_value = [getranbyte(16) for i in range(n_parties)]
+def make_party_seeds(n_parties):
+    party_master_seed_value = [getranbyte(16) for i in range(n_parties)] #array of int
     return party_master_seed_value
 
 #pseudorandom assignment for lambdas 
@@ -250,16 +239,6 @@ def PRassignLambda(circuit, wire, n_parties):
             gate.c = wire.lam_hat(gate.z)
             triples.append([sum(wire.lambda_val(gate.x)), y_lam_hat, z_lam_hat])
             n_mult += 1
-        elif gate.operation == 'NOT' or gate.operation == 'INV': 
-            wire.set_lambda(gate.z, [None]*n_parties)
-            if wire.lambda_val(gate.x) == None:
-                x_lambda = [generateNum(i, 'lambda', gate.x) for i in party_master_seed]
-                wire.set_lambda(gate.x, x_lambda)
-            for i in range(n_parties):
-                if i == 0:
-                    wire.lambda_val(gate.z)[i] = wire.lambda_val(gate.x)[i] + Value(1) 
-                else: 
-                    wire.lambda_val(gate.z)[i] = wire.lambda_val(gate.x)[i]
         else: 
             try: 
                 pass
