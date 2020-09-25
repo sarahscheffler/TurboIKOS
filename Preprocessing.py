@@ -40,7 +40,10 @@ def getRandom():
     return lam
  
 def getranbyte(num_bytes): #getRandomBytes : int -> bytes getRandomBytes(16) creates a 16-byte random number (not a Value)
-    return bytes_to_long(os.urandom(num_bytes))
+    x = (os.urandom(num_bytes))
+    assert (len(x) == 16)
+    return x
+    # return (os.urandom(num_bytes))
 
 """
 input: list
@@ -151,7 +154,7 @@ def rebuildlambda(party, seed, circuit, c_info):
     n_ouput = c_info['n_output']
     c_nmul = c_info['n_mul']
 
-    cipher = AES.new(long_to_bytes(seed), AES.MODE_ECB)
+    cipher = AES.new((seed), AES.MODE_ECB)
     n_mult = 0
 
     lambda_val = [None]*n_input
@@ -195,13 +198,17 @@ def rebuildlambda(party, seed, circuit, c_info):
     return lambda_val, lambda_z, lam_y_hat, lam_z_hat
 
 def make_party_seeds(n_parties):
-    party_master_seed_value = [getranbyte(16) for i in range(n_parties)] #array of int
+    party_master_seed_value = [(getranbyte(16)) for i in range(n_parties)] #array of int
+    # pmsv = [(getranbyte(16)) for i in range(n_parties)] #array of int
+    # print(pmsv)
+    # party_master_seed_value = [bytes_to_long(i) for i in pmsv] #array of int
     return party_master_seed_value
 
 #pseudorandom assignment for lambdas 
 def PRassignLambda(circuit, wire, n_parties):
     party_master_seed_value = make_party_seeds(n_parties)
-    party_master_seed = [AES.new(long_to_bytes(i), AES.MODE_ECB) for i in party_master_seed_value] 
+    party_master_seed = [AES.new(i, AES.MODE_ECB) for i in party_master_seed_value] 
+
     triples = []
     n_mult = 0
     for gate in circuit:

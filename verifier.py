@@ -31,7 +31,7 @@ def rebuild_commitments(circuit, c_info, parties, open_views, list_rval, broadca
         n_mul = 0
         input_str = b''
         lambda_seed = b''
-        lambda_seed += long_to_bytes(party['party seed'])
+        lambda_seed += (party['party seed'])
         for j in range(n_input):
             input_str += long_to_bytes(party['input'][j].value)
                 
@@ -48,7 +48,6 @@ def rebuild_commitments(circuit, c_info, parties, open_views, list_rval, broadca
             n = len(alpha_array)
             l = len(alpha_array[0])
             m = len(alpha_array[0][0])
-            print(n, l, m)
             for e in range(l):
                 for i in range(n):
                     for j in range(m):
@@ -146,9 +145,6 @@ def recompute(circuit, c_info, n_parties, parties, comitted_views, open_views, b
         party_view = open_views[i]
         seed = party_view['party seed']
 
-        num_mult = 0
-        zeta = 0
-
         input_val = open_views[i]['input'] 
         wire_value = [input_val[i] if i < len(input_val) else Value(0) for i in range(n_wires)]        
         #generating lambdas from the master seed 
@@ -158,61 +154,63 @@ def recompute(circuit, c_info, n_parties, parties, comitted_views, open_views, b
         lam_y_hat = rebuild_lam[2]
         lam_z_hat = rebuild_lam[3]
         alpha_shares = []
-  
- 
-        for j in range(n_gate):
-            c = circuit[j]
-            if c.operation == 'ADD' or c.operation == 'XOR':
-                x_v = wire_value[c.x]
-                y_v = wire_value[c.y]
-                z_v = x_v + y_v
-                lamx = lambda_val[c.x]
-                lamy = lambda_val[c.y]
-                wire_value[c.z] = z_v
-                lambda_val[c.z] = lamx + lamy
-                x_e, y_e = e_inputs[c.x], e_inputs[c.y]
-                e_inputs[c.z] = x_e + y_e
-            if c.operation == 'MUL' or c.operation == 'AND':
-                x_v = wire_value[c.x]
-                y_v = wire_value[c.y]
-                if parties[i] == 0: 
-                    z_v = e_z[num_mult] - lambda_z[num_mult]
-                else:
-                    z_v = Value(0) - lambda_z[num_mult]
-                wire_value[c.z] = z_v
+        
+        for e in range(n_epsilons):
+            num_mult = 0
+            zeta = 0
+            for j in range(n_gate):
+                c = circuit[j]
+                if c.operation == 'ADD' or c.operation == 'XOR':
+                    if e == 0:
+                        x_v = wire_value[c.x]
+                        y_v = wire_value[c.y]
+                        z_v = x_v + y_v
+                        lamx = lambda_val[c.x]
+                        lamy = lambda_val[c.y]
+                        wire_value[c.z] = z_v
+                        lambda_val[c.z] = lamx + lamy
+                        x_e, y_e = e_inputs[c.x], e_inputs[c.y]
+                        e_inputs[c.z] = x_e + y_e
+                if c.operation == 'MUL' or c.operation == 'AND':
+                    if e == 0: 
+                        x_v = wire_value[c.x]
+                        y_v = wire_value[c.y]
+                        if parties[i] == 0: 
+                            z_v = e_z[num_mult] - lambda_z[num_mult]
+                        else:
+                            z_v = Value(0) - lambda_z[num_mult]
+                        wire_value[c.z] = z_v
             
-                e_inputs[c.z] = e_z[num_mult]
-                lambda_val[c.z] = lambda_z[num_mult]
+                    e_inputs[c.z] = e_z[num_mult]
+                    lambda_val[c.z] = lambda_z[num_mult]
 
-                y_lam = lambda_val[c.y]
-                y_lamh = lam_y_hat[num_mult]
-                
-                for e in range(n_epsilons):
+                    y_lam = lambda_val[c.y]
+                    y_lamh = lam_y_hat[num_mult]
+
+                    x = c.x
+                    y = c.y
+                    z = c.z
                     alpha_to_share = epsilon1[e][num_mult]*y_lam + (epsilon2[e][num_mult] * y_lamh)
-                    alpha[num_mult][e][i] = alpha_to_share
+                    # alpha_to_share = epsilon1[e][num_mult]*y_lam + (epsilon2[num_mult][e] * y_lamh)
+                    alpha[num_mult][e][i] = alpha_to_share #alpha[nummult][epsilon][
                 
-                x = c.x
-                y = c.y
-                z = c.z
-                for e in range(n_epsilons):
                     A = sum(p_alpha[num_mult][e])
-
                     zeta += (epsilon1[e][num_mult] * e_inputs[y] - A)* lambda_val[x] + \
-                        epsilon1[e][num_mult] * e_inputs[x] * lambda_val[y] - \
-                        epsilon1[e][num_mult] * lambda_z[num_mult] - epsilon2[e][num_mult] * lam_z_hat[num_mult]
+                            epsilon1[e][num_mult] * e_inputs[x] * lambda_val[y] - \
+                            epsilon1[e][num_mult] * lambda_z[num_mult] - epsilon2[e][num_mult] * lam_z_hat[num_mult]
+                    
                     if parties[i] == 0: 
                         zeta += epsilon1[e][num_mult] * e_z[num_mult] - epsilon1[e][num_mult] * e_inputs[x] * e_inputs[y] + epsilon2[e][num_mult] * e_z_hat[num_mult]
-                    if j == n_gate: #why this line
-                        zeta_broadcast[e][i] = zeta
-                num_mult += 1
-            if c.operation == 'INV' or c.operation == 'NOT':
-                if current_party == 0:
-                    wire_value[c.z] = wire_value[c.x] + Value(1)    
-                else:
-                    wire_value[c.z] = wire_value[c.x]
-
+                    
+                    num_mult += 1
+                if c.operation == 'INV' or c.operation == 'NOT':
+                    if current_party == 0:
+                        wire_value[c.z] = wire_value[c.x] + Value(1)    
+                    else:
+                        wire_value[c.z] = wire_value[c.x]
+                if j == n_gate-1:
+                    zeta_broadcast[e][i] = zeta
         output_shares.append(wire_value[-1])
-    
     return alpha, output_shares, zeta_broadcast
 
 """
@@ -230,9 +228,7 @@ def check_recompute(c_info, parties, broadcast, recomputed_alpha, recompute_outp
     prover_alpha = broadcast['alpha']
     prover_output = broadcast['output shares']
     prover_zeta = broadcast['zeta']
-    print(recomputed_alpha)
-    print('')
-    print(prover_alpha)
+
     for i in range(len(parties)): 
         #check alphas 
         assert(recompute_output_shares[i].value == prover_output[parties[i]].value), "Verifier's recomputed output shares does not match prover's output shares."

@@ -36,7 +36,7 @@ def round_one_internal(n_parties, n_gate, n_input, circuit, wire, party_seeds):
         input_str = b''
         seed_str = b''
         d['party seed'] = party_seeds[j]
-        seed_str += long_to_bytes(party_seeds[j])
+        seed_str += (party_seeds[j])
         for i in range(n_input):
             d['input'].append(wire.v(i)[j])
             # d['party seed'].append(party_seeds[j])

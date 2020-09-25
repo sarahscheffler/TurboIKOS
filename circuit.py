@@ -136,7 +136,7 @@ def compute_output(circuit, epsilon_1, epsilon_2, wire, n_gate, n_parties, n_eps
                 y_lamh = wire.lam_hat(c.y)[j]
                 for e in range(n_epsilons):
                     alpha_shares[e][j] = epsilon_1[e][m]*y_lam + (epsilon_2[e][m]*y_lamh)
-            alpha_broadcast.append(alpha_shares)
+            alpha_broadcast.append(alpha_shares) #alpha[gate][epsilon][party]
             m += 1
         # ADD gates	
         if c.operation == 'ADD' or c.operation== 'XOR':
@@ -147,16 +147,16 @@ def compute_output(circuit, epsilon_1, epsilon_2, wire, n_gate, n_parties, n_eps
 #input: circuit, wire structure, list of n_mul gate alphas, and two epsilons
 #output: n_parties zeta shares
 def compute_zeta_share(circuit, wire, alpha, epsilon_1, epsilon_2, n_parties, n_epsilons):
-    r = [[None]*n_parties]*n_epsilons
+    r = [[None for x in range(n_parties)] for x in range(n_epsilons)]
     for i in range(n_parties):
-        zeta = 0
-        n = 0
-        for j in range(len(circuit)):
-            if circuit[j].operation == 'AND' or  circuit[j].operation == 'MUL':
-                x = circuit[j].x
-                y = circuit[j].y
-                z = circuit[j].z
-                for e in range(n_epsilons):
+        for e in range(n_epsilons):
+            zeta = 0
+            n = 0
+            for j in range(len(circuit)):
+                if circuit[j].operation == 'AND' or  circuit[j].operation == 'MUL':
+                    x = circuit[j].x
+                    y = circuit[j].y
+                    z = circuit[j].z
                     A = sum(alpha[n][e])
                     zeta += (epsilon_1[e][n] * wire.e(y) - A)* wire.lambda_val(x)[i] + \
                         epsilon_1[e][n] * wire.e(x) * wire.lambda_val(y)[i] - \
@@ -164,8 +164,8 @@ def compute_zeta_share(circuit, wire, alpha, epsilon_1, epsilon_2, n_parties, n_
                     
                     if i == 0:
                         zeta += epsilon_1[e][n] * wire.e(z) - epsilon_1[e][n]*wire.e(x)*wire.e(y) + epsilon_2[e][n]*wire.e_hat(z)
-                n+= 1   
+                    n+= 1   
             if j== len(circuit)-1:
                 r[e][i] = (zeta)
-                
     return r
+
