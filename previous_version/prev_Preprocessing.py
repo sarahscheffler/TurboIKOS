@@ -11,13 +11,10 @@
       3. split data for parties
 """
 
-import os
 from Value import Value
-import Value as v
-from Cryptodome.Cipher import AES
-from Cryptodome.Util.Padding import pad
-from Cryptodome.Util.number import long_to_bytes, bytes_to_long
-from gmpy2 import mpz
+from Crypto.Cipher import AES
+from Crypto.Util.Padding import pad
+from Crypto.Util.number import long_to_bytes
 
 """
     temporary/helper functions
@@ -30,24 +27,18 @@ from gmpy2 import mpz
 """
 input: /
 output: Value
+
 generate cryptographically secure randomness lambda
 """
-
-
 def getRandom():
     lam = Value()
     lam.getRand()
     return lam
- 
-def getranbyte(num_bytes): #getRandomBytes : int -> bytes getRandomBytes(16) creates a 16-byte random number (not a Value)
-    x = (os.urandom(num_bytes))
-    assert (len(x) == 16)
-    return x
-    # return (os.urandom(num_bytes))
 
 """
 input: list
 output: boolean
+
 take a list of triples and randomly partition them into pairs
 call Fiat-Shamir.py to calculate each epsilon and r
 calculate v
@@ -80,12 +71,50 @@ def randomLC(triples):
 """
 input: Value, Value
 output: tuple
+
 generate a Beaver's triple according to lambdas
 """
 def genTriple(lamA, lamB):
     lamC = lamA*lamB
     return (lamA, lamB, lamC)
 
+"""
+input: list, integer
+output: list, list
+
+take the list representing the circuit
+for input wires, call getLambda()
+for output wires of add gates, propagate
+for output wires of mul gates, call genTriple()
+call splitData() to split the shares into n parties
+output the circuit with lambdas updated for each wire
+
+def assignLambda_old(circuit, wire_data, n):
+    triples = []
+    for gate in circuit:
+        if gate.operation == "ADD" or gate.operation == "XOR":
+            wire_data[gate.x]['lambda'].getRand()
+            wire_data[gate.y]['lambda'].getRand() 
+            wire_data[gate.z]['lambda'] = wire_data[gate.x]['lambda'] + \
+                                          wire_data[gate.y]['lambda']
+        elif gate.operation == "MUL" or gate.operation == "AND":
+            wire_data[gate.x]['lambda'].getRand()
+            wire_data[gate.y]['lambda'].getRand()
+            wire_data[gate.z]['lambda'].getRand()
+            gate.a = wire_data[gate.x]['lambda']
+            gate.b = wire_data[gate.y]['lambda']
+            gate.c = genTriple(gate.a, gate.b)[2]
+            triples.append([gate.a, gate.b, gate.c])
+            triples.append(genTriple(getRandom(), getRandom()))
+        else:
+            try:
+                pass
+            except:
+                print("Unrecognized gate type")
+    for wire in wire_data:
+        wire['lambda'] = wire['lambda'].splitVal(n)
+    return (circuit, wire_data, triples)
+"""
 
 #inputs: circuit, wire object, number of parties
 #output: list of triples
@@ -125,90 +154,74 @@ def assignLambda(circuit, wire, n_parties):
             #set z_lam_hat
             z_lam_hat = getRandom()
             wire.set_lam_hat(gate.z, z_lam_hat.splitVal(n_parties))
-        elif gate.operation == 'INV' or gate.opeartion == 'NOT': 
-            wire.set_lambda(gate.z, [None]*n_parties)
-            if wire.lambda_val(gate.x) == None:
-                x_lam = getRandom()
-                wire.set_lambda(gate.x, x_lam.splitVal(n_parties))
-            for i in range(n_parties):
-                if i == 0:
-                    wire.lambda_val(gate.z)[i] = wire.lambda_val(gate.x)[i] + Value(1) 
-                else: 
-                    wire.lambda_val(gate.z)[i] = wire.lambda_val(gate.x)[i]
+            #set triples
+            gate.a = wire.lambda_val(gate.x)
+            gate.b = wire.lam_hat(gate.y)
+            gate.c = wire.lam_hat(gate.z) 
+            triples.append([sum(wire.lambda_val(gate.x)),y_lam_hat, z_lam_hat])
+                       
         else:
             try:
                 pass
             except:
                 print("Unrecognized gate type")
-    return 1
+    return triples
    
-def generateNum(cipher, lambda_type, index):
-    assert(lambda_type == 'lambda' or \
-         lambda_type == 'lambda y hat' or \
-              lambda_type == 'lambda z hat'), "Lambda type is invalid"
-    number = cipher.encrypt(pad(lambda_type.encode() + str(index).encode(), AES.block_size))
-    return Value(bytes_to_long(number))
+def generateNum(seed, lambda_type, index):
+    cipher = AES.new(seed, AES.MODE_ECB)
+    assert(lambda_type == 'lambda' or lambda_type == 'lambda y hat' or lambda_type == 'lambda z hat'), "Lambda type is invalid"
+    number = cipher.encrypt(pad(lambda_type + str(index), AES.block_size))
+    return Value(number)
 
-def rebuildlambda(party, seed, circuit, c_info):
-    n_input = c_info['n_input']
-    n_ouput = c_info['n_output']
-    c_nmul = c_info['n_mul']
-
-    cipher = AES.new((seed), AES.MODE_ECB)
+def rebuildlambda(party, seed, circuit, wire, n_parties):
+    cipher = AES.new(seed, AES.MODE_ECB)
+    none_arr = [None*n_parties]
     n_mult = 0
-
-    lambda_val = [None]*n_input
-    lambda_z = []
-    lam_y_hat = [None]*c_nmul
-    lam_z_hat = [None]*c_nmul
-
     for gate in circuit:
-        x = gate.x
-        y = gate.y 
-        z = gate.z
         if gate.operation == "ADD" or gate.operation == "XOR":
+            #set lambda_val of gate to none_arr 
+            if wire.lambda_val(gate.x) == None:
+                wire.set_lambda(gate.x, none_arr) 
+            if wire.lambda_val(gate.y) == None:
+                wire.set_lambda(gate.y, none_arr)
+            if wire.lambda_val(gate.z) == None:
+                wire.set_lambda(gate.z, none_arr)
+
             #calculate lambdas from PR generateNum
-            if x < n_input:
-                x_lam = generateNum(cipher, 'lambda', x)
-                lambda_val[x] = x_lam
-            if y < n_input:
-                y_lam = generateNum(cipher, 'lambda', y)
-                lambda_val[y] = y_lam
+            if wire.lambda_val(gate.x)[party] == None:
+                x_lam = generateNum(seed, 'lambda', gate.x)
+                wire.lambda_val(gate.x)[party] = x_lam
+            if wire.lambda_val(gate.y)[party] == None:
+                y_lam = generateNum(seed, 'lambda', gate.y)
+                wire.lambda_val(gate.y)[party] = y_lam
             z_lam = x_lam + y_lam
-            lam_z_hat.append(z_lam)
+            wire.lambda_val(gate.z)[party] = z_lam
         elif gate.operation == "MUL" or gate.operation == "AND": 
+            if wire.lambda_val(gate.x) == None:
+                wire.set_lambda(gate.x, none_arr) 
+            if wire.lambda_val(gate.y) == None:
+                wire.set_lambda(gate.y, none_arr)
+            
             #calculate lambdas 
-            if x < n_input:
-                x_lam = generateNum(cipher, 'lambda', x)
-                lambda_val[x] = x_lam
-            if y < n_input:
-                y_lam = generateNum(cipher, 'lambda', y)
-                lambda_val[y] = y_lam
+            if wire.lambda_val(gate.x) == None:
+                x_lam = generateNum(seed, 'lambda', gate.x)
+                wire.lambda_val(gate.x)[party] = x_lam
+            if wire.lambda_val(gate.y) == None:
+                y_lam = generateNum(seed, 'lambda', gate.y)
+                wire.lambda_val(gate.y)[party] = y_lam
             
             #set y lam hat
-            y_lam_hat = generateNum(cipher, 'lambda y hat', n_mult) 
-            lam_y_hat[n_mult] = y_lam_hat
+            y_lam_hat = generateNum(seed, 'lambda y hat', n_mult) 
+            wire.lam_hat(gate.y)[party] = y_lam_hat
             #set z lam 
-            z_lam = generateNum(cipher, 'lambda', z)  
-            lambda_z.append(z_lam)
-            #set z lam hat 
-            z_lam_hat = generateNum(cipher, 'lambda z hat', n_mult)
-            lam_z_hat[n_mult] = z_lam_hat
-            n_mult += 1
-    return lambda_val, lambda_z, lam_y_hat, lam_z_hat
-
-def make_party_seeds(n_parties):
-    party_master_seed_value = [(getranbyte(16)) for i in range(n_parties)] #array of int
-    # pmsv = [(getranbyte(16)) for i in range(n_parties)] #array of int
-    # print(pmsv)
-    # party_master_seed_value = [bytes_to_long(i) for i in pmsv] #array of int
-    return party_master_seed_value
+            z_lam = generateNum(seed, 'lambda', gate.z)
+            wire.lambda_val(gate.z, z_lam)
+    return wire
 
 #pseudorandom assignment for lambdas 
 def PRassignLambda(circuit, wire, n_parties):
-    party_master_seed_value = make_party_seeds(n_parties)
-    party_master_seed = [AES.new(i, AES.MODE_ECB) for i in party_master_seed_value] 
-
+    party_master_seed_value = [getRandom() for i in range(n_parties)]
+    party_master_seed = [(long_to_bytes(i.value)) for i in party_master_seed_value] 
     triples = []
     n_mult = 0
     for gate in circuit:
@@ -242,14 +255,13 @@ def PRassignLambda(circuit, wire, n_parties):
             wire.set_lam_hat(gate.z, z_lam_hat)
             #set triples 
             gate.a = wire.lambda_val(gate.x)
-            gate.b = wire.lam_hat(gate.y)
+            gate.b - wire.lam_hat(gate.y)
             gate.c = wire.lam_hat(gate.z)
             triples.append([sum(wire.lambda_val(gate.x)), y_lam_hat, z_lam_hat])
-            n_mult += 1
         else: 
             try: 
                 pass
             except: 
                 print("Unrecognized gate type")
 
-    return triples, party_master_seed_value
+    return triples, party_master_seed

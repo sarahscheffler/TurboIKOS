@@ -1,7 +1,7 @@
 import sys
 import hashlib
 from Value import Value
-from Crypto.Util.number import bytes_to_long, long_to_bytes
+from Cryptodome.Util.number import bytes_to_long, long_to_bytes
 import Fiat_Shamir
 from wire import Wire
 from gate import gate
@@ -31,7 +31,7 @@ def rebuild_commitments(circuit, c_info, parties, open_views, list_rval, broadca
         n_mul = 0
         input_str = b''
         lambda_seed = b''
-        lambda_seed += long_to_bytes(party['party seed'].value)
+        lambda_seed += (party['party seed'])
         for j in range(n_input):
             input_str += long_to_bytes(party['input'][j].value)
                 
@@ -81,7 +81,7 @@ def check_commitments(parties, committed_views, rebuilt_views, committed_broadca
 
     #check broadcast
     assert (hashlib.sha256(rebuilt_broadcast).hexdigest() == committed_broadcast), "Committed broadcast does not match open broadcast"
-    print("Prover's committed views and broadcast match the opened views and broadcast")
+    # print("Prover's committed views and broadcast match the opened views and broadcast")
     return 1
 
 """
@@ -172,7 +172,7 @@ def recompute(circuit, c_info, n_parties, parties, comitted_views, open_views, b
                         x_e, y_e = e_inputs[c.x], e_inputs[c.y]
                         e_inputs[c.z] = x_e + y_e
                 if c.operation == 'MUL' or c.operation == 'AND':
-                    if e == 0:
+                    if e == 0: 
                         x_v = wire_value[c.x]
                         y_v = wire_value[c.y]
                         if parties[i] == 0: 
@@ -181,17 +181,18 @@ def recompute(circuit, c_info, n_parties, parties, comitted_views, open_views, b
                             z_v = Value(0) - lambda_z[num_mult]
                         wire_value[c.z] = z_v
             
-                        e_inputs[c.z] = e_z[num_mult]
-                        lambda_val[c.z] = lambda_z[num_mult]
+                    e_inputs[c.z] = e_z[num_mult]
+                    lambda_val[c.z] = lambda_z[num_mult]
 
-                        y_lam = lambda_val[c.y]
-                        y_lamh = lam_y_hat[num_mult]
+                    y_lam = lambda_val[c.y]
+                    y_lamh = lam_y_hat[num_mult]
 
-                        x = c.x
-                        y = c.y
-                        z = c.z
+                    x = c.x
+                    y = c.y
+                    z = c.z
                     alpha_to_share = epsilon1[e][num_mult]*y_lam + (epsilon2[e][num_mult] * y_lamh)
-                    alpha[num_mult][e][i] = alpha_to_share
+                    # alpha_to_share = epsilon1[e][num_mult]*y_lam + (epsilon2[num_mult][e] * y_lamh)
+                    alpha[num_mult][e][i] = alpha_to_share #alpha[nummult][epsilon][
                 
                     A = sum(p_alpha[num_mult][e])
                     zeta += (epsilon1[e][num_mult] * e_inputs[y] - A)* lambda_val[x] + \
@@ -202,6 +203,11 @@ def recompute(circuit, c_info, n_parties, parties, comitted_views, open_views, b
                         zeta += epsilon1[e][num_mult] * e_z[num_mult] - epsilon1[e][num_mult] * e_inputs[x] * e_inputs[y] + epsilon2[e][num_mult] * e_z_hat[num_mult]
                     
                     num_mult += 1
+                if c.operation == 'INV' or c.operation == 'NOT':
+                    if current_party == 0:
+                        wire_value[c.z] = wire_value[c.x] + Value(1)    
+                    else:
+                        wire_value[c.z] = wire_value[c.x]
                 if j == n_gate-1:
                     zeta_broadcast[e][i] = zeta
         output_shares.append(wire_value[-1])
@@ -231,7 +237,7 @@ def check_recompute(c_info, parties, broadcast, recomputed_alpha, recompute_outp
                 assert (prover_alpha[j][e][parties[i]].value == recomputed_alpha[j][e][i].value), "Verifier's recomputed alphas does not match prover's alphas."
                 assert(recomputed_zeta[e][i].value == prover_zeta[e][parties[i]].value), "Verifier's recomputd zetas does not match prover's zetas."
 
-    print("Verifier's alphas, zetas, and output matches prover's.")
+    # print("Verifier's alphas, zetas, and output matches prover's.")
     return 
 
 

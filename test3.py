@@ -31,6 +31,7 @@ def test():
     l_output = Circuit[2]
     n_addgate = Circuit[7]
     n_mulgate = Circuit[8]
+    c_info = Circuit[10]
     Circuit = Circuit[0]
 
     #repeat rep timesssign input values
@@ -61,10 +62,13 @@ def test():
                 w.set_v(i, inputs[i].splitVal(n_parties))
 
             start_time_preprocessing = time.process_time()
-            triples = p.assignLambda(Circuit, w, n_parties)  
+            #Preprocessing - assign lambdas and triples, generate master seeds 
+            assign_lambda = p.PRassignLambda(Circuit, w, n_parties)
+            triples = assign_lambda[0]
+            party_seeds = assign_lambda[1]
             
             #commit round one
-            round1 = prover.round_one_internal(n_parties, n_gate, n_input, Circuit, w)
+            round1 = prover.round_one_internal(n_parties, n_gate, n_input, Circuit, w, party_seeds)
             views_commit = prover.round_one_external(round1)
             preprocessing_time = time.process_time() - start_time_preprocessing
             preprocessing_arr[t] += preprocessing_time

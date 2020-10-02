@@ -11,5 +11,7 @@ installation on mac (if you do not have GMP, MPFR, MPC):
 ($ brew install gcc)
 $ pip install gmpy2
 ```
--[objsize](https://pypi.org/project/objsize/)
+- [objsize](https://pypi.org/project/objsize/)
+```sh
 $ pip install objsize
+```

@@ -18,6 +18,8 @@ from Value import Value
 
 def parse(gate):
     input_stream = sys.argv[1]
+    n_mulgate = 0 
+    n_addgate = 0
     with open(input_stream) as f:
         first_line = f.readline().split()
         n_gate = int(first_line[0])
@@ -41,12 +43,30 @@ def parse(gate):
             n = line.strip('\n').split(' ')
             input1, input2, output, operation = int(
             n[2]), int(n[3]), int(n[4]), n[5]
+            if operation == 'ADD' or operation == 'XOR':
+                n_addgate += 1
+            else:
+                n_mulgate += 1
             g = gate(input1, input2, output, operation=operation)
             l[i] = g
             i = i + 1
             if i == n_gate:
                 break
-    return l, l_input, l_output, n_gate, n_wires, n_output, n_input
+    c_info = {'l': l, 'l input': l_input, 'n_gate': n_gate, 'n_wires': n_wires, 'n_output': n_output, 'n_input': n_input, 'n_addgate': n_addgate, 'n_mul': n_mulgate}
+    return l, l_input, l_output, n_gate, n_wires, n_output, n_input, n_addgate, n_mulgate, c_info
+
+    """
+    c_info 
+        l
+        l input
+        n_gate
+        n_wires
+        n_output
+        n_input
+        n_addgate
+        n_mul    
+    """
+
 
     """
 	index of array corresponds to topological order of circuit
@@ -63,6 +83,7 @@ def wire_data(n_wires):
 #Write to output wires of each gate and compute alpha values.  
 def compute_output(circuit, epsilon_1, epsilon_2, wire, n_gate, n_parties):
     alpha_broadcast = []
+    m = 0
     for i in range(n_gate):
         c = circuit[i]
         #MUL gates
@@ -74,8 +95,9 @@ def compute_output(circuit, epsilon_1, epsilon_2, wire, n_gate, n_parties):
             for j in range(n_parties):
                 y_lam = wire.lambda_val(c.y)[j]
                 y_lamh = wire.lam_hat(c.y)[j]
-                alpha_shares[j] = epsilon_1[i]*y_lam + (epsilon_2[i]*y_lamh)
+                alpha_shares[j] = epsilon_1[m]*y_lam + (epsilon_2[m]*y_lamh)
             alpha_broadcast.append(alpha_shares)
+            m += 1
         # ADD gates	
         if c.operation == 'ADD' or c.operation== 'XOR':
             c.w = wire
@@ -86,7 +108,7 @@ def compute_output(circuit, epsilon_1, epsilon_2, wire, n_gate, n_parties):
 #output: n_parties zeta shares
 def compute_zeta_share(circuit, wire, alpha, epsilon_1, epsilon_2, n_parties):
     r = [None]*n_parties
-    
+
     for i in range(n_parties):
         zeta = 0
         n = 0
@@ -96,11 +118,13 @@ def compute_zeta_share(circuit, wire, alpha, epsilon_1, epsilon_2, n_parties):
                 y = circuit[j].y
                 z = circuit[j].z
                 A = sum(alpha[n])
-                zeta += (epsilon_1[j] * wire.e(y) - A)* wire.lambda_val(x)[i] + \
-                    epsilon_1[j] * wire.e(x) * wire.lambda_val(y)[i] - \
-                    epsilon_1[j] * wire.lambda_val(z)[i] - epsilon_2[j] * wire.lam_hat(z)[i]     
-                n += 1
+
+                zeta += (epsilon_1[n] * wire.e(y) - A)* wire.lambda_val(x)[i] + \
+                    epsilon_1[n] * wire.e(x) * wire.lambda_val(y)[i] - \
+                    epsilon_1[n] * wire.lambda_val(z)[i] - epsilon_2[n] * wire.lam_hat(z)[i]     
+                
                 if i == 0:
-                    zeta += epsilon_1[j] * wire.e(z) - epsilon_1[j]*wire.e(x)*wire.e(y) + epsilon_2[j]*wire.e_hat(z)
+                    zeta += epsilon_1[n] * wire.e(z) - epsilon_1[n]*wire.e(x)*wire.e(y) + epsilon_2[n]*wire.e_hat(z)
+                n += 1
         r[i] = (zeta)
     return r 
