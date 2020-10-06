@@ -45,7 +45,7 @@ class gate:
     # Assigns v values  z = x*y for each party
     # assign e value on output wire
     # return e share for broadcast
-    def mult(self):
+    def mult(self, mult_count):
         #alpha_broadcast = []*circuit.n_parties
         z_v_arr = [None]*self.n_parties 
         # calculate z_vi
@@ -65,8 +65,8 @@ class gate:
         z_v = sum(self.w.v(self.x)) * sum(self.w.v(self.y))
         z_e = z_v + sum(self.w.lambda_val(self.z))
         # calculate and set z_eh
-        z_eh = sum(self.w.lambda_val(self.x)) * sum(self.w.lam_hat(self.y)) + \
-            sum(self.w.lam_hat(self.z))
+        z_eh = sum(self.w.lambda_val(self.x)) * sum(self.w.lam_hat(self.y)[str(mult_count)]) + \
+            sum(self.w.lam_hat(self.z)[str(mult_count)])
         self.w.set_e_hat(self.z, z_eh)
         for i in range(self.n_parties):
             # calculate z_vi
@@ -85,8 +85,10 @@ class gate:
     def inv(self):
         self.w.set_v(self.z, [None]* self.n_parties)
         for i in range(self.n_parties):
-            if self.n_parties[i] == 0:
-                self.w.v(z)[i] = self.w.v(x)[i] + Value(1)
+            if i == 0:
+                self.w.v(self.z)[i] = self.w.v(self.x)[i] + Value(1)
+                self.w.lambda_val(self.z)[i] = self.w.lambda_val(self.x)[i] + Value(1)
             else:
-                self.w.v(z)[i] = self.w.v(x)[i]
+                self.w.v(self.z)[i] = self.w.v(self.x)[i]
+                self.w.lambda_val(self.z)[i] = self.w.lambda_val(self.x)[i]
        

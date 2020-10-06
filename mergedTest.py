@@ -67,9 +67,10 @@ class TestMPCInTheHead(unittest.TestCase):
                     if g.operation == 'AND' or g.operation == 'MUL':
                         for j in range(n_parties):
                             for e in range(n_epsilons):
-                                assert(alpha[m][e][j] == epsilon_1[e][m]*w.lambda_val(g.y)[j] + epsilon_2[e][m]*w.lam_hat(g.y)[j])
+                                assert(alpha[m][e][j] == epsilon_1[e][m]*w.lambda_val(g.y)[j] + epsilon_2[e][m]*w.lam_hat(g.y)[str(m)][j])
                         m = m + 1
                 
+                m = 0
                 for j in range(n_gate):
                     g = Circuit[j]
                     #ADD gate
@@ -82,7 +83,8 @@ class TestMPCInTheHead(unittest.TestCase):
                     #MUL gate
                     if g.operation == 'AND' or g.operation == 'MUL':
                         #Check e hat assignment
-                        assert(w.e_hat(g.z) == sum(w.lambda_val(g.x)) * sum(w.lam_hat(g.y)) + sum(w.lam_hat(g.z)))
+                        assert(w.e_hat(g.z) == sum(w.lambda_val(g.x)) * sum(w.lam_hat(g.y)[str(m)]) + sum(w.lam_hat(g.z)[str(m)]))
+                        m+=1
                         #Chck v value
                         assert(sum(w.v(g.z)) == (sum(w.v(g.x)) * sum(w.v(g.y)))) 
                 #Check e assignment
@@ -99,6 +101,7 @@ class TestMPCInTheHead(unittest.TestCase):
                 r3 = broadcast_commit
                 #number of parties to be corrupted
                 t = 2 
+                # parties = [0, 1] #test parties
                 parties = fs.round4(r1, r3, t, n_parties)
             
                 #round 5
@@ -267,6 +270,7 @@ class TestMPCInTheHead(unittest.TestCase):
                     
                     #Generate parties to corrupt
                     t = n_parties -1
+                    # parties = [0, 1] #test parties
                     parties = fs.round4(r1, r3, t, n_parties)
 
                     #round five
@@ -379,6 +383,7 @@ class TestMPCInTheHead(unittest.TestCase):
                                 
                     #Generate parties to corrupt
                     n_corrupt = n_parties -1
+                    # parties = [0, 1] #test parties
                     parties = fs.round4(r1, r3, n_corrupt, n_parties)
 
                     #round five

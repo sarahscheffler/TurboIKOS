@@ -50,10 +50,10 @@ class Wire:
         checkIndex(index, self.n_wire)
         return self.data[index]['lam_hat']
 
-    def set_lam_hat(self, index, arr):
+    def set_lam_hat(self, index, arr, mult_count):
         checkIndex(index, self.n_wire)
         checkArray(arr, self.n_parties)
-        self.data[index]['lam_hat'] = arr
+        self.data[index]['lam_hat'][str(mult_count)] = arr
         return 1
 
     def e_hat(self, index):
