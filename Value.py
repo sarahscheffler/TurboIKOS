@@ -18,11 +18,11 @@ def getfield():
     return field
 
 class Value:
-    def __init__(self, value=None):
+    def __init__(self, value=None, p=field):
         if value == None:
             self.value = None
         else:
-            self.value = mpz(value)
+            self.value = gmpy2.f_mod(mpz(value), p)
 
     """
     overload + and sum with ^, * with & for boolean circuit

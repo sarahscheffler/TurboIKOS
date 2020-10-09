@@ -13,11 +13,12 @@ from Value import Value
 #         nymber of inputs
 # function:: parse external file in Bristol format
 
-n_epsilons = 2
+n_epsilons = 1
 def parse_bristol(gate, n_parties, i):
     input_stream = sys.argv[i]
     n_mulgate = 0 
     n_addgate = 0
+    n_inv = 0 
     with open(input_stream, 'r') as f:
         first_line = f.readline().split()
         n_gate = int(first_line[0])
@@ -46,14 +47,16 @@ def parse_bristol(gate, n_parties, i):
                 input1, input2, output, operation = int(n[2]), None, int(n[3]), n[4]
             if operation == 'ADD' or operation == 'XOR':
                 n_addgate += 1
-            else:
+            elif operation == 'MUL' or operation == 'AND':
                 n_mulgate += 1
+            elif operation == 'INV' or operation == 'NOT': 
+                n_inv += 1
             g = gate(input1, input2, output, n_parties, operation=operation)
             l[i] = g
             i = i + 1
             if i == n_gate:
                 break
-    c_info = {'l': l, 'l input': l_input, 'n_gate': n_gate, 'n_wires': n_wires, 'n_output': n_output, 'n_input': n_input, 'n_addgate': n_addgate, 'n_mul': n_mulgate, 'n_parties': n_parties}
+    c_info = {'l': l, 'l input': l_input, 'n_gate': n_gate, 'n_wires': n_wires, 'n_output': n_output, 'n_input': n_input, 'n_addgate': n_addgate, 'n_mul': n_mulgate, 'n_inv': n_inv, 'n_parties': n_parties}
     return l, l_input, l_output, n_gate, n_wires, n_output, n_input, n_addgate, n_mulgate, n_parties, c_info
 
     """
@@ -125,6 +128,7 @@ def wire_data(n_wires):
 def compute_output(circuit, epsilon_1, epsilon_2, wire, n_gate, n_parties, n_epsilons):
     alpha_broadcast = []
     m = 0
+    outputs = [] #for test 
     for i in range(n_gate):
         c = circuit[i]
         #MUL gates
@@ -148,6 +152,7 @@ def compute_output(circuit, epsilon_1, epsilon_2, wire, n_gate, n_parties, n_eps
         if c.operation == 'INV' or c.operation == 'NOT': 
             c.w = wire
             c.inv()
+        outputs.append(wire.v(c.z))
     return alpha_broadcast
 
 #input: circuit, wire structure, list of n_mul gate alphas, and two epsilons
@@ -164,6 +169,7 @@ def compute_zeta_share(circuit, wire, alpha, epsilon_1, epsilon_2, n_parties, n_
                     y = circuit[j].y
                     z = circuit[j].z
                     A = sum(alpha[n][e])
+                    #epsilon_1[e][n], wire.e(y), A, wire.lambda_val(x)[i], epsilon_1[e][n], wire.e(x), wire.lambda_val(y)[i], epsilon_1[e][n], wire.lambda_val(z)[i], epsilon_2[e][n], wire.lam_hat(z)[str(n)][i] 
                     zeta += (epsilon_1[e][n] * wire.e(y) - A)* wire.lambda_val(x)[i] + \
                         epsilon_1[e][n] * wire.e(x) * wire.lambda_val(y)[i] - \
                         epsilon_1[e][n] * wire.lambda_val(z)[i] - epsilon_2[e][n] * wire.lam_hat(z)[str(n)][i]     

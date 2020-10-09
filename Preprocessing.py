@@ -170,6 +170,8 @@ def generateNum(cipher, lambda_type, index):
     number = cipher.encrypt(pad(lambda_type.encode() + str(index).encode(), AES.block_size))
     return Value(bytes_to_long(number))
 
+    #continue do everything except line return statement should stay, return statement should return however many bits we need 
+
 
 """
 input: 
@@ -237,8 +239,14 @@ def rebuildlambda(party, seed, circuit, c_info):
                 # lam_z_hat[n_mult] = z_lam_hat
             n_mult += 1
       
-        # elif gate.operation == "INV" or gate.operation == "NOT":
-
+        elif gate.operation == "INV" or gate.operation == "NOT":
+            if x < n_input: 
+                lambda_z.append(generateNum(cipher, 'lambda', x))
+            
+                if party == 0: 
+                    lambda_z.append(lambda_val[x] + Value(1))
+                else: 
+                    lambda_z.append(lambda_val[x])
             
         #     if party == 0: 
         #         lambda_z.append(lambda_val[x] + Value(1))
@@ -311,16 +319,17 @@ def PRassignLambda(circuit, wire, n_parties):
             gate.c = wire.lam_hat(gate.z)
             triples.append([sum(wire.lambda_val(gate.x)), y_lam_hat, z_lam_hat])
             n_mult += 1
-        # elif gate.operation == "INV" or gate.operation == "NOT":
-        #     #set initial lambda values as the same values from gate[x]
-        #     if wire.lambda_val(gate.x) == None: 
-        #         x_lambda = [generateNum(i, 'lambda', gate.x) for i in party_master_seed]
-        #         wire.set_lambda(gate.x, x_lambda)
-        #     for i in range(n_parties): 
-        #         if i == 0: 
-        #             wire.lambda_val(gate.z)[i] = (wire.lambda_val(gate.x)[i] + Value(1))
-        #         else: 
-        #             wire.lambda_val(gate.z)[i] = (wire.lambda_val(gate.x)[i])
+        elif gate.operation == "INV" or gate.operation == "NOT":
+            #set initial lambda values as the same values from gate[x]
+            if wire.lambda_val(gate.x) == None: 
+                x_lambda = [generateNum(i, 'lambda', gate.x) for i in party_master_seed]
+                wire.set_lambda(gate.x, x_lambda)
+            wire.set_lambda(gate.z, [None]*n_parties)
+            for i in range(n_parties): 
+                if i == 0: 
+                    wire.lambda_val(gate.z)[i] = (wire.lambda_val(gate.x)[i] + Value(1))
+                else: 
+                    wire.lambda_val(gate.z)[i] = (wire.lambda_val(gate.x)[i])
 
         else: 
             try: 

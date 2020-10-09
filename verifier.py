@@ -140,6 +140,8 @@ def recompute(circuit, c_info, n_parties, parties, comitted_views, open_views, b
     e_z_hat = broadcast['e z hat'] + [Value(0)]*to_concatenate
     p_alpha = broadcast['alpha']
 
+    output_test = [] #output test 
+
     for i in range(len(parties)):
         current_party = parties[i]
         party_view = open_views[i]
@@ -154,6 +156,8 @@ def recompute(circuit, c_info, n_parties, parties, comitted_views, open_views, b
         lam_y_hat = rebuild_lam[2]
         lam_z_hat = rebuild_lam[3]
         alpha_shares = []
+
+        outputs = []
         
         for e in range(n_epsilons):
             num_mult = 0
@@ -212,12 +216,14 @@ def recompute(circuit, c_info, n_parties, parties, comitted_views, open_views, b
                         else:
                             wire_value[c.z] = wire_value[c.x]
                             lambda_val[c.z] = lambda_val[c.x] 
-                    
-                    # e_inputs[c.z] = e_inputs[c.x]
+                        e_inputs[c.z] = e_inputs[c.x]
 
                 if j == n_gate-1:
                     zeta_broadcast[e][i] = zeta
+            outputs.append(wire_value[c.z])
+        
         output_shares.append(wire_value[-1])
+        output_test.append(outputs)
     return alpha, output_shares, zeta_broadcast
 
 """
@@ -244,7 +250,7 @@ def check_recompute(c_info, parties, broadcast, recomputed_alpha, recompute_outp
                 assert (prover_alpha[j][e][parties[i]].value == recomputed_alpha[j][e][i].value), "Verifier's recomputed alphas does not match prover's alphas."
                 assert(recomputed_zeta[e][i].value == prover_zeta[e][parties[i]].value), "Verifier's recomputed zetas does not match prover's zetas."
 
-    # print("Verifier's alphas, zetas, and output matches prover's.")
+    print("Verifier's alphas, zetas, and output matches prover's.")
     return 
 
 

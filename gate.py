@@ -91,4 +91,5 @@ class gate:
             else:
                 self.w.v(self.z)[i] = self.w.v(self.x)[i]
                 self.w.lambda_val(self.z)[i] = self.w.lambda_val(self.x)[i]
+        self.w.set_e(self.z, self.w.e(self.x))
        
