@@ -10,7 +10,6 @@ from gmpy2 import mpz
 from Cryptodome.Util.number import bytes_to_long
 
 field = mpz(2**127-1)
-# field = mpz(2)
 r_state = gmpy2.random_state(bytes_to_long(os.urandom(16)))
 
 def getfield():
@@ -52,12 +51,7 @@ class Value:
         left = gmpy2.f_mod(self.value, p)
         right = gmpy2.f_mod(other.value, p)
         return left != right
-    '''
-    overload print
-    '''
-    def __repr__(self):
-        return str(self.value)
-
+        
     """
     support arithmetic operations
     """
@@ -104,3 +98,8 @@ class Value:
 
     # def __repr__(self):
     #     return (self.value)
+
+#send field value 
+def getfield():
+    global field
+    return field

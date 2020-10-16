@@ -190,6 +190,10 @@ def recompute(circuit, c_info, n_parties, parties, comitted_views, open_views, b
                     x = c.x
                     y = c.y
                     z = c.z
+                    print(e, num_mult, parties[i])
+                    print(epsilon1[e][num_mult], epsilon2[e][num_mult])
+                    print('verifier y lam ', y_lam)
+                    print('verifier y lam hat ', y_lamh)
                     alpha_to_share = epsilon1[e][num_mult]*y_lam + (epsilon2[e][num_mult] * y_lamh)
                     # alpha_to_share = epsilon1[e][num_mult]*y_lam + (epsilon2[num_mult][e] * y_lamh)
                     alpha[num_mult][e][i] = alpha_to_share #alpha[nummult][epsilon][

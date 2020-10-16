@@ -11,13 +11,10 @@
       3. split data for parties
 """
 
-import os
 from Value import Value
-import Value as v
-from Cryptodome.Cipher import AES
-from Cryptodome.Util.Padding import pad
-from Cryptodome.Util.number import long_to_bytes, bytes_to_long
-from gmpy2 import mpz
+from Crypto.Cipher import AES
+from Crypto.Util.Padding import pad
+from Crypto.Util.number import long_to_bytes, bytes_to_long
 
 """
     temporary/helper functions
@@ -30,24 +27,18 @@ from gmpy2 import mpz
 """
 input: /
 output: Value
+
 generate cryptographically secure randomness lambda
 """
-
-
 def getRandom():
     lam = Value()
     lam.getRand()
     return lam
- 
-def getranbyte(num_bytes): #getRandomBytes : int -> bytes getRandomBytes(16) creates a 16-byte random number (not a Value)
-    x = (os.urandom(num_bytes))
-    assert (len(x) == 16)
-    return x
-    # return (os.urandom(num_bytes))
 
 """
 input: list
 output: boolean
+
 take a list of triples and randomly partition them into pairs
 call Fiat-Shamir.py to calculate each epsilon and r
 calculate v
@@ -80,12 +71,12 @@ def randomLC(triples):
 """
 input: Value, Value
 output: tuple
+
 generate a Beaver's triple according to lambdas
 """
 def genTriple(lamA, lamB):
     lamC = lamA*lamB
     return (lamA, lamB, lamC)
-
 
 #inputs: circuit, wire object, number of parties
 #output: list of triples
@@ -125,22 +116,18 @@ def assignLambda(circuit, wire, n_parties):
             #set z_lam_hat
             z_lam_hat = getRandom()
             wire.set_lam_hat(gate.z, z_lam_hat.splitVal(n_parties))
-        elif gate.operation == 'INV' or gate.opeartion == 'NOT': 
-            wire.set_lambda(gate.z, [None]*n_parties)
-            if wire.lambda_val(gate.x) == None:
-                x_lam = getRandom()
-                wire.set_lambda(gate.x, x_lam.splitVal(n_parties))
-            for i in range(n_parties):
-                if i == 0:
-                    wire.lambda_val(gate.z)[i] = wire.lambda_val(gate.x)[i] + Value(1) 
-                else: 
-                    wire.lambda_val(gate.z)[i] = wire.lambda_val(gate.x)[i]
+            #set triples
+            gate.a = wire.lambda_val(gate.x)
+            gate.b = wire.lam_hat(gate.y)
+            gate.c = wire.lam_hat(gate.z) 
+            triples.append([sum(wire.lambda_val(gate.x)),y_lam_hat, z_lam_hat])
+                       
         else:
             try:
                 pass
             except:
                 print("Unrecognized gate type")
-    return 1
+    return triples
    
 def generateNum(cipher, lambda_type, index):
     assert(lambda_type == 'lambda' or \
@@ -154,7 +141,7 @@ def rebuildlambda(party, seed, circuit, c_info):
     n_ouput = c_info['n_output']
     c_nmul = c_info['n_mul']
 
-    cipher = AES.new((seed), AES.MODE_ECB)
+    cipher = AES.new(long_to_bytes(seed.value), AES.MODE_ECB)
     n_mult = 0
 
     lambda_val = [None]*n_input
@@ -198,17 +185,13 @@ def rebuildlambda(party, seed, circuit, c_info):
     return lambda_val, lambda_z, lam_y_hat, lam_z_hat
 
 def make_party_seeds(n_parties):
-    party_master_seed_value = [(getranbyte(16)) for i in range(n_parties)] #array of int
-    # pmsv = [(getranbyte(16)) for i in range(n_parties)] #array of int
-    # print(pmsv)
-    # party_master_seed_value = [bytes_to_long(i) for i in pmsv] #array of int
+    party_master_seed_value = [getRandom() for i in range(n_parties)]
     return party_master_seed_value
 
 #pseudorandom assignment for lambdas 
 def PRassignLambda(circuit, wire, n_parties):
     party_master_seed_value = make_party_seeds(n_parties)
-    party_master_seed = [AES.new(i, AES.MODE_ECB) for i in party_master_seed_value] 
-
+    party_master_seed = [AES.new(long_to_bytes(i.value), AES.MODE_ECB) for i in party_master_seed_value] 
     triples = []
     n_mult = 0
     for gate in circuit:

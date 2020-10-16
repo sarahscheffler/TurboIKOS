@@ -1,17 +1,31 @@
+#ecrets import token_hex  # solid randomness for cryptographic use
+
+
+
+
+# think about optimizing space. e.g shrink randomness from 256-bits to 128-bits used if appropriate.
+# change terminology to match circuit.py
+
+
 from Value import Value 
 
 class gate:
     # input: 2 inputs, 3 triples/ 0's
-    def __init__(self, input1, input2, output, n_parties, *, wire = None, operation=None):
+    def __init__(self, input1, input2, output,*, wire = None, triple1=Value(), triple2=Value(), triple3=Value(), operation=None):
         self.operation = operation
-        self.n_parties = n_parties
+        self.n_parties = 3
         self.w = wire
         self.x = input1
         self.y = input2
         self.z = output
-    
-    def __repr__(self):
-        return 'operation:' + str(self.operation) + ' x:' + str(self.x) + ' y:' + str(self.y) + ' z:' + str(self.z)
+        if operation == 'AND' or 'MUL':
+            self.a = triple1
+            self.b = triple2
+            self.c = triple3
+        if operation == 'XOR' or 'ADD':
+            self.a = None
+            self.b = None
+            self.c = None
 
     # Assigns v values z = x + y for each party
     # Assign e value on output wire
@@ -41,7 +55,6 @@ class gate:
         z_e = x_e + y_e
         # set z_e
         self.w.set_e(self.z, z_e)
-
     # Assigns v values  z = x*y for each party
     # assign e value on output wire
     # return e share for broadcast
@@ -73,7 +86,7 @@ class gate:
             if i == 0:
                 z_v_share = z_e - self.w.lambda_val(self.z)[i]
             else:
-                z_v_share = Value(0) - self.w.lambda_val(self.z)[i]
+                z_v_share = Value(0)-self.w.lambda_val(self.z)[i]
             z_v_arr[i] = z_v_share 
      
           
@@ -81,12 +94,4 @@ class gate:
         # calculate and set z_e
         z_e = sum(self.w.v(self.z)) + sum(self.w.lambda_val(self.z))
         self.w.set_e(self.z, z_e)
-    
-    def inv(self):
-        self.w.set_v(self.z, [None]* self.n_parties)
-        for i in range(self.n_parties):
-            if self.n_parties[i] == 0:
-                self.w.v(z)[i] = self.w.v(x)[i] + Value(1)
-            else:
-                self.w.v(z)[i] = self.w.v(x)[i]
        
