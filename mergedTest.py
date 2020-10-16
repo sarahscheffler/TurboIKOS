@@ -43,10 +43,15 @@ class TestMPCInTheHead(unittest.TestCase):
 
                 #Assign v values
                 inputs = []
+                #test - to uncomment
                 for i in range(n_input):
                     val = Value()
                     val.getRand()
                     inputs.append(val)
+
+                # inputs = [(Value(0)), Value(1), Value(0)]
+
+                # inputs = [(Value(0)), Value(1)]
                
                 for i in range(n_input):
                     w.set_v(i, inputs[i].splitVal(n_parties))
@@ -67,9 +72,10 @@ class TestMPCInTheHead(unittest.TestCase):
                     if g.operation == 'AND' or g.operation == 'MUL':
                         for j in range(n_parties):
                             for e in range(n_epsilons):
-                                assert(alpha[m][e][j] == epsilon_1[e][m]*w.lambda_val(g.y)[j] + epsilon_2[e][m]*w.lam_hat(g.y)[j])
+                                assert(alpha[m][e][j] == epsilon_1[e][m]*w.lambda_val(g.y)[j] + epsilon_2[e][m]*w.lam_hat(g.y)[str(m)][j])
                         m = m + 1
                 
+                m = 0
                 for j in range(n_gate):
                     g = Circuit[j]
                     #ADD gate
@@ -82,7 +88,8 @@ class TestMPCInTheHead(unittest.TestCase):
                     #MUL gate
                     if g.operation == 'AND' or g.operation == 'MUL':
                         #Check e hat assignment
-                        assert(w.e_hat(g.z) == sum(w.lambda_val(g.x)) * sum(w.lam_hat(g.y)) + sum(w.lam_hat(g.z)))
+                        assert(w.e_hat(g.z) == sum(w.lambda_val(g.x)) * sum(w.lam_hat(g.y)[str(m)]) + sum(w.lam_hat(g.z)[str(m)]))
+                        m+=1
                         #Chck v value
                         assert(sum(w.v(g.z)) == (sum(w.v(g.x)) * sum(w.v(g.y)))) 
                 #Check e assignment
@@ -99,6 +106,7 @@ class TestMPCInTheHead(unittest.TestCase):
                 r3 = broadcast_commit
                 #number of parties to be corrupted
                 t = 2 
+                parties = [0, 1] #test parties
                 parties = fs.round4(r1, r3, t, n_parties)
             
                 #round 5
@@ -187,6 +195,9 @@ class TestMPCInTheHead(unittest.TestCase):
 
     
     def test_timing_full(self):
+        COMMIT_BYTES = 32
+        VALUE_BYTES = 16
+        SEED_BYTES = int(256/8)
         for test in range(1, len(sys.argv)):
             with self.subTest(test = test):
                 #Parse circuit
@@ -210,6 +221,10 @@ class TestMPCInTheHead(unittest.TestCase):
                 run_time_arr = [None]*rep
                 verifier_time_arr = [None]*rep
                 for repetition in range(rep):
+                    broadcastc_size = 0
+                    viewsc_size = 0
+                    broadcast_size = 0
+                    views_size_PR = 0
 
                     # Create list of wire data    
                     wire_data = circuit.wire_data(n_wires)
@@ -227,11 +242,13 @@ class TestMPCInTheHead(unittest.TestCase):
                     preprocessing_arr[repetition] = preprocessing_time
 
                     #Assign v values
+                    #test - to uncomment
                     inputs = []
                     for i in range(n_input):
                         val = Value()
                         val.getRand()
                         inputs.append(val)
+                    # inputs = [(Value(0)), Value(1), Value(0)]
                    
                     for i in range(n_input):
                         w.set_v(i, inputs[i].splitVal(n_parties))
@@ -267,6 +284,7 @@ class TestMPCInTheHead(unittest.TestCase):
                     
                     #Generate parties to corrupt
                     t = n_parties -1
+                    parties = [0, 1] #test parties
                     parties = fs.round4(r1, r3, t, n_parties)
 
                     #round five
@@ -281,29 +299,33 @@ class TestMPCInTheHead(unittest.TestCase):
                     verifier_time = time.process_time() - start_time
                     verifier_time_arr[repetition] = verifier_time
 
+                    broadcastc_size += COMMIT_BYTES
+                    viewsc_size += COMMIT_BYTES*len(views_commit)
+                    broadcast_size += sum([sum([VALUE_BYTES for v in broadcast[k]]) for k in broadcast if (k!= "alpha" or k!= "zeta")])+sum([VALUE_BYTES for v in broadcast["alpha"] for i in range(n_parties)])*n_epsilons + sum([VALUE_BYTES for v in broadcast["zeta"][0] for i in range(n_parties)])*n_epsilons
+                    views_size_PR += sum([sum([VALUE_BYTES for v in views[i]["input"]]) for i in range(t)]) + SEED_BYTES*t
+
                 print('number of gates:', n_gate)
                 print('number of add gates:', n_gate - n_mulgate)
                 print('number of mul gates:', n_mulgate)
-                average_preprocessing_time = sum(preprocessing_arr) / rep
-                print('average preprocessing time:', average_preprocessing_time, 'seconds')
+                preprocessing_time = sum(preprocessing_arr) 
+                print('preprocessing time:', preprocessing_time, 'seconds')
 
-                average_run_time = sum(run_time_arr) / rep
-                print('average run time:', average_run_time, 'seconds')
+                run_time = sum(run_time_arr) 
+                print('run time:', run_time, 'seconds')
                 # Proof size = wire size + circuit size + alpha size + zeta size
                 
-                broadcastc_size = get_deep_size(broadcast_commit)
-                viewsc_size = get_deep_size(views_commit)
-                broadcast_size = get_deep_size(broadcast)
-                views_size = get_deep_size(views)
-                proof_size = get_deep_size(broadcast_commit) + get_deep_size(views_commit) + get_deep_size(broadcast) + get_deep_size(views)
-                print('proof size:', proof_size, 'bytes')
+                
+
                 print('broadcast commit size:', broadcastc_size)
                 print('views commit size:', viewsc_size)
                 print('broadcast size:', broadcast_size)
-                print('views size:', views_size)
+                print('prover views size:', views_size_PR)
                 print('timing test passed')
                 
     def test_repeat(self):
+        COMMIT_BYTES = 32
+        VALUE_BYTES = 16
+        SEED_BYTES = int(256/8) #16??
         for test in range(1, len(sys.argv)):
             with self.subTest(test = test):
                 #Parse circuit
@@ -327,8 +349,12 @@ class TestMPCInTheHead(unittest.TestCase):
                 preprocessing_arr = [None]*rep
                 run_time_arr = [None]*rep
                 verifier_time_arr = [None]*rep
+                broadcastc_size = 0
+                viewsc_size = 0
+                broadcast_size = 0
+                views_size_PR = 0
                 for repetition in range(rep):
-
+                    
                     # Create list of wire data    
                     wire_data = circuit.wire_data(n_wires)
                     w = Wire(wire_data, n_parties, n_wires)
@@ -345,12 +371,14 @@ class TestMPCInTheHead(unittest.TestCase):
                     preprocessing_arr[repetition] = preprocessing_time
 
                     #Assign v values
+                    #TEST TO UNCOMMENT 
                     inputs = []
                     for i in range(n_input):
                         val = Value()
                         val.getRand()
                         inputs.append(val)
-                               
+                    # inputs = [(Value(0)), Value(1), Value(0)]
+
                     for i in range(n_input):
                         w.set_v(i, inputs[i].splitVal(n_parties))
                                 
@@ -379,6 +407,7 @@ class TestMPCInTheHead(unittest.TestCase):
                                 
                     #Generate parties to corrupt
                     n_corrupt = n_parties -1
+                    parties = [0, 1] #test parties
                     parties = fs.round4(r1, r3, n_corrupt, n_parties)
 
                     #round five
@@ -393,15 +422,26 @@ class TestMPCInTheHead(unittest.TestCase):
                     verifier_time = time.process_time() - start_time
                     verifier_time_arr[repetition] = verifier_time
 
+                    broadcastc_size += COMMIT_BYTES
+                    viewsc_size += COMMIT_BYTES*len(views_commit)
+                    broadcast_size += sum([sum([VALUE_BYTES for v in broadcast[k]]) for k in broadcast if (k!= "alpha" or k!= "zeta")])+sum([VALUE_BYTES for v in broadcast["alpha"] for i in range(n_parties)])*n_epsilons + sum([VALUE_BYTES for v in broadcast["zeta"][0] for i in range(n_parties)])*n_epsilons
+                    views_size_PR += sum([sum([VALUE_BYTES for v in views[i]["input"]]) for i in range(n_corrupt)]) + SEED_BYTES*n_corrupt
+
                 print('number of parties to corrupt:', n_corrupt)
                 print('number of add gates:', n_addgate)
                 print('number of mul gates:', n_mulgate)
-                average_preprocessing_time = sum(preprocessing_arr) / rep
-                print('average preprocessing time:', average_preprocessing_time, 'seconds')
+                preprocessing_time = sum(preprocessing_arr)
+                print('preprocessing time:', preprocessing_time, 'seconds')
 
-                average_run_time = sum(run_time_arr) / rep
-                print('average run time:', average_run_time, 'seconds')
+                run_time = sum(run_time_arr)
+                print('run time:', run_time, 'seconds')
                 # Proof size = wire size + circuit size + alpha size + zeta size
+
+
+                print('broadcast commit size:', broadcastc_size)
+                print('views commit size:', viewsc_size)
+                print('broadcast size:', broadcast_size)
+                print('prover views size:', views_size_PR)
 
     
 if __name__ == "__main__": 
