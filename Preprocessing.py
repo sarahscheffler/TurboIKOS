@@ -53,7 +53,6 @@ output whether the final random linear combination equals 0
 """
 def randomLC(triples):
     assert(len(triples)%2 == 0)
-    # TODO: replace epsilon with Fiat-Shamir
     epsilon = getRandom()
     ret = 0
     i = 0

@@ -101,9 +101,3 @@ class Value:
         last = self - sum(ret)
         ret.append(last)
         return ret
-
-    # def __str__(self):
-    #     return (self.value)
-
-    # def __repr__(self):
-    #     return (self.value)

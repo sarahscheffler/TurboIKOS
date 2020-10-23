@@ -98,7 +98,6 @@ def check_zeta(broadcast):
     zeta = broadcast['zeta']
     for e in range(len(zeta)):
         assert(sum(zeta[e]) == check_zero), "Zeta does not sum to zero"
-    # print("Zetas in prover's broadcast sums to 0")
     return 
 
 """
@@ -226,7 +225,7 @@ def recompute(circuit, c_info, n_parties, parties, comitted_views, open_views, b
         # output_shares.append(wire_value[-1]) #no clue why THIS doesn't work? 
         output_shares.append(outputs[-1])
         output_test.append(outputs)
-    return alpha, output_shares, zeta_broadcast, output_test #REMOVE OUTPUTS
+    return alpha, output_shares, zeta_broadcast #REMOVE OUTPUTS
 
 """
 ---check_recompute---
@@ -243,24 +242,6 @@ def check_recompute(c_info, parties, broadcast, recomputed_alpha, recompute_outp
     prover_alpha = broadcast['alpha']
     prover_output = broadcast['output shares']
     prover_zeta = broadcast['zeta']
-
-    #code for testing
-    wrong_output = []
-    wrong_alpha = []
-    wrong_zeta = []
-    for i in range(len(parties)):
-        if recompute_output_shares[i].value != prover_output[parties[i]].value:
-            wrong_output.append(parties[i])
-        for e in range(n_epsilons):
-            for j in range(n_multgate):
-                if (prover_alpha[j][e][parties[i]].value != recomputed_alpha[j][e][i].value):
-                    if (j, e, parties[i]) not in wrong_alpha: 
-                        wrong_alpha.append((j, e, parties[i]))
-                if (recomputed_zeta[e][i].value != prover_zeta[e][parties[i]].value): 
-                    if (e, parties[i]) not in wrong_zeta:
-                        wrong_zeta.append((e, parties[i]))
-        
-    rand_var = 1
 
     for i in range(len(parties)): 
         #check alphas 
@@ -284,20 +265,6 @@ def verifier(circuit, c_info, n_parties, parties, committed_views, open_views, r
 
     #verifier recompute 
     v_recompute = recompute(circuit, c_info, n_parties, parties, committed_views, open_views, broadcast, n_epsilons)
-    
-    #test code 
-    # n_output = c_info['n_output']
-    # v_outputs = v_recompute[-1]
-    # p_outputs = CTEST.return_outputs()
-    # wrong_wire = []
-    # for i in range(len(parties)):
-    #     current_party = parties[i]
-    #     for j in range(len(p_outputs)):
-    #         if v_outputs[i][j] != p_outputs[j][current_party]:
-    #             wrong_wire.append(j)
-
-    # rand_var = True
-
 
     checkrecompute = check_recompute(c_info, parties, broadcast, v_recompute[0], v_recompute[1], v_recompute[2], n_epsilons)
     print("passed")
