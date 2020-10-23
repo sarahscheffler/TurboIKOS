@@ -195,13 +195,10 @@ def rebuildlambda(party, seed, circuit, c_info):
     cipher = AES.new((seed), AES.MODE_ECB)
     n_mult = 0
 
-    lambda_val = [None]*n_input
-    # lambda_z = {}
+    lambda_val = [Value(None)]*n_input
     lambda_z = []
     lam_y_hat = {}
-    # lam_y_hat = [None]*c_nmul
     lam_z_hat = {}
-    # lam_z_hat = [None]*c_nmul
 
     for gate in circuit:
         x = gate.x
@@ -209,49 +206,37 @@ def rebuildlambda(party, seed, circuit, c_info):
         z = gate.z
         if gate.operation == "ADD" or gate.operation == "XOR":
             #calculate lambdas from PR generateNum
-            if x < n_input:
+            if x < n_input and lambda_val[x] == Value(None):
                 x_lam = generateNum(cipher, 'lambda', x)
                 lambda_val[x] = x_lam
-            if y < n_input:
+            if y < n_input and lambda_val[y] == Value(None):
                 y_lam = generateNum(cipher, 'lambda', y)
                 lambda_val[y] = y_lam
-            z_lam = x_lam + y_lam
-            # lambda_z.append(z_lam)
         elif gate.operation == "MUL" or gate.operation == "AND": 
             #calculate lambdas 
-            if x < n_input:
+            if x < n_input and lambda_val[x] == Value(None):
                 x_lam = generateNum(cipher, 'lambda', x)
                 lambda_val[x] = x_lam
-            if y < n_input:
+            if y < n_input and lambda_val[y] == Value(None):
                 y_lam = generateNum(cipher, 'lambda', y)
                 lambda_val[y] = y_lam
-            
+
             #set y lam hat
             if y not in lam_y_hat: 
                 lam_y_hat[str(n_mult)] = generateNum(cipher, 'lambda y hat', n_mult) 
-                # lam_y_hat[n_mult] = y_lam_hat
             #set z lam 
             z_lam = generateNum(cipher, 'lambda', z)  
             lambda_z.append(z_lam)
             #set z lam hat 
             if z not in lam_z_hat:
                 lam_z_hat[str(n_mult)] = generateNum(cipher, 'lambda z hat', n_mult)
-                # lam_z_hat[n_mult] = z_lam_hat
             n_mult += 1
       
         elif gate.operation == "INV" or gate.operation == "NOT":
-            if x < n_input: 
-                lambda_z.append(generateNum(cipher, 'lambda', x))
-            
-                if party == 0: 
-                    lambda_z.append(lambda_val[x] + Value(1))
-                else: 
-                    lambda_z.append(lambda_val[x])
-            
-        #     if party == 0: 
-        #         lambda_z.append(lambda_val[x] + Value(1))
-        #     else: 
-        #         lambda_z.append(lambda_val[x])
+            if x < n_input and lambda_val[x] == Value(None): 
+                x_lam = generateNum(cipher, 'lambda', x)
+                lambda_val[x] = x_lam
+
     return lambda_val, lambda_z, lam_y_hat, lam_z_hat
 
 

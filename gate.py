@@ -87,9 +87,9 @@ class gate:
         for i in range(self.n_parties):
             if i == 0:
                 self.w.v(self.z)[i] = self.w.v(self.x)[i] + Value(1)
-                self.w.lambda_val(self.z)[i] = self.w.lambda_val(self.x)[i] + Value(1)
+                # self.w.lambda_val(self.z)[i] = self.w.lambda_val(self.x)[i] + Value(1)
             else:
                 self.w.v(self.z)[i] = self.w.v(self.x)[i]
-                self.w.lambda_val(self.z)[i] = self.w.lambda_val(self.x)[i]
+                # self.w.lambda_val(self.z)[i] = self.w.lambda_val(self.x)[i]
         self.w.set_e(self.z, self.w.e(self.x))
        

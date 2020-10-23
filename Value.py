@@ -44,9 +44,12 @@ class Value:
     overload equality check
     """
     def __eq__(self, other, p = field):
-        left = gmpy2.f_mod(self.value, p)
-        right = gmpy2.f_mod(other.value, p)
-        return left == right
+        if self.value == None or other.value == None:
+            return self.value == other.value
+        else: 
+            left = gmpy2.f_mod(self.value, p)
+            right = gmpy2.f_mod(other.value, p)
+            return left == right
 
     def __ne__(self, other, p = field):
         left = gmpy2.f_mod(self.value, p)

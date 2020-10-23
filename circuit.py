@@ -14,6 +14,7 @@ from Value import Value
 # function:: parse external file in Bristol format
 
 n_epsilons = 1
+outputs = []
 def parse_bristol(gate, n_parties, i):
     input_stream = sys.argv[i]
     n_mulgate = 0 
@@ -128,7 +129,7 @@ def wire_data(n_wires):
 def compute_output(circuit, epsilon_1, epsilon_2, wire, n_gate, n_parties, n_epsilons):
     alpha_broadcast = []
     m = 0
-    outputs = [] #for test 
+    global outputs #for test 
     for i in range(n_gate):
         c = circuit[i]
         #MUL gates
@@ -154,6 +155,10 @@ def compute_output(circuit, epsilon_1, epsilon_2, wire, n_gate, n_parties, n_eps
             c.inv()
         outputs.append(wire.v(c.z))
     return alpha_broadcast
+
+def return_outputs():
+    global outputs
+    return outputs
 
 #input: circuit, wire structure, list of n_mul gate alphas, and two epsilons
 #output: n_parties zeta shares
@@ -181,4 +186,3 @@ def compute_zeta_share(circuit, wire, alpha, epsilon_1, epsilon_2, n_parties, n_
             if j== len(circuit)-1:
                 r[e][i] = (zeta)
     return r
-
