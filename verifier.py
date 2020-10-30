@@ -158,10 +158,10 @@ def recompute(circuit, c_info, n_parties, parties, comitted_views, open_views, b
         alpha_shares = []
 
         outputs = []
-        
         for e in range(n_epsilons):
             num_mult = 0
             zeta = 0
+            big_alpha = 0 #NOTE NEW CHANGE 
             for j in range(n_gate):
                 c = circuit[j]
                 if c.operation == 'ADD' or c.operation == 'XOR':
