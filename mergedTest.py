@@ -43,15 +43,10 @@ class TestMPCInTheHead(unittest.TestCase):
 
                 #Assign v values
                 inputs = []
-                #test - to uncomment
                 for i in range(n_input):
                     val = Value()
                     val.getRand()
                     inputs.append(val)
-
-                # inputs = [(Value(0)), Value(1), Value(0)]
-
-                # inputs = [(Value(0)), Value(1)]
                
                 for i in range(n_input):
                     w.set_v(i, inputs[i].splitVal(n_parties))
@@ -106,7 +101,6 @@ class TestMPCInTheHead(unittest.TestCase):
                 r3 = broadcast_commit
                 #number of parties to be corrupted
                 t = 2 
-                parties = [0, 1] #test parties
                 parties = fs.round4(r1, r3, t, n_parties)
             
                 #round 5
@@ -242,14 +236,12 @@ class TestMPCInTheHead(unittest.TestCase):
                     preprocessing_arr[repetition] = preprocessing_time
 
                     #Assign v values
-                    #test - to uncomment
                     inputs = []
                     for i in range(n_input):
                         val = Value()
                         val.getRand()
                         inputs.append(val)
-                    # inputs = [(Value(0)), Value(1), Value(0)]
-                   
+                                       
                     for i in range(n_input):
                         w.set_v(i, inputs[i].splitVal(n_parties))
 
@@ -284,7 +276,6 @@ class TestMPCInTheHead(unittest.TestCase):
                     
                     #Generate parties to corrupt
                     t = n_parties -1
-                    parties = [0, 1] #test parties
                     parties = fs.round4(r1, r3, t, n_parties)
 
                     #round five
@@ -371,13 +362,11 @@ class TestMPCInTheHead(unittest.TestCase):
                     preprocessing_arr[repetition] = preprocessing_time
 
                     #Assign v values
-                    #TEST TO UNCOMMENT 
                     inputs = []
                     for i in range(n_input):
                         val = Value()
                         val.getRand()
                         inputs.append(val)
-                    # inputs = [(Value(0)), Value(1), Value(0)]
 
                     for i in range(n_input):
                         w.set_v(i, inputs[i].splitVal(n_parties))
@@ -407,7 +396,6 @@ class TestMPCInTheHead(unittest.TestCase):
                                 
                     #Generate parties to corrupt
                     n_corrupt = n_parties -1
-                    parties = [0, 1] #test parties
                     parties = fs.round4(r1, r3, n_corrupt, n_parties)
 
                     #round five

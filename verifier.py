@@ -7,6 +7,7 @@ from wire import Wire
 from gate import gate
 from gmpy2 import mpz
 import Preprocessing as prepro
+import circuit as CTEST
 
 """
 ---check_commitments---
@@ -97,7 +98,6 @@ def check_zeta(broadcast):
     zeta = broadcast['zeta']
     for e in range(len(zeta)):
         assert(sum(zeta[e]) == check_zero), "Zeta does not sum to zero"
-    print("Zetas in prover's broadcast sums to 0")
     return 
 
 """
@@ -140,13 +140,15 @@ def recompute(circuit, c_info, n_parties, parties, comitted_views, open_views, b
     e_z_hat = broadcast['e z hat'] + [Value(0)]*to_concatenate
     p_alpha = broadcast['alpha']
 
+    output_test = [] #output test 
+
     for i in range(len(parties)):
         current_party = parties[i]
         party_view = open_views[i]
         seed = party_view['party seed']
 
         input_val = open_views[i]['input'] 
-        wire_value = [input_val[i] if i < len(input_val) else Value(0) for i in range(n_wires)]        
+        wire_value = [input_val[k] if k < len(input_val) else Value(0) for k in range(n_wires)]        
         #generating lambdas from the master seed 
         rebuild_lam = prepro.rebuildlambda(current_party, seed, circuit, c_info)
         lambda_val = rebuild_lam[0] + ([Value(0)]*to_concatenate)
@@ -154,6 +156,8 @@ def recompute(circuit, c_info, n_parties, parties, comitted_views, open_views, b
         lam_y_hat = rebuild_lam[2]
         lam_z_hat = rebuild_lam[3]
         alpha_shares = []
+
+        outputs = []
         
         for e in range(n_epsilons):
             num_mult = 0
@@ -170,52 +174,58 @@ def recompute(circuit, c_info, n_parties, parties, comitted_views, open_views, b
                         wire_value[c.z] = z_v
                         lambda_val[c.z] = lamx + lamy
                         x_e, y_e = e_inputs[c.x], e_inputs[c.y]
-                        e_inputs[c.z] = x_e + y_e
+                        e_inputs[c.z] = x_e + y_e   
                 if c.operation == 'MUL' or c.operation == 'AND':
                     if e == 0: 
-                        x_v = wire_value[c.x]
-                        y_v = wire_value[c.y]
+                    # x_v = wire_value[c.x]
+                    # y_v = wire_value[c.y]
                         if parties[i] == 0: 
                             z_v = e_z[num_mult] - lambda_z[num_mult]
                         else:
                             z_v = Value(0) - lambda_z[num_mult]
-                        wire_value[c.z] = z_v
+                        wire_value[c.z] = z_v    
             
                     e_inputs[c.z] = e_z[num_mult]
                     lambda_val[c.z] = lambda_z[num_mult]
 
                     y_lam = lambda_val[c.y]
-                    y_lamh = lam_y_hat[num_mult]
+                    y_lamh = lam_y_hat[str(num_mult)]
 
                     x = c.x
                     y = c.y
                     z = c.z
-                    print(e, num_mult, parties[i])
-                    print(epsilon1[e][num_mult], epsilon2[e][num_mult])
-                    print('verifier y lam ', y_lam)
-                    print('verifier y lam hat ', y_lamh)
+                    # epsilon1[e][num_mult], y_lam, epsilon2[e][num_mult], y_lamh
                     alpha_to_share = epsilon1[e][num_mult]*y_lam + (epsilon2[e][num_mult] * y_lamh)
-                    # alpha_to_share = epsilon1[e][num_mult]*y_lam + (epsilon2[num_mult][e] * y_lamh)
-                    alpha[num_mult][e][i] = alpha_to_share #alpha[nummult][epsilon][
-                
+                    alpha[num_mult][e][i] = alpha_to_share #alpha[nummult][epsilon]
+            
                     A = sum(p_alpha[num_mult][e])
                     zeta += (epsilon1[e][num_mult] * e_inputs[y] - A)* lambda_val[x] + \
                             epsilon1[e][num_mult] * e_inputs[x] * lambda_val[y] - \
-                            epsilon1[e][num_mult] * lambda_z[num_mult] - epsilon2[e][num_mult] * lam_z_hat[num_mult]
+                            epsilon1[e][num_mult] * lambda_z[num_mult] - epsilon2[e][num_mult] * lam_z_hat[str(num_mult)]
                     
                     if parties[i] == 0: 
+                        #epsilon1[e][num_mult], e_z[num_mult], epsilon1[e][num_mult], e_inputs[x], e_inputs[y], epsilon2[e][num_mult]e_z_hat[num_mult]
                         zeta += epsilon1[e][num_mult] * e_z[num_mult] - epsilon1[e][num_mult] * e_inputs[x] * e_inputs[y] + epsilon2[e][num_mult] * e_z_hat[num_mult]
                     
                     num_mult += 1
-                if c.operation == 'INV' or c.operation == 'NOT':
-                    if current_party == 0:
-                        wire_value[c.z] = wire_value[c.x] + Value(1)    
-                    else:
-                        wire_value[c.z] = wire_value[c.x]
+                if c.operation == 'INV' or c.operation == 'NOT': 
+                    if e == 0: 
+                        if current_party == 0:
+                            wire_value[c.z] = wire_value[c.x] + Value(1)
+                            lambda_val[c.z] = lambda_val[c.x] + Value(1) 
+                        else:
+                            wire_value[c.z] = wire_value[c.x]
+                            lambda_val[c.z] = lambda_val[c.x]
+                        e_inputs[c.z] = e_inputs[c.x]
+
                 if j == n_gate-1:
                     zeta_broadcast[e][i] = zeta
-        output_shares.append(wire_value[-1])
-    return alpha, output_shares, zeta_broadcast
+                outputs.append(wire_value[c.z])
+        
+        # output_shares.append(wire_value[-1]) #no clue why THIS doesn't work? 
+        output_shares.append(outputs[-1])
+        output_test.append(outputs)
+    return alpha, output_shares, zeta_broadcast #REMOVE OUTPUTS
 
 """
 ---check_recompute---
@@ -239,7 +249,7 @@ def check_recompute(c_info, parties, broadcast, recomputed_alpha, recompute_outp
         for e in range(n_epsilons):
             for j in range(n_multgate):
                 assert (prover_alpha[j][e][parties[i]].value == recomputed_alpha[j][e][i].value), "Verifier's recomputed alphas does not match prover's alphas."
-                assert(recomputed_zeta[e][i].value == prover_zeta[e][parties[i]].value), "Verifier's recomputd zetas does not match prover's zetas."
+                assert(recomputed_zeta[e][i].value == prover_zeta[e][parties[i]].value), "Verifier's recomputed zetas does not match prover's zetas."
 
     # print("Verifier's alphas, zetas, and output matches prover's.")
     return 
@@ -255,4 +265,6 @@ def verifier(circuit, c_info, n_parties, parties, committed_views, open_views, r
 
     #verifier recompute 
     v_recompute = recompute(circuit, c_info, n_parties, parties, committed_views, open_views, broadcast, n_epsilons)
+
     checkrecompute = check_recompute(c_info, parties, broadcast, v_recompute[0], v_recompute[1], v_recompute[2], n_epsilons)
+    print("passed")
