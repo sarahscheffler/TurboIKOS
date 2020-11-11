@@ -141,7 +141,7 @@ def compute_output(circuit, epsilon_1, epsilon_2, wire, n_gate, n_parties):
                 y_lamh = wire.lam_hat(c.y)[str(m)][j]
                 # epsilon_1[e][m], y_lam, epsilon_2[e][m], y_lamh
                 alpha_shares[j] = epsilon_1[m]*y_lam + (epsilon_2[m]*y_lamh)
-            alpha_shares_mulgate.append(alpha_shares) #alpha[gate][epsilon][party]
+            alpha_shares_mulgate.append(alpha_shares) #alpha[gate][party]
             m += 1
         # ADD gates	
         if c.operation == 'ADD' or c.operation== 'XOR':
@@ -151,7 +151,7 @@ def compute_output(circuit, epsilon_1, epsilon_2, wire, n_gate, n_parties):
             c.w = wire
             c.inv()
     #compute single alpha for each mulgate (alpha = epsilon1*lambda_y + epsilon2*lambda_y_hat)
-    alpha_broadcast = [None for x in range(len(alpha_shares_mulgate))] #alpha_broadcast[#mul_gate][#epsilon]
+    alpha_broadcast = [None for x in range(len(alpha_shares_mulgate))] #alpha_broadcast[#mul_gate]
     for i in range(len(alpha_shares_mulgate)):
         alpha_broadcast[i] = sum(alpha_shares_mulgate[i])
 
@@ -193,6 +193,6 @@ def compute_A_share(alpha_broadcast, alpha_shares_mulgate, rand, n_parties):
             cum += (rand[m]*alpha_shares_mulgate[m][j])
             if j == 0:
                 cum -= (rand[m]*alpha_broadcast[m])
-        A[j][e] = cum
+        A[j] = cum
     return A
                 

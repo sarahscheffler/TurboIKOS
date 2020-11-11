@@ -142,7 +142,7 @@ output: open views, open broadcasts, dictionary of rvals
 """
 def round_seven(round1, round3, round5, parties_open): 
     broadcasts = {'round1': round1[5], 'round3': round3[2], 'round5': round5[2]}
-    rval = {'views': [], 'broadcast_round1': round1[3], 'broadcast_round3': round3[1], 'broadcast_round5': round5[1]}
+    rval = {'views': [], 'round1': round1[3], 'round3': round3[1], 'round5': round5[1]} #round1, round3, round5 rvals for broadcasts
     views = round1[4]
     r_vals = round1[2]
     open_views = []
