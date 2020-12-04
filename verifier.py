@@ -239,7 +239,6 @@ def recompute(circuit, c_info, parties, comitted_views, committed_broadcast1, op
             if parties[p] == 0:
                 sum_smalla -= (gammas[m]*b_alpha[m])
         bigA[p] = sum_smalla
-    print(gammas)
     return bigA, output_shares, zeta_broadcast #REMOVE OUTPUTS
 
 """
