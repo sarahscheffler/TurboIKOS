@@ -89,6 +89,8 @@ def check_zeta(broadcast): #round three broadcast
     #check \zeta == 0
     check_zero = Value(0)
     zeta = broadcast['zeta']
+    if zeta == []:
+        return
     assert(sum(zeta) == check_zero), "Zeta does not sum to zero"
     return 
 
@@ -98,6 +100,8 @@ def check_zeta(broadcast): #round three broadcast
 """
 def check_bigalpha(round5): #round 5 broadcast
     check_zero = Value(0)
+    if round5 == []:
+        return
     assert(sum(round5) == check_zero), "Big Alpha does not sum to zero"
     return
 
@@ -261,8 +265,9 @@ def check_recompute(c_info, parties, dict_broadcast, recompute_A, recompute_outp
         current_party = parties[i]
         #check alphas 
         assert(recompute_output_shares[i].value == prover_output[current_party].value), "Verifier's recomputed output shares does not match prover's output shares."
-        assert (prover_alpha[current_party].value == recompute_A[i].value), "Verifier's recomputed alphas does not match prover's big alphas."
-        assert(recomputed_zeta[i].value == prover_zeta[current_party].value), "Verifier's recomputed zetas does not match prover's zetas."
+        if (prover_alpha != []):
+            assert (prover_alpha[current_party].value == recompute_A[i].value), "Verifier's recomputed alphas does not match prover's big alphas."
+            assert(recomputed_zeta[i].value == prover_zeta[current_party].value), "Verifier's recomputed zetas does not match prover's zetas."
 
     # print("Verifier's alphas, zetas, and output matches prover's.")
     return 
