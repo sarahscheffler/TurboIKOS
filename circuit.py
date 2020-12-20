@@ -57,6 +57,7 @@ def parse_bristol(gate, n_parties, i):
             if i == n_gate:
                 break
     c_info = {'l': l, 'l input': l_input, 'n_gate': n_gate, 'n_wires': n_wires, 'n_output': n_output, 'n_input': n_input, 'n_addgate': n_addgate, 'n_mul': n_mulgate, 'n_inv': n_inv, 'n_parties': n_parties}
+    print(c_info)
     return l, l_input, l_output, n_gate, n_wires, n_output, n_input, n_addgate, n_mulgate, n_parties, c_info
 
     """
@@ -97,6 +98,7 @@ def parse_pws(gate, n_parties, i):
                         operation = 'ADD'
                     c.append(gate(input1, input2, output, n_parties, operation = operation))
     c_info = {'l input': l_input, 'n_gate': n_gate, 'n_wires': n_wires, 'n_output': n_output, 'n_input': n_input, 'n_addgate': n_addgate, 'n_mul': n_mulgate, 'n_parties': n_parties}
+    print(c_info)
     return c, l_input, l_output, n_gate, n_wires, n_output, n_input, n_addgate, n_mulgate, n_parties, c_info
 
 def parse(gate, n_parties):

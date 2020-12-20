@@ -17,6 +17,9 @@ class Wire:
         self.n_wire = n_wires
         self.n_parties = n_parties
 
+    def __repr__(self):
+        return "data: " + str(self.data) + " n_wires: " + str(self.n_wire)
+
     def e(self, index):
         checkIndex(index, self.n_wire)
         return self.data[index]['e']
