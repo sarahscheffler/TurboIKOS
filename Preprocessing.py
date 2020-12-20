@@ -167,20 +167,28 @@ def generateNum(cipher, num_type, index):
          num_type == 'lambda y hat' or \
               num_type == 'lambda z hat' or \
                   num_type == 'index'), "Type input is invalid"
+    
+    if num_type == 'lambda': 
+        num_type = 'l'
+    elif num_type == 'lambda y hat':
+        num_type = 'y'
+    elif num_type == 'lambda z hat': 
+        num_type = 'z'
+    elif num_type == 'index':
+        num_type = 'i'
+
     field = v.getfield()
     max_16 = (8**16)
     if field > max_16: 
         reject_val = (field//max_16)*max_16 #((2^127)-1)
     else: 
         reject_val = (max_16//field)*field
+    
     attempt = 0 
-    number = bytes_to_long(cipher.encrypt(pad(num_type.encode() + str(index).encode() + str(attempt).encode(), AES.block_size))) 
+    number = bytes_to_long(cipher.encrypt(pad((num_type + str(index) + str(attempt)).encode(), AES.block_size))) 
     while number >= reject_val:
-        # print("number", number)
-        # print("reject", reject_val)
         attempt += 1
-        number = bytes_to_long(cipher.encrypt(pad(num_type.encode() + str(index).encode() + str(attempt).encode(), AES.block_size))) 
-    # print(attempt)
+        number = bytes_to_long(cipher.encrypt(pad((num_type + str(index) + str(attempt)).encode(), AES.block_size))) 
     return Value(number%field)
 
 """

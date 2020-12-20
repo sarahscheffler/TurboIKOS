@@ -9,7 +9,7 @@ import gmpy2
 from gmpy2 import mpz
 from Cryptodome.Util.number import bytes_to_long
 
-field = mpz(2**127-1)
+field = mpz((2**127)-1)
 # field = mpz(2)
 r_state = gmpy2.random_state(bytes_to_long(os.urandom(16)))
 

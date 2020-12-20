@@ -120,8 +120,13 @@ def get_gammas_ehat(commited_round3, n_multgates):
     r3 = hashlib.sha256(commited_round3)
     return Fiat_Shamir.make_gammas(r3.digest(), n_multgates)
 
-def rebuild_inputs(seed, n_inputs, lambda_vals, e_vals): 
-    inputs = [e_vals[i] - lambda_vals[i] for i in range(n_inputs)]
+def rebuild_inputs(party, n_inputs, lambda_vals, e_vals): 
+    inputs = [None]*n_inputs
+    for i in range(n_inputs):
+        if party == 0: 
+            inputs[i] = e_vals[i] - lambda_vals[i]
+        else:
+            inputs[i] = Value(0) - lambda_vals[i]
     return inputs
 
 """
@@ -172,7 +177,7 @@ def recompute(circuit, c_info, parties, comitted_views, committed_broadcast1, op
         lam_y_hat = rebuild_lam[2]
         lam_z_hat = rebuild_lam[3]
 
-        input_val = rebuild_inputs(seed, n_input, lambda_val, e_inputs)
+        input_val = rebuild_inputs(current_party, n_input, lambda_val, e_inputs)
         wire_value = [input_val[k] if k < len(input_val) else Value(0) for k in range(n_wires)]        
 
         outputs = []
