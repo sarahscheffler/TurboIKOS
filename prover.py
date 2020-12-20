@@ -123,7 +123,7 @@ def round3(c_info, zeta, little_alpha):
     little_alpha_str = b''
     broadcast2 = {'zeta': zeta, 'little_alpha': little_alpha}
 
-    for p in range(n_parties): 
+    for p in range(len(zeta)): 
         zeta_str += long_to_bytes(zeta[p].value)
     
     for m in range(n_mul):
@@ -144,7 +144,7 @@ def round5(c_info,big_alpha):
     n_parties = c_info['n_parties']
     big_alpha_str = b''
 
-    for p in range(n_parties): 
+    for p in range(len(big_alpha)): 
         big_alpha_str += long_to_bytes(big_alpha[p].value)
     
     temp = commit(big_alpha_str)

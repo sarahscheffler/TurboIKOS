@@ -25,7 +25,7 @@ def parse_bristol(gate, n_parties, i):
         n_wires = int(first_line[1])
         second_line = f.readline().split()
         # n_input = int(second_line[0])
-        n_input = int(second_line[1]) + int(second_line[2])
+        n_input = int(second_line[0])
         # create list of number of wires for input value
         # l_input = [int(second_line[i+1]) for i in range(n_input)]
         l_input = [1 for i in range(n_input)]
@@ -56,8 +56,7 @@ def parse_bristol(gate, n_parties, i):
             i = i + 1
             if i == n_gate:
                 break
-    c_info = {'l': l, 'l input': l_input, 'n_gate': n_gate, 'n_wires': n_wires, 'n_output': n_output, 'n_input': n_input, 'n_addgate': n_addgate, 'n_mul': n_mulgate, 'n_inv': n_inv, 'n_parties': n_parties}
-    print(c_info)
+    c_info = {'l input': l_input, 'n_gate': n_gate, 'n_wires': n_wires, 'n_output': n_output, 'n_input': n_input, 'n_addgate': n_addgate, 'n_mul': n_mulgate, 'n_inv': n_inv, 'n_parties': n_parties}
     return l, l_input, l_output, n_gate, n_wires, n_output, n_input, n_addgate, n_mulgate, n_parties, c_info
 
     """
@@ -97,8 +96,8 @@ def parse_pws(gate, n_parties, i):
                         n_addgate += 1
                         operation = 'ADD'
                     c.append(gate(input1, input2, output, n_parties, operation = operation))
+
     c_info = {'l input': l_input, 'n_gate': n_gate, 'n_wires': n_wires, 'n_output': n_output, 'n_input': n_input, 'n_addgate': n_addgate, 'n_mul': n_mulgate, 'n_parties': n_parties}
-    print(c_info)
     return c, l_input, l_output, n_gate, n_wires, n_output, n_input, n_addgate, n_mulgate, n_parties, c_info
 
 def parse(gate, n_parties):
@@ -172,6 +171,8 @@ def compute_alpha(circuit, epsilon_1, epsilon_2, wire, n_gate, n_parties):
 #input: circuit, wire structure, list of n_mul gate alphas, and two epsilons
 #output: n_parties zeta shares
 def compute_zeta_share(circuit, wire, alpha, epsilon_1, epsilon_2, n_parties):
+    if alpha == []:
+        return []
     r = [None for x in range(n_parties)]
     for i in range(n_parties):
         zeta = 0
@@ -198,6 +199,8 @@ def compute_zeta_share(circuit, wire, alpha, epsilon_1, epsilon_2, n_parties):
 #input: alpha_broadcast, alpha shares per mulgate, random values[#mulgate][#epsilon], number of parties, number of epsilons
 #output: A shares[#party][epsilon]
 def compute_A_share(alpha_broadcast, alpha_shares_mulgate, rand, n_parties):
+    if alpha_shares_mulgate == []:
+        return []
     A = [None for x in range(n_parties)]
     for j in range(n_parties):
         cum = 0
