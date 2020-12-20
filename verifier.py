@@ -17,15 +17,13 @@ def rebuild_commitments(circuit, c_info, open_parties, open_views, dict_rval, di
     #rebuild views 
     rebuilt_views = [None]*len(open_parties)
     views_rval = dict_rval['views']
+    input_str = b''
+    lambda_str = b''
+
     for i in range(len(open_views)): 
-        party = open_views[i]
-        n_mul = 0 
-        input_str = b''
-        lambda_seed_str = party['lambda_seed']
-        for j in range(n_input):
-            input_str += long_to_bytes(party['input'][j].value)
+        party_seed = open_views[i]
         
-        temp_str = long_to_bytes(views_rval[i]) + input_str + lambda_seed_str
+        temp_str = long_to_bytes(views_rval[i]) + party_seed
         rebuilt_views[i] = hashlib.sha256(temp_str).hexdigest()
 
     #rebuild broadcasts 
@@ -118,6 +116,16 @@ def get_gammas_ehat(commited_round3, n_multgates):
     return Fiat_Shamir.make_gammas(r3.digest(), n_multgates)
 
 """
+NEW PROTOCOL 
+"""
+def rebuild_inputs(seed, n_inputs): 
+    inputs = [None]*n_inputs
+    for i in range(n_inputs): 
+        inputs[i] = prepro.generateNum(seed, 'index', i)
+    return inputs
+
+
+"""
 ---recompute---
     inputs:
         circuit: circuit object 
@@ -130,7 +138,7 @@ def get_gammas_ehat(commited_round3, n_multgates):
 """
 def recompute(circuit, c_info, parties, comitted_views, open_views, open_round1, open_round3, commit_round3):
     #get info from c_info
-    n_wires, n_gate, n_mult = c_info['n_wires'], c_info['n_gate'], c_info['n_mul']
+    n_wires, n_gate, n_mult, n_input = c_info['n_wires'], c_info['n_gate'], c_info['n_mul'], c_info['n_input']
     #get epsilons 
     temp_str = ''.join(comitted_views)
     temp_epsilon = get_epsilons(temp_str.encode(), n_mult)
@@ -156,9 +164,11 @@ def recompute(circuit, c_info, parties, comitted_views, open_views, open_round1,
     for i in range(len(parties)):
         current_party = parties[i]
         party_view = open_views[i]
-        seed = party_view['party seed']
+        input_seed = party_view['input seed']
+        seed = party_view['lambda seed']
 
-        input_val = open_views[i]['input'] 
+        # input_val = open_views[i]['input'] 
+        input_val = rebuild_inputs(input_seed, n_input)
         wire_value = [input_val[k] if k < len(input_val) else Value(0) for k in range(n_wires)]        
 
         #generating lambdas from the master seed 
@@ -174,7 +184,6 @@ def recompute(circuit, c_info, parties, comitted_views, open_views, open_round1,
         for j in range(n_gate):
             c = circuit[j]
             if c.operation == 'ADD' or c.operation == 'XOR':
-                if e == 0:
                     x_v = wire_value[c.x]
                     y_v = wire_value[c.y]
                     z_v = x_v + y_v

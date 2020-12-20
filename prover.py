@@ -5,6 +5,24 @@ Commit to views and broadcast
 import hashlib
 from Value import Value
 from Cryptodome.Util.number import bytes_to_long, long_to_bytes
+import Preprocessing as pre
+from Cryptodome.Cipher import AES
+import wire
+
+
+def set_inputs(c_info, circuit, wire, num_parties, real_val, seed):
+    n_input = c_info['n_input']
+
+    for i in range(n_input):
+        vals = []
+        if wire.v(i) == Value():
+            for p in seed:
+                vals.append(pre.generateNum(p, 'index', i)) 
+            wire.set_v(i, vals)
+            wire.set_e(i, sum(vals) - real_val[i])
+
+    return seed
+
 #input: byte string to commit
 #output: random value in mpz format, commited data in hexadecimal format
 #commit data 
@@ -20,7 +38,7 @@ def open(r, v, commit):
     return commit == hashlib.sha256(long_to_bytes(r) + v).hexdigest()
 
 #input: c_info (dictionary of circuit info), circuit (circuit object), wire (wire object), party seeds (list of byte strings)
-def round_one_internal(c_info, circuit, wire, party_seeds): #NEW PROTOCOL 
+def round_one_internal(c_info, circuit, wire, list_seed): #NEW PROTOCOL 
     n_parties, n_gate, n_input = c_info['n_parties'], c_info['n_gate'], c_info['n_input']
     
     #broadcast1
@@ -34,27 +52,22 @@ def round_one_internal(c_info, circuit, wire, party_seeds): #NEW PROTOCOL
     output_shares_str = b''
 
     #views 
-    views_commit = [None]*n_parties
     views = [None]*n_parties
+    views_commit = [None]*n_parties
     r_views = [None]*n_parties
 
     output_shares = wire.v(circuit[-1].z)
     for p in range(n_parties):
-        #broadcast1 
-        output_shares_str += long_to_bytes(wire.v(circuit[-1].z[j].value))
-
         #views
-        d = {'input': [], 'party seed': None}
+        d = list_seed[p]
         views_str = b''
-        input_str = b''
         seed_str = b''
-        d['party seed'] = party_seeds[p]
-        seed_str += (party_seeds[p])
-        for i in range(n_input):
-            d['input'].append(wire.v(i)[p])
-            input_str += long_to_bytes(wire.v(i)[p].value)
+        # seed_str += (lambda_seed[p])
+        # for i in range(n_input):
+        #     d['input'].append(wire.v(i)[p])
+        #     input_str += long_to_bytes(wire.v(i)[p].value)
         views[j] = d
-        views_str = input_str + seed_str
+        views_str = d
         temp = commit(views_str)
         r_views[j] = temp[0]
         views_commit[j] = temp[1]
@@ -88,6 +101,18 @@ def round_one_internal(c_info, circuit, wire, party_seeds): #NEW PROTOCOL
 
     return views_commit, broadcast1_commit, r_views, r_broadcast1, views, broadcast1
 
+"""
+m wires, n parties 
+round 1: 
+views = [seed of party 1, ... , seed of party n]
+views_commit[n] = input seed party n + lambda seed party n 
+broadcast1 = {'e inputs': arr[#inputs], 'e z': arr[#multgates], 'e z hat': arr[#multgates], 'output shares': arr[#parties]}
+broadcast1_commit = e_input of wire 1 + ... + e_input of wire #inputs + 
+                    e_z of wire 1 + ... + e_z of wire #multgates  
+                    e_z_hat of wire 1 + ... + e_z_hat of wire #mulgates + 
+                    output share of party 1 + ... + output share of party n 
+"""
+
 def round_three_internal(c_info, zeta, little_alpha):
     n_parties = c_info['n_parties']
     zeta_str = b''
@@ -105,6 +130,14 @@ def round_three_internal(c_info, zeta, little_alpha):
 
     return broadcast2_commit, r_broadcast2, broadcast2
 
+"""
+m wires, n parties 
+round 3: 
+broadcast2 = {'zeta': arr[#parties], 'little_alpha': [#parties]}
+broadcast2_commit = zeta share of party 1 + ... + zeta share of party n +
+                    little alpha share of party 1 + ... + little alpha share of party n 
+"""
+
 def round_five_internal(c_info,big_alpha): 
     n_parties = c_info['n_parties']
     big_alpha_str = b''
@@ -117,6 +150,13 @@ def round_five_internal(c_info,big_alpha):
     broadcast3_commit = temp[1]
 
     return broadcast3_commit, r_broadcast3, big_alpha
+
+"""
+m wires, n parties 
+round 5: 
+big_alpha = arr[#n parties]
+broadcast3_commit = big_alpha party 1 + ... + big_alpha party n 
+"""
 
 #input: output of round_one_internal
 #output: committed views and broadcast1
@@ -153,20 +193,6 @@ def round_seven(round1, round3, round5, parties_open):
     rval['views'] = open_rval
     return open_views, rval, broadcasts
                                                                                                                                        
-    
-"""
-m wires, n parties
-committed broadcast = e input of wire 1 +...+ e input of wire #inputs + e z of wire 1 +...+ e z of wire #mulgates + 
-                      e z hat share of wire 1 +...+ e z hat share of wire #mulgates + alpha party 1 gate 1 + ... + alpha party 1 gate #mul gate +...+
-                      alpha party n gate 1 + ... + alpha party n gate #mulgate + zeta party 1 + ... + zeta party n + 
-                      output share of party 1 +...+ output share of party n
-broadcast = dict{e inputs: arr[#inputs], e z: arr[#mulgates], e z hat: arr[#mulgates], alpha: arr[#mulgates][n], zeta: arr[n], output shares:arr[n]}
- 
-committed views[n] = input of wire 1 + ... input of wire #inputs + lambda of wire 1 + ... + lambda of wire #inputs +
-                     lambda z 1 +... + #mult gates lambda z + lambda y hat 1 + ... + #mult gates lambda y hat +
-                     lambda y hat 1 + ... + lambda y hat #mult gates + lambda z hat 1  +... lambda z hat #mulgates
-views [n] = dict{input: arr[#inputs], input lambda: arr[#inputs], lambda z: arr[#mult gates], lambda y hat: arr[#mult gates], lambda z hat: arr[#mult gates]}
-"""
 
 
 
@@ -279,4 +305,18 @@ def round_five(round1, round3, parties):
         v.append(views[i])
         r.append(r_views[i])
     return round3[0], round3[2], r, v
+"""
+
+"""
+m wires, n parties
+committed broadcast = e input of wire 1 +...+ e input of wire #inputs + e z of wire 1 +...+ e z of wire #mulgates + 
+                      e z hat share of wire 1 +...+ e z hat share of wire #mulgates + alpha party 1 gate 1 + ... + alpha party 1 gate #mul gate +...+
+                      alpha party n gate 1 + ... + alpha party n gate #mulgate + zeta party 1 + ... + zeta party n + 
+                      output share of party 1 +...+ output share of party n
+broadcast = dict{e inputs: arr[#inputs], e z: arr[#mulgates], e z hat: arr[#mulgates], alpha: arr[#mulgates][n], zeta: arr[n], output shares:arr[n]}
+ 
+committed views[n] = input of wire 1 + ... input of wire #inputs + lambda of wire 1 + ... + lambda of wire #inputs +
+                     lambda z 1 +... + #mult gates lambda z + lambda y hat 1 + ... + #mult gates lambda y hat +
+                     lambda y hat 1 + ... + lambda y hat #mult gates + lambda z hat 1  +... lambda z hat #mulgates
+views [n] = dict{input: arr[#inputs], input lambda: arr[#inputs], lambda z: arr[#mult gates], lambda y hat: arr[#mult gates], lambda z hat: arr[#mult gates]}
 """

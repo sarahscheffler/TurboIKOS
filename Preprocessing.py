@@ -16,7 +16,7 @@ import Value as v
 from Cryptodome.Cipher import AES
 from Cryptodome.Util.Padding import pad
 from Cryptodome.Util.number import long_to_bytes, bytes_to_long
-from gmpy2 import mpz
+from gmpy2 import mpz, sub
 
 """
     function independent section
@@ -162,14 +162,22 @@ output:
 function: 
     creates a pseudorandom value to be assigned to a lambda value, which verifier can use to rebuild 
 """
-def generateNum(cipher, lambda_type, index):
-    assert(lambda_type == 'lambda' or \
-         lambda_type == 'lambda y hat' or \
-              lambda_type == 'lambda z hat'), "Lambda type is invalid"
-    number = cipher.encrypt(pad(lambda_type.encode() + str(index).encode(), AES.block_size))
-    return Value(bytes_to_long(number))
+def generateNum(cipher, num_type, index):
+    assert(num_type == 'lambda' or \
+         num_type == 'lambda y hat' or \
+              num_type == 'lambda z hat' or \
+                  num_type == 'index'), "Lambda type is invalid"
+    field = v.getfield()
+    max_16 = (8^16)
+    reject_val = (max_16//field) * field
+    attempt = 0 
+    number = bytes_to_long(cipher.encrypt(pad(num_type.encode() + str(index).encode() + str(attempt), AES.block_size))) 
+    while number > reject_val: 
+        attempt += 1
+        number = bytes_to_long(cipher.encrypt(pad(num_type.encode() + str(index).encode() + str(attempt), AES.block_size))) 
+    return Value(number%field)
 
-    #continue do everything except line return statement should stay, return statement should return however many bits we need 
+#continue do everything except line return statement should stay, return statement should return however many bits we need 
 
 
 """

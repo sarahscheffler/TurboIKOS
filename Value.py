@@ -1,4 +1,3 @@
-
 """
     Value.py
     Wrapper for data type and operations
