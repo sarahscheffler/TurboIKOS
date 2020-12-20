@@ -17,15 +17,13 @@ def rebuild_commitments(circuit, c_info, open_parties, open_views, dict_rval, di
     #rebuild views 
     rebuilt_views = [None]*len(open_parties)
     views_rval = dict_rval['views']
+    input_str = b''
+    
     for i in range(len(open_views)): 
-        party = open_views[i]
+        party_seed = open_views[i]
         n_mul = 0 
-        input_str = b''
-        lambda_seed_str = party['party seed']
-        for j in range(n_input):
-            input_str += long_to_bytes(party['input'][j].value)
         
-        temp_str = long_to_bytes(views_rval[i]) + input_str + lambda_seed_str
+        temp_str = long_to_bytes(views_rval[i]) + party_seed
         rebuilt_views[i] = hashlib.sha256(temp_str).hexdigest()
 
     #rebuild broadcasts 
@@ -122,6 +120,15 @@ def get_gammas_ehat(commited_round3, n_multgates):
     r3 = hashlib.sha256(commited_round3)
     return Fiat_Shamir.make_gammas(r3.digest(), n_multgates)
 
+def rebuild_inputs(party, n_inputs, lambda_vals, e_vals): 
+    inputs = [None]*n_inputs
+    for i in range(n_inputs):
+        if party == 0: 
+            inputs[i] = e_vals[i] - lambda_vals[i]
+        else:
+            inputs[i] = Value(0) - lambda_vals[i]
+    return inputs
+
 """
 ---recompute---
     inputs:
@@ -135,7 +142,7 @@ def get_gammas_ehat(commited_round3, n_multgates):
 """
 def recompute(circuit, c_info, parties, comitted_views, committed_broadcast1, open_views, open_round1, open_round3, commit_round3):
     #get info from c_info
-    n_wires, n_gate, n_mult = c_info['n_wires'], c_info['n_gate'], c_info['n_mul']
+    n_wires, n_gate, n_mult, n_input = c_info['n_wires'], c_info['n_gate'], c_info['n_mul'], c_info['n_input']
     #get epsilons 
     temp_str = ''.join(comitted_views) + committed_broadcast1
     temp_epsilon = get_epsilons(temp_str.encode(), n_mult)
@@ -150,7 +157,7 @@ def recompute(circuit, c_info, parties, comitted_views, committed_broadcast1, op
     alpha_shares = [[None for x in range(len(parties))] for x in range(n_mult)] #alpha[mult gate][party]
     zeta_broadcast = [None for x in range (len(parties))]
     output_shares = []
-    to_concatenate = n_wires - len(open_views[0]['input'])
+    to_concatenate = n_wires - n_input
 
     e_inputs = open_round1['e inputs'] + [Value(0)]*to_concatenate
     e_z = open_round1['e z']
@@ -161,10 +168,7 @@ def recompute(circuit, c_info, parties, comitted_views, committed_broadcast1, op
     for i in range(len(parties)):
         current_party = parties[i]
         party_view = open_views[i]
-        seed = party_view['party seed']
-
-        input_val = open_views[i]['input'] 
-        wire_value = [input_val[k] if k < len(input_val) else Value(0) for k in range(n_wires)]        
+        seed = party_view
 
         #generating lambdas from the master seed 
         rebuild_lam = prepro.rebuildlambda(current_party, seed, circuit, c_info)
@@ -172,6 +176,9 @@ def recompute(circuit, c_info, parties, comitted_views, committed_broadcast1, op
         lambda_z = rebuild_lam[1]
         lam_y_hat = rebuild_lam[2]
         lam_z_hat = rebuild_lam[3]
+
+        input_val = rebuild_inputs(current_party, n_input, lambda_val, e_inputs)
+        wire_value = [input_val[k] if k < len(input_val) else Value(0) for k in range(n_wires)]        
 
         outputs = []
         num_mult = 0

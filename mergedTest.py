@@ -46,9 +46,10 @@ class TestMPCInTheHead(unittest.TestCase):
                     val = Value()
                     val.getRand()
                     inputs.append(val)
-               
-                for i in range(n_input):
-                    w.set_v(i, inputs[i].splitVal(n_parties))
+
+                prover.set_inputs(c_info, Circuit, w, n_parties, inputs)
+                # for i in range(n_input):
+                #     w.set_v(i, inputs[i].splitVal(n_parties))
                 # triples = p.assignLambda(Circuit, w, n_parties)
                 circuit.compute_output(Circuit, w, n_gate, n_parties)
                 #Commit round one
@@ -160,8 +161,9 @@ class TestMPCInTheHead(unittest.TestCase):
                         val.getRand()
                         inputs.append(val)
                 
-                    for i in range(n_input):
-                        w.set_v(i, inputs[i].splitVal(n_parties))
+                    prover.set_inputs(c_info, Circuit, w, n_parties, inputs)
+                    # for i in range(n_input):
+                    #     w.set_v(i, inputs[i].splitVal(n_parties))
                     # triples = p.assignLambda(Circuit, w, n_parties)
                     circuit.compute_output(Circuit, w, n_gate, n_parties)
                     #Commit round one
@@ -237,7 +239,7 @@ class TestMPCInTheHead(unittest.TestCase):
                     broadcastc_size += COMMIT_BYTES*3
                     viewsc_size += COMMIT_BYTES*len(views_committed)
                     broadcast_size += sum([sum([sum([VALUE_BYTES for v in dict_broadcast[broadcast][i]]) for i in dict_broadcast[broadcast]]) for broadcast in dict_broadcast  if (broadcast!= "round5")]) + sum([VALUE_BYTES for v in dict_broadcast["round5"]])
-                    views_size_PR += sum([sum([VALUE_BYTES for v in  open_views[i]["input"]]) for i in range(n_parties-1)]) + SEED_BYTES*(n_parties-1)
+                    views_size_PR += sum([sum([VALUE_BYTES for v in  open_views[i]]) for i in range(n_parties-1)]) + SEED_BYTES*(n_parties-1)
 
 
                 #Print statistics
