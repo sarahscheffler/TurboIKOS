@@ -5,6 +5,27 @@ import wire
 import hashlib
 from Value import Value
 from Cryptodome.Util.number import bytes_to_long, long_to_bytes
+import Preprocessing as pre
+from Cryptodome.Cipher import AES
+import wire
+
+def set_inputs(c_info, circuit, wire, num_parties, real_val):
+    n_input = c_info['n_input']
+
+    for i in range(n_input):
+        vals = [None]*num_parties
+        sum_lambda = sum(wire.lambda_val(i))
+        e_val = real_val[i] + sum_lambda
+        wire.set_e(i, e_val)
+        for j in range(num_parties):
+            if j == 0: 
+                vals[j] = e_val - wire.lambda_val(i)[j]
+            else:
+                vals[j] = Value(0)-wire.lambda_val(i)[j]
+        wire.set_v(i, vals)
+    return
+
+
 #input: byte string to commit
 #output: random value in mpz format, commited data in hexadecimal format
 #commit data 
@@ -45,17 +66,18 @@ def round1(c_info, circuit, wire, party_seeds): #NEW PROTOCOL
         output_shares_str += long_to_bytes(output_shares[p].value)
 
         #views
-        d = {'input': [], 'party seed': None}
+        # d = {'input': [], 'party seed': None}
+        d = party_seeds[p]
         views_str = b''
         input_str = b''
         seed_str = b''
-        d['party seed'] = party_seeds[p]
+        # d['party seed'] = party_seeds[p]
         seed_str += (party_seeds[p])
-        for i in range(n_input):
-            d['input'].append(wire.v(i)[p])
-            input_str += long_to_bytes(wire.v(i)[p].value)
+        # for i in range(n_input):
+        #     d['input'].append(wire.v(i)[p])
+        #     input_str += long_to_bytes(wire.v(i)[p].value)
         views[p] = d
-        views_str = input_str + seed_str
+        views_str = seed_str
         temp = commit(views_str)
         r_views[p] = temp[0]
         views_commit[p] = temp[1]
