@@ -1,12 +1,3 @@
-#ecrets import token_hex  # solid randomness for cryptographic use
-
-
-
-
-# think about optimizing space. e.g shrink randomness from 256-bits to 128-bits used if appropriate.
-# change terminology to match circuit.py
-
-
 from Value import Value 
 
 class gate:
@@ -21,6 +12,7 @@ class gate:
     
     def __repr__(self):
         return 'operation:' + str(self.operation) + ' x:' + str(self.x) + ' y:' + str(self.y) + ' z:' + str(self.z)
+
     # Assigns v values z = x + y for each party
     # Assign e value on output wire
     def add(self):
@@ -49,10 +41,11 @@ class gate:
         z_e = x_e + y_e
         # set z_e
         self.w.set_e(self.z, z_e)
+
     # Assigns v values  z = x*y for each party
     # assign e value on output wire
     # return e share for broadcast
-    def mult(self):
+    def mult(self, mult_count):
         #alpha_broadcast = []*circuit.n_parties
         z_v_arr = [None]*self.n_parties 
         # calculate z_vi
@@ -72,15 +65,15 @@ class gate:
         z_v = sum(self.w.v(self.x)) * sum(self.w.v(self.y))
         z_e = z_v + sum(self.w.lambda_val(self.z))
         # calculate and set z_eh
-        z_eh = sum(self.w.lambda_val(self.x)) * sum(self.w.lam_hat(self.y)) + \
-            sum(self.w.lam_hat(self.z))
+        z_eh = sum(self.w.lambda_val(self.x)) * sum(self.w.lam_hat(self.y)[str(mult_count)]) + \
+            sum(self.w.lam_hat(self.z)[str(mult_count)])
         self.w.set_e_hat(self.z, z_eh)
         for i in range(self.n_parties):
             # calculate z_vi
             if i == 0:
                 z_v_share = z_e - self.w.lambda_val(self.z)[i]
             else:
-                z_v_share = Value(0)-self.w.lambda_val(self.z)[i]
+                z_v_share = Value(0) - self.w.lambda_val(self.z)[i]
             z_v_arr[i] = z_v_share 
      
           
@@ -88,4 +81,15 @@ class gate:
         # calculate and set z_e
         z_e = sum(self.w.v(self.z)) + sum(self.w.lambda_val(self.z))
         self.w.set_e(self.z, z_e)
+    
+    def inv(self):
+        self.w.set_v(self.z, [None]* self.n_parties)
+        for i in range(self.n_parties):
+            if i == 0:
+                self.w.v(self.z)[i] = self.w.v(self.x)[i] + Value(1)
+                # self.w.lambda_val(self.z)[i] = self.w.lambda_val(self.x)[i] + Value(1)
+            else:
+                self.w.v(self.z)[i] = self.w.v(self.x)[i]
+                # self.w.lambda_val(self.z)[i] = self.w.lambda_val(self.x)[i]
+        self.w.set_e(self.z, self.w.e(self.x))
        

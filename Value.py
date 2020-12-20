@@ -9,7 +9,8 @@ import gmpy2
 from gmpy2 import mpz
 from Cryptodome.Util.number import bytes_to_long
 
-field = mpz(2**127-1)
+# field = mpz(2**127-1)
+field = mpz(2)
 r_state = gmpy2.random_state(bytes_to_long(os.urandom(16)))
 
 def getfield():
@@ -17,11 +18,11 @@ def getfield():
     return field
 
 class Value:
-    def __init__(self, value=None):
+    def __init__(self, value=None, p=field):
         if value == None:
             self.value = None
         else:
-            self.value = mpz(value)
+            self.value = gmpy2.f_mod(mpz(value), p)
 
     """
     overload + and sum with ^, * with & for boolean circuit
@@ -43,9 +44,12 @@ class Value:
     overload equality check
     """
     def __eq__(self, other, p = field):
-        left = gmpy2.f_mod(self.value, p)
-        right = gmpy2.f_mod(other.value, p)
-        return left == right
+        if self.value == None or other.value == None:
+            return self.value == other.value
+        else: 
+            left = gmpy2.f_mod(self.value, p)
+            right = gmpy2.f_mod(other.value, p)
+            return left == right
 
     def __ne__(self, other, p = field):
         left = gmpy2.f_mod(self.value, p)
@@ -97,14 +101,3 @@ class Value:
         last = self - sum(ret)
         ret.append(last)
         return ret
-
-    # def __str__(self):
-    #     return (self.value)
-
-    # def __repr__(self):
-    #     return (self.value)
-
-#send field value 
-def getfield():
-    global field
-    return field
