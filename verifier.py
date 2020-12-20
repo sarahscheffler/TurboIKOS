@@ -267,7 +267,6 @@ def check_recompute(c_info, parties, dict_broadcast, recompute_A, recompute_outp
         assert(recompute_output_shares[i].value == prover_output[current_party].value), "Verifier's recomputed output shares does not match prover's output shares."
         if (prover_alpha != []):
             assert (prover_alpha[current_party].value == recompute_A[i].value), "Verifier's recomputed alphas does not match prover's big alphas."
-            print(recomputed_zeta[i].value, prover_zeta[current_party].value)
             assert(recomputed_zeta[i].value == prover_zeta[current_party].value), "Verifier's recomputed zetas does not match prover's zetas."
 
     # print("Verifier's alphas, zetas, and output matches prover's.")
