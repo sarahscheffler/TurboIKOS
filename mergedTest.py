@@ -128,7 +128,6 @@ class TestMPCInTheHead(unittest.TestCase):
                 broadcast_size = 0
                 views_size_PR = 0
 
-                n_parties = 3
                 temp = circuit.parse(gate, n_parties)
                 n_wires = temp[4]
                 n_gate = temp[3]
