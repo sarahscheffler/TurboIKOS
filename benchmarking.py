@@ -9,14 +9,25 @@ from Value import Value
 import prover
 import Fiat_Shamir as fs
 import time
-from objsize import get_deep_size
+# from objsize import get_deep_size
+# from pympler import asizeof
+# import resource
+import os
+import psutil
 import verifier as v
 from Cryptodome.Util.number import bytes_to_long, long_to_bytes
 import math
+from memory_profiler import memory_usage
 
 COMMIT_BYTES = 32
 VALUE_BYTES = 16
 SEED_BYTES = int(256/8)
+
+def get_process_memory():
+    process = psutil.Process(os.getpid())
+    mem_info = process.memory_info()
+    return mem_info.rss
+
             
 def benchmarking(n_parties):
 
@@ -142,14 +153,17 @@ def benchmarking(n_parties):
         verifier_time_arr[repetition] = verifier_time
 
         #Calculate size statistics
-        broadcastc_size += COMMIT_BYTES*3
-        viewsc_size += COMMIT_BYTES*len(views_committed)
-        broadcast_size += sum([sum([sum([VALUE_BYTES for v in dict_broadcast[broadcast][i]]) for i in dict_broadcast[broadcast]]) for broadcast in dict_broadcast  if (broadcast!= "round5")]) + sum([VALUE_BYTES for v in dict_broadcast["round5"]])
-        views_size_PR += sum([sum([VALUE_BYTES for v in  open_views[i]]) for i in range(n_parties-1)]) + SEED_BYTES*(n_parties-1)
+        broadcastc_size += COMMIT_BYTES
+        viewsc_size += COMMIT_BYTES*n_parties
+        # broadcast_size += sum([sum([sum([VALUE_BYTES for v in dict_broadcast[broadcast][i]]) for i in dict_broadcast[broadcast]]) for broadcast in dict_broadcast  if (broadcast!= "round5")]) + sum([VALUE_BYTES for v in dict_broadcast["round5"]])
+        broadcast_size += VALUE_BYTES*n_input + VALUE_BYTES*3*n_mul + VALUE_BYTES*2*n_parties + VALUE_BYTES*n_output
+        views_size_PR += SEED_BYTES*n_parties
 
-        memory += get_deep_size(broadcastc_size) + get_deep_size(viewsc_size) + get_deep_size(broadcast_size) + get_deep_size(views_size_PR)
+        # memory += get_deep_size(broadcastc_size) + get_deep_size(viewsc_size) + get_deep_size(broadcast_size) + get_deep_size(views_size_PR)
+        # memory += resource.getrusage(resource.RUSAGE_SELF).ru_maxrss
+        memory = get_process_memory()
         proof_size += broadcastc_size + viewsc_size + broadcast_size + views_size_PR
-
+        
     # preprocessing_time = sum(preprocessing_arr)
     # print('preprocessing time:', preprocessing_time, 'seconds')
 
@@ -157,5 +171,5 @@ def benchmarking(n_parties):
     verifier_time_total = sum(verifier_time_arr)
     # Proof size = wire size + circuit size + alpha size + zeta size
 
-    return prover_time_total, verifier_time_total, proof_size, memory
+    return prover_time_total, verifier_time_total, proof_size, memory, rep
 

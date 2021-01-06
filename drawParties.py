@@ -9,13 +9,15 @@ p = []
 v = []
 s = []
 m = []
-num_parties = [3, 10, 100, 1000]
+r = []
+num_parties = [3, 10, 100, 1000, 10000, 100000]
 for i in num_parties:
-    tempP, tempV, tempS, tempM = benchmarking(i)
+    tempP, tempV, tempS, tempM, rep = benchmarking(i)
     p.append(tempP)
     v.append(tempV)
     s.append(tempS/(10**6))
     m.append(tempM/(10**6))
+    r.append(rep)
 
 # 2x2 x-y plot
 def plotTable():
@@ -24,14 +26,17 @@ def plotTable():
     plotMemory(axs[0, 1],num_parties,m)
     plotPTime(axs[1, 0],num_parties,p)
     plotVTime(axs[1, 1],num_parties,v)
-    plt.show()
+    plt.savefig('graph/test.jpg')
+    #  plt.show()
 
 
 def plotSize(ax, x, y):
-    ax.plot(x, y)
+    ax.plot(x, y, label = 'proof size')
+    ax.plot(x, r, label = '# repetitions')
     ax.set_xlabel('number of parties', fontsize=12)
-    ax.set_ylabel('proof size (in MB)', fontsize=12)
+    ax.set_ylabel('proof size (in MB)/# reps', fontsize=12)
     ax.set_title('Proof Size', fontsize=14)
+    ax.legend()
 
 
 def plotMemory(ax, x, y):

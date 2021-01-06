@@ -16,7 +16,7 @@ Setup on a fresh Ubuntu instance:
 $ sudo apt update
 $ sudo apt install python3-pip
 $ sudo apt install libgmp-dev libmpfr-dev libmpc-dev
-$ pip3 install gmpy2 pycryptodomex (numpy matplotlib pycryptodome objsize)
+$ pip3 install gmpy2 pycryptodomex (numpy matplotlib pycryptodome psutil)
 ```
 
 ### Instruction:
