@@ -1,18 +1,17 @@
 import sys
 from Value import Value
 
-
-
-# input: external file
-# output: circuit data struct (array of gate objects in topological order
-#         list of # wires of input 
-#         list of # wires of output
-#         numbers of gates
-#         numbers of wires
-#         number of outputs
-#         nymber of inputs
-# function:: parse external file in Bristol format
-
+"""
+input: external file
+output: circuit data struct (array of gate objects in topological order
+        list of # wires of input 
+        list of # wires of output
+        numbers of gates
+        numbers of wires
+        number of outputs
+        nymber of inputs
+function:: parse external file in Bristol format
+"""
 n_epsilons = 1
 def parse_bristol(gate, n_parties, i):
     input_stream = sys.argv[i]
@@ -24,10 +23,7 @@ def parse_bristol(gate, n_parties, i):
         n_gate = int(first_line[0])
         n_wires = int(first_line[1])
         second_line = f.readline().split()
-        # n_input = int(second_line[0])
         n_input = int(second_line[0])
-        # create list of number of wires for input value
-        # l_input = [int(second_line[i+1]) for i in range(n_input)]
         l_input = [1 for i in range(n_input)]
     
         third_line = f.readline().split()
@@ -116,16 +112,19 @@ def parse_test(gate, n_parties, i):
         else:
             return parse_bristol(gate, n_parties, i)
 
-# input: number of wires
-# output: wire data structure (array of dictionaries with keys 'e', 'v', 'lambda, 'lam_hat', 'e_hat' with index of wire#
-
+"""
+input: number of wires
+output: wire data structure (array of dictionaries with keys 'e', 'v', 'lambda, 'lam_hat', 'e_hat' with index of wire#
+"""
 def wire_data(n_wires):
     return [{'e': None, 'v': Value() , 'lambda': None, 'lam_hat': {} , 'e_hat': None}
                  for i in range(n_wires)]
 
-#input: circuit object, epsilon1, epsilon2, wire data structure, number of gates, number of parties
-#output: array of array of alpha values. row# = mul gate#, col# = party# 
-#Write to output wires of each gate and compute alpha values.  
+"""
+input: circuit object, epsilon1, epsilon2, wire data structure, number of gates, number of parties
+output: array of array of alpha values. row# = mul gate#, col# = party# 
+Write to output wires of each gate and compute alpha values.  
+"""
 def compute_output(circuit, wire, n_gate, n_parties):
     m = 0
     for i in range(n_gate):
@@ -156,7 +155,7 @@ def compute_alpha(circuit, epsilon_1, epsilon_2, wire, n_gate, n_parties):
             for j in range(n_parties):
                 y_lam = wire.lambda_val(c.y)[j]
                 y_lamh = wire.lam_hat(c.y)[str(m)][j]
-                # epsilon_1[e][m], y_lam, epsilon_2[e][m], y_lamh
+                # epsilon_1[e][m], y_lam, epsilon_2[e][m], y_lamh (debugging)
                 alpha_shares[j] = epsilon_1[m]*y_lam + (epsilon_2[m]*y_lamh)
             alpha_shares_mulgate.append(alpha_shares) #alpha[gate][party]
             m += 1
@@ -167,9 +166,10 @@ def compute_alpha(circuit, epsilon_1, epsilon_2, wire, n_gate, n_parties):
 
     return alpha_broadcast, alpha_shares_mulgate
 
-
-#input: circuit, wire structure, list of n_mul gate alphas, and two epsilons
-#output: n_parties zeta shares
+"""
+input: circuit, wire structure, list of n_mul gate alphas, and two epsilons
+output: n_parties zeta shares
+"""
 def compute_zeta_share(circuit, wire, alpha, epsilon_1, epsilon_2, n_parties):
     if alpha == []:
         return []
@@ -183,7 +183,7 @@ def compute_zeta_share(circuit, wire, alpha, epsilon_1, epsilon_2, n_parties):
                 y = circuit[j].y
                 z = circuit[j].z
                 A = sum(alpha[n])
-                #epsilon_1[e][n], wire.e(y), A, wire.lambda_val(x)[i], epsilon_1[e][n], wire.e(x), wire.lambda_val(y)[i], epsilon_1[e][n], wire.lambda_val(z)[i], epsilon_2[e][n], wire.lam_hat(z)[str(n)][i] 
+                # epsilon_1[e][n], wire.e(y), A, wire.lambda_val(x)[i], epsilon_1[e][n], wire.e(x), wire.lambda_val(y)[i], epsilon_1[e][n], wire.lambda_val(z)[i], epsilon_2[e][n], wire.lam_hat(z)[str(n)][i]
                 zeta += (epsilon_1[n] * wire.e(y) - A)* wire.lambda_val(x)[i] + \
                     epsilon_1[n] * wire.e(x) * wire.lambda_val(y)[i] - \
                     epsilon_1[n] * wire.lambda_val(z)[i] - epsilon_2[n] * wire.lam_hat(z)[str(n)][i]     
@@ -196,8 +196,10 @@ def compute_zeta_share(circuit, wire, alpha, epsilon_1, epsilon_2, n_parties):
             r[i] = (zeta)
     return r
 
-#input: alpha_broadcast, alpha shares per mulgate, random values[#mulgate][#epsilon], number of parties, number of epsilons
-#output: A shares[#party][epsilon]
+"""
+input: alpha_broadcast, alpha shares per mulgate, random values[#mulgate][#epsilon], number of parties, number of epsilons
+output: A shares[#party][epsilon]
+"""
 def compute_A_share(alpha_broadcast, alpha_shares_mulgate, rand, n_parties):
     if alpha_shares_mulgate == []:
         return []

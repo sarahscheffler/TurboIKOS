@@ -7,8 +7,6 @@ def checkIndex(index, wire):
 def checkArray(arr, n_parties):
     assert str(type(arr)) == "<class 'list'>"
     assert len(arr) == n_parties
-    #for i in arr:
-        #assert str(type(i)) == "<class 'int'>"
 
 class Wire:
 

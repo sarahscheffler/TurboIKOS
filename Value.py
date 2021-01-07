@@ -1,4 +1,3 @@
-
 """
     Value.py
     Wrapper for data type and operations
@@ -65,17 +64,14 @@ class Value:
     support arithmetic operations
     """
     def add(self, num, p = field):
-        # return self.value ^ num 
         ret = gmpy2.add(self.value, num)
         return gmpy2.f_mod(ret, p)
 
     def sub(self, num, p = field):
-        # return self.value ^ num
         ret = gmpy2.sub(self.value, num)
         return gmpy2.f_mod(ret, p)
     
     def mul(self, num, p = field):
-        # return self.value & num
         ret = gmpy2.mul(self.value, num)
         return gmpy2.f_mod(ret, p)
     

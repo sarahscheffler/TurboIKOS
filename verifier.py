@@ -9,8 +9,10 @@ from gmpy2 import mpz
 import Preprocessing as prepro
 import circuit as CTEST
 
-#input: circuit (circuit object), c_info (dict of circuit info), open_parties (list of open parties)
-#       open_views (list of open views), dict_rval (dictionary of rvals), dict_broadcast (dictionary of broadcasts)
+"""
+input: circuit (circuit object), c_info (dict of circuit info), open_parties (list of open parties)
+      open_views (list of open views), dict_rval (dictionary of rvals), dict_broadcast (dictionary of broadcasts)
+"""
 def rebuild_commitments(circuit, c_info, open_parties, open_views, dict_rval, dict_broadcast): 
     n_input, n_gate = c_info['n_input'], c_info['n_gate']
 
@@ -56,9 +58,10 @@ def rebuild_commitments(circuit, c_info, open_parties, open_views, dict_rval, di
 
     return dict_rebuilt
 
-#INPUT: parties (list of open parties), cm_views (committed views), cm_round1 (committed round 1 broadcast), cm_round3 (committed round 3 broadcast)
-#       cm_round5(committed round 5 broadcast), dict_rebuilt (dictionary of rebuilt commitments from rebuild_commitments)
-
+"""
+INPUT: parties (list of open parties), cm_views (committed views), cm_round1 (committed round 1 broadcast), cm_round3 (committed round 3 broadcast)
+      cm_round5(committed round 5 broadcast), dict_rebuilt (dictionary of rebuilt commitments from rebuild_commitments)
+"""
 def check_commitments(parties, cm_views, cm_broadcast1, cm_round3, cm_round5, dict_rebuilt): 
     #check views 
     rb_views = dict_rebuilt['views']
@@ -93,7 +96,7 @@ def check_zeta(broadcast): #round three broadcast
     return 
 
 """
----NEW PROTOCOL: check_alpha---
+---check_alpha---
     broadcast3: third broadcast committed in rount 5 opened in round 7
 """
 def check_bigalpha(round5): #round 5 broadcast
@@ -113,9 +116,6 @@ def get_epsilons(committed_views, n_multgates):
     r2 = hashlib.sha256(committed_views)
     return Fiat_Shamir.make_epsilons(r2.digest(), n_multgates)
 
-"""
-NEW PROTOCOL 
-"""
 def get_gammas_ehat(commited_round3, n_multgates):
     r3 = hashlib.sha256(commited_round3)
     return Fiat_Shamir.make_gammas(r3.digest(), n_multgates)
@@ -236,8 +236,7 @@ def recompute(circuit, c_info, parties, comitted_views, committed_broadcast1, op
             if j == n_gate-1:
                 zeta_broadcast[i] = zeta
             outputs.append(wire_value[c.z])
-
-        # output_shares.append(wire_value[-1]) #no clue why THIS doesn't work? 
+ 
         output_shares.append(outputs[-1])
     
 
@@ -275,8 +274,6 @@ def check_recompute(c_info, parties, dict_broadcast, recompute_A, recompute_outp
         if (prover_alpha != []):
             assert (prover_alpha[current_party].value == recompute_A[i].value), "Verifier's recomputed alphas does not match prover's big alphas."
             assert(recomputed_zeta[i].value == prover_zeta[current_party].value), "Verifier's recomputed zetas does not match prover's zetas."
-
-    # print("Verifier's alphas, zetas, and output matches prover's.")
     return 
 
 
@@ -296,91 +293,3 @@ def verifier(circuit, c_info, parties, cm_views, cm_broadcast1, cm_round3, cm_ro
 
     checkrecompute = check_recompute(c_info, parties, dict_broadcast, v_recompute[0], v_recompute[1], v_recompute[2])
     print("passed")
-
-
-
-
-
-
-#OLD PROTOCOL
-"""
-#START COMMENT
----check_commitments----
-    inputs: 
-        circuit: Circuit object
-        c_info: dictionary of information extracted from circuit.parse -- look at circuit for how dictionary is set up 
-        parties: list of the party number opened by prover (generated from Fiat Shamir)
-        open_views: party views opened by prover (round 5)
-        list_rval: list the randomness used for each view commitment, same length as views, received in round 5
-        broadcast: opened broadcast, received in round 5 
-        broadvast_rval: randomness for broadcast, received in round 5
-    output: 
-        returns 1 if all assertions pass, else get assertion error 
-#END COMMENT
-
-def rebuild_commitments(circuit, c_info, parties, open_views, list_rval, broadcast, broadcast_rval):
-    n_input, n_gate = c_info['n_input'], c_info['n_gate']
-    #rebuild commitments 
-    rebuilt_views = [None]*len(parties) #list of views committed again via sha256 
-
-    for i in range(len(open_views)):
-        party = open_views[i]
-        n_mul = 0
-        input_str = b''
-        lambda_seed = b''
-        lambda_seed += (party['party seed'])
-        for j in range(n_input):
-            input_str += long_to_bytes(party['input'][j].value)
-                
-        view_str_test = input_str + lambda_seed
-        view_str = long_to_bytes(list_rval[i]) + input_str + lambda_seed
-        rebuilt_views[i] = hashlib.sha256(view_str).hexdigest()
-            
-
-    #check that information from round 3 was not tampered with (broadcast to committed_broadcast)
-    rebuilt_broadcast = b''
-    for item in broadcast:
-        if item == 'alpha':
-            alpha_array = broadcast['alpha']
-            n = len(alpha_array)
-            l = len(alpha_array[0])
-            m = len(alpha_array[0][0])
-            for e in range(l):
-                for i in range(n):
-                    for j in range(m):
-                        rebuilt_broadcast += long_to_bytes(alpha_array[i][e][j].value)
-        elif item == 'zeta':
-            zeta_array = broadcast['zeta']
-            for i in range(len(zeta_array)):
-                for j in range(len(zeta_array[0])):
-                    rebuilt_broadcast += long_to_bytes(zeta_array[i][j].value)
-        else:
-            for item_value in broadcast[item]:
-                rebuilt_broadcast += long_to_bytes(item_value.value)
-    rebuilt_broadcast = long_to_bytes(broadcast_rval) + rebuilt_broadcast
-
-    return rebuilt_views, rebuilt_broadcast
-
-
-#START COMMENT
----check_commitments---
-inputs: 
-    parties: list of parties opened 
-    committed_views: received from prover from round1
-    rebuilt_views: rebuild_commitments()[0]
-    committed_broadcast: received from prover round 1
-    rebuilt_broadcast: rebuild_commitments()[1]
-#END COMMENT
-
-def check_commitments(parties, committed_views, rebuilt_views, committed_broadcast, rebuilt_broadcast):
-    #check views 
-    for i in range(len(parties)):
-        assert(rebuilt_views[i] == committed_views[parties[i]]), "Commitment view does not match opened view"
-
-    #check broadcast
-    assert (hashlib.sha256(rebuilt_broadcast).hexdigest() == committed_broadcast), "Committed broadcast does not match open broadcast"
-    # print("Prover's committed views and broadcast match the opened views and broadcast")
-    return 1
-
-
-"""
