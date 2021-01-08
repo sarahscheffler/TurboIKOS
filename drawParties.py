@@ -4,13 +4,12 @@ import matplotlib.gridspec as gridspec
 import math
 from benchmarking import benchmarking
 
-
 p = []
 v = []
 s = []
 m = []
 r = []
-num_parties = [3, 10, 100, 1000, 10000, 100000]
+num_parties = [3, 10, 50, 100, 500, 1000]
 for i in num_parties:
     tempP, tempV, tempS, tempM, rep = benchmarking(i)
     p.append(tempP)
@@ -18,25 +17,27 @@ for i in num_parties:
     s.append(tempS/(10**6))
     m.append(tempM/(10**6))
     r.append(rep)
+print(p, v, s, m)
 
 # 2x2 x-y plot
 def plotTable():
     fig, axs = plt.subplots(2, 2, constrained_layout=True)
-    plotSize(axs[0, 0],num_parties,s)
-    plotMemory(axs[0, 1],num_parties,m)
-    plotPTime(axs[1, 0],num_parties,p)
-    plotVTime(axs[1, 1],num_parties,v)
+    plotSize(axs[0, 0],num_parties,log2arr(s))
+    plotMemory(axs[0, 1],num_parties,log2arr(m))
+    plotPTime(axs[1, 0],num_parties,log2arr(p))
+    plotVTime(axs[1, 1],num_parties,log2arr(v))
     plt.savefig('graph/test.jpg')
     #  plt.show()
 
 
 def plotSize(ax, x, y):
-    ax.plot(x, y, label = 'proof size')
-    ax.plot(x, r, label = '# repetitions')
+    #ax.plot(x, y, label = 'proof size')
+    #ax.plot(x, r, label = '# repetitions')
+    ax.plot(x, y)
     ax.set_xlabel('number of parties', fontsize=12)
     ax.set_ylabel('proof size (in MB)/# reps', fontsize=12)
     ax.set_title('Proof Size', fontsize=14)
-    ax.legend()
+    #ax.legend()
 
 
 def plotMemory(ax, x, y):
@@ -68,7 +69,7 @@ def log2arr(arr):
     return ret
 
 
-plotTable()
+# plotTable()
 
 """
 # comparision table

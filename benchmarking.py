@@ -17,7 +17,6 @@ import psutil
 import verifier as v
 from Cryptodome.Util.number import bytes_to_long, long_to_bytes
 import math
-from memory_profiler import memory_usage
 
 COMMIT_BYTES = 32
 VALUE_BYTES = 16
@@ -103,6 +102,7 @@ def benchmarking(n_parties):
         epsilon_2 = temp[1]
 
         start_time = time.process_time()
+        start_memory = get_process_memory()
         #Compute alphas
         temp = circuit.compute_alpha(Circuit, epsilon_1, epsilon_2, w, n_gate, n_parties)
         #alphas to broadcast
@@ -142,6 +142,15 @@ def benchmarking(n_parties):
         prover_time = time.process_time() - start_time
         prover_time_arr[repetition] = prover_time
 
+        #Calculate size statistics
+        broadcastc_size += COMMIT_BYTES
+        viewsc_size += COMMIT_BYTES*n_parties
+        # broadcast_size += sum([sum([sum([VALUE_BYTES for v in dict_broadcast[broadcast][i]]) for i in dict_broadcast[broadcast]]) for broadcast in dict_broadcast  if (broadcast!= "round5")]) + sum([VALUE_BYTES for v in dict_broadcast["round5"]])
+        broadcast_size += VALUE_BYTES*n_input + VALUE_BYTES*3*n_mul + VALUE_BYTES*2*n_parties + VALUE_BYTES*n_output
+        views_size_PR += SEED_BYTES*n_parties
+        # memory = max(memory,get_process_memory() - start_memory)
+        memory = get_process_memory()
+
         #Start time for verifier
         start_time = time.process_time()
 
@@ -152,16 +161,8 @@ def benchmarking(n_parties):
         verifier_time = time.process_time() - start_time
         verifier_time_arr[repetition] = verifier_time
 
-        #Calculate size statistics
-        broadcastc_size += COMMIT_BYTES
-        viewsc_size += COMMIT_BYTES*n_parties
-        # broadcast_size += sum([sum([sum([VALUE_BYTES for v in dict_broadcast[broadcast][i]]) for i in dict_broadcast[broadcast]]) for broadcast in dict_broadcast  if (broadcast!= "round5")]) + sum([VALUE_BYTES for v in dict_broadcast["round5"]])
-        broadcast_size += VALUE_BYTES*n_input + VALUE_BYTES*3*n_mul + VALUE_BYTES*2*n_parties + VALUE_BYTES*n_output
-        views_size_PR += SEED_BYTES*n_parties
-
-        # memory += get_deep_size(broadcastc_size) + get_deep_size(viewsc_size) + get_deep_size(broadcast_size) + get_deep_size(views_size_PR)
-        # memory += resource.getrusage(resource.RUSAGE_SELF).ru_maxrss
-        memory = get_process_memory()
+        # memory += sys.getsizeof(broadcastc_size) + sys.getsizeof(viewsc_size) + sys.getsizeof(broadcast_size) + sys.getsizeof(views_size_PR)
+        # memory = resource.getrusage(resource.RUSAGE_SELF).ru_maxrss
         proof_size += broadcastc_size + viewsc_size + broadcast_size + views_size_PR
         
     # preprocessing_time = sum(preprocessing_arr)
