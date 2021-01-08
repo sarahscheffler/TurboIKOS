@@ -29,7 +29,7 @@ Test files are either Bristol format files or PWS files.
 **Bristol Format**
 
 Bristol files were found from ['Bristol Fashion' MPC Circuits](https://homes.esat.kuleuven.be/~nsmart/MPC/). 
-Files must be modified so that the second line has the total number of input wires and a 1 for every occurance of input wire. See circuits/adder64_mod.txt. 
+Files must be modified so that the second line has the total number of input wires and a 1 for every occurance of input wire. See circuits/adder64_mod.txt for an example. 
 
 **PWS File**
 
