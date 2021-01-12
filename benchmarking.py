@@ -38,8 +38,8 @@ def benchmarking(n_parties):
 
     #Store each run time in an array
     preprocessing_arr = [None]*rep
-    prover_time_arr = [None]*rep
-    verifier_time_arr = [None]*rep
+    prover_time = 0
+    verifier_time = 0
     #initialize size variables
     broadcastc_size = 0
     viewsc_size = 0
@@ -101,7 +101,7 @@ def benchmarking(n_parties):
         epsilon_1 = temp[0]
         epsilon_2 = temp[1]
 
-        start_time = time.process_time()
+        start_prover_time = time.process_time()
         start_memory = get_process_memory()
         #Compute alphas
         temp = circuit.compute_alpha(Circuit, epsilon_1, epsilon_2, w, n_gate, n_parties)
@@ -139,27 +139,24 @@ def benchmarking(n_parties):
         dict_broadcast = r7[2]
 
         #Set run time
-        prover_time = time.process_time() - start_time
-        prover_time_arr[repetition] = prover_time
+        prover_time += time.process_time() - start_prover_time
 
         #Calculate size statistics
         broadcastc_size += COMMIT_BYTES
-        viewsc_size += COMMIT_BYTES*n_parties
+        viewsc_size += COMMIT_BYTES*(n_parties-1)
         # broadcast_size += sum([sum([sum([VALUE_BYTES for v in dict_broadcast[broadcast][i]]) for i in dict_broadcast[broadcast]]) for broadcast in dict_broadcast  if (broadcast!= "round5")]) + sum([VALUE_BYTES for v in dict_broadcast["round5"]])
         broadcast_size += VALUE_BYTES*n_input + VALUE_BYTES*3*n_mul + VALUE_BYTES*2*n_parties + VALUE_BYTES*n_output
-        views_size_PR += SEED_BYTES*n_parties
-        # memory = max(memory,get_process_memory() - start_memory)
-        memory = get_process_memory()
+        views_size_PR += SEED_BYTES*(n_parties-1)
+        memory = max(memory,get_process_memory() - start_memory)
 
         #Start time for verifier
-        start_time = time.process_time()
+        start_verifier_time = time.process_time()
 
         #verifier test
         v.verifier(Circuit, c_info, parties_to_open, views_committed, broadcast1_committed, cm_round3, cm_round5, open_views, dict_rval, dict_broadcast)
 
         #Set time for verifier
-        verifier_time = time.process_time() - start_time
-        verifier_time_arr[repetition] = verifier_time
+        verifier_time += time.process_time() - start_verifier_time
 
         # memory += sys.getsizeof(broadcastc_size) + sys.getsizeof(viewsc_size) + sys.getsizeof(broadcast_size) + sys.getsizeof(views_size_PR)
         # memory = resource.getrusage(resource.RUSAGE_SELF).ru_maxrss
@@ -167,10 +164,7 @@ def benchmarking(n_parties):
         
     # preprocessing_time = sum(preprocessing_arr)
     # print('preprocessing time:', preprocessing_time, 'seconds')
-
-    prover_time_total = sum(prover_time_arr)
-    verifier_time_total = sum(verifier_time_arr)
     # Proof size = wire size + circuit size + alpha size + zeta size
 
-    return prover_time_total, verifier_time_total, proof_size, memory, rep
+    return prover_time, verifier_time, proof_size, memory, rep
 

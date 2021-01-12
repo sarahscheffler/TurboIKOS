@@ -4,32 +4,18 @@ import matplotlib.gridspec as gridspec
 import math
 from benchmarking import benchmarking
 import csv
+import sys
 
-p = []
-v = []
-s = []
-m = []
-r = []
-num_parties = range(3,101)
-for i in num_parties:
-    tempP, tempV, tempS, tempM, rep = benchmarking(i)
-    p.append(tempP)
-    v.append(tempV)
-    s.append(tempS/(10**6))
-    m.append(tempM/(10**6))
-    r.append(rep)
-    
-# writing to csv file  
-with open('drawParties.csv', 'w', newline='') as csvfile:  
-    # creating a csv writer object  
-    csvwriter = csv.writer(csvfile)  
-        
-    # writing the fields  
-    csvwriter.writerow(p)
-    csvwriter.writerow(v)
-    csvwriter.writerow(s)
-    csvwriter.writerow(m)  
+with open(sys.argv[1], newline='') as f:
+    reader = csv.reader(f)
+    data = list(reader)
 
+p = data[0]
+v = data[1]
+s = data[2]
+m = data[3] 
+
+num_parties = range(3, 101)
 
 # 2x2 x-y plot
 def plotTable():
@@ -38,7 +24,7 @@ def plotTable():
     plotMemory(axs[0, 1],num_parties,log2arr(m))
     plotPTime(axs[1, 0],num_parties,log2arr(p))
     plotVTime(axs[1, 1],num_parties,log2arr(v))
-    plt.savefig('graph/test.jpg')
+    plt.savefig('graph/drawP3to10_64.jpg')
     #  plt.show()
 
 
@@ -77,11 +63,11 @@ def plotVTime(ax, x, y):
 def log2arr(arr):
     ret = []
     for i in arr:
-        ret.append(math.log(i, 2))
+        ret.append(math.log(float(i), 2))
     return ret
 
 
-# plotTable()
+plotTable()
 
 """
 # comparision table
