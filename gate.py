@@ -46,7 +46,6 @@ class gate:
     # assign e value on output wire
     # return e share for broadcast
     def mult(self, mult_count):
-        #alpha_broadcast = []*circuit.n_parties
         z_v_arr = [None]*self.n_parties 
         # calculate z_vi
         x_e = self.w.e(self.x)
@@ -87,9 +86,7 @@ class gate:
         for i in range(self.n_parties):
             if i == 0:
                 self.w.v(self.z)[i] = self.w.v(self.x)[i] + Value(1)
-                # self.w.lambda_val(self.z)[i] = self.w.lambda_val(self.x)[i] + Value(1)
             else:
                 self.w.v(self.z)[i] = self.w.v(self.x)[i]
-                # self.w.lambda_val(self.z)[i] = self.w.lambda_val(self.x)[i]
         self.w.set_e(self.z, self.w.e(self.x))
        
