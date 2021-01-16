@@ -12,7 +12,6 @@ m = []
 r = []
 num_parties = range(3,101)
 for i in num_parties:
-    print(i)
     tempP, tempV, tempS, tempM, rep = benchmarking(i)
     p.append(tempP)
     v.append(tempV)

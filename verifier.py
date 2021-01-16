@@ -9,8 +9,10 @@ from gmpy2 import mpz
 import Preprocessing as prepro
 import circuit as CTEST
 
-#input: circuit (circuit object), c_info (dict of circuit info), open_parties (list of open parties)
-#       open_views (list of open views), dict_rval (dictionary of rvals), dict_broadcast (dictionary of broadcasts)
+"""
+input: circuit (circuit object), c_info (dict of circuit info), open_parties (list of open parties)
+      open_views (list of open views), dict_rval (dictionary of rvals), dict_broadcast (dictionary of broadcasts)
+"""
 def rebuild_commitments(circuit, c_info, open_parties, open_views, dict_rval, dict_broadcast): 
     n_input, n_gate = c_info['n_input'], c_info['n_gate']
 
@@ -56,9 +58,10 @@ def rebuild_commitments(circuit, c_info, open_parties, open_views, dict_rval, di
 
     return dict_rebuilt
 
-#INPUT: parties (list of open parties), cm_views (committed views), cm_round1 (committed round 1 broadcast), cm_round3 (committed round 3 broadcast)
-#       cm_round5(committed round 5 broadcast), dict_rebuilt (dictionary of rebuilt commitments from rebuild_commitments)
-
+"""
+INPUT: parties (list of open parties), cm_views (committed views), cm_round1 (committed round 1 broadcast), cm_round3 (committed round 3 broadcast)
+      cm_round5(committed round 5 broadcast), dict_rebuilt (dictionary of rebuilt commitments from rebuild_commitments)
+"""
 def check_commitments(parties, cm_views, cm_broadcast1, cm_round3, cm_round5, dict_rebuilt): 
     #check views 
     rb_views = dict_rebuilt['views']
@@ -93,7 +96,7 @@ def check_zeta(broadcast): #round three broadcast
     return 
 
 """
----NEW PROTOCOL: check_alpha---
+---check_alpha---
     broadcast3: third broadcast committed in rount 5 opened in round 7
 """
 def check_bigalpha(round5): #round 5 broadcast
@@ -113,9 +116,6 @@ def get_epsilons(committed_views, n_multgates):
     r2 = hashlib.sha256(committed_views)
     return Fiat_Shamir.make_epsilons(r2.digest(), n_multgates)
 
-"""
-NEW PROTOCOL 
-"""
 def get_gammas_ehat(commited_round3, n_multgates):
     r3 = hashlib.sha256(commited_round3)
     return Fiat_Shamir.make_gammas(r3.digest(), n_multgates)
@@ -236,8 +236,7 @@ def recompute(circuit, c_info, parties, comitted_views, committed_broadcast1, op
             if j == n_gate-1:
                 zeta_broadcast[i] = zeta
             outputs.append(wire_value[c.z])
-
-        # output_shares.append(wire_value[-1]) #no clue why THIS doesn't work? 
+ 
         output_shares.append(outputs[-1])
     
 
@@ -275,8 +274,6 @@ def check_recompute(c_info, parties, dict_broadcast, recompute_A, recompute_outp
         if (prover_alpha != []):
             assert (prover_alpha[current_party].value == recompute_A[i].value), "Verifier's recomputed alphas does not match prover's big alphas."
             assert(recomputed_zeta[i].value == prover_zeta[current_party].value), "Verifier's recomputed zetas does not match prover's zetas."
-
-    # print("Verifier's alphas, zetas, and output matches prover's.")
     return 
 
 
@@ -295,6 +292,7 @@ def verifier(circuit, c_info, parties, cm_views, cm_broadcast1, cm_round3, cm_ro
     v_recompute = recompute(circuit, c_info, parties, cm_views, cm_broadcast1, open_views, dict_broadcast['round1'], dict_broadcast['round3'], cm_round3)
 
     checkrecompute = check_recompute(c_info, parties, dict_broadcast, v_recompute[0], v_recompute[1], v_recompute[2])
+<<<<<<< HEAD
     # print("passed")
 
 
@@ -384,3 +382,6 @@ def check_commitments(parties, committed_views, rebuilt_views, committed_broadca
 
 
 """
+=======
+    print("passed")
+>>>>>>> 915b46044169f6cee308e82385a69d0a6f1d84dd
