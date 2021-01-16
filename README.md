@@ -9,7 +9,7 @@ A Python implementation on "MPC-in-the-head".
 - [gmpy2](https://gmpy2.readthedocs.io/en/latest/mpz.html#examples) 
 - [PyCryptodome](https://pycryptodome.readthedocs.io/en/latest/src/installation.html) 
 - ([matplotlib](https://matplotlib.org/3.3.3/contents.html))
-- ([objsize](https://pypi.org/project/objsize/))
+- ([ps](https://pypi.org/project/psutil/))
 
 Setup on a fresh Ubuntu instance:
 ```sh

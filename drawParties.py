@@ -12,6 +12,7 @@ m = []
 r = []
 num_parties = range(3,101)
 for i in num_parties:
+    print(i)
     tempP, tempV, tempS, tempM, rep = benchmarking(i)
     p.append(tempP)
     v.append(tempV)
@@ -20,7 +21,7 @@ for i in num_parties:
     r.append(rep)
     
 # writing to csv file  
-with open('drawParties.csv', 'w', newline='') as csvfile:  
+with open('draw3to100_16_new.csv', 'w', newline='') as csvfile:  
     # creating a csv writer object  
     csvwriter = csv.writer(csvfile)  
         
@@ -35,10 +36,10 @@ with open('drawParties.csv', 'w', newline='') as csvfile:
 def plotTable():
     fig, axs = plt.subplots(2, 2, constrained_layout=True)
     plotSize(axs[0, 0],num_parties,log2arr(s))
-    plotMemory(axs[0, 1],num_parties,log2arr(m))
-    plotPTime(axs[1, 0],num_parties,log2arr(p))
+    plotMemory(axs[1, 0],num_parties,log2arr(m))
+    plotPTime(axs[0, 1],num_parties,log2arr(p))
     plotVTime(axs[1, 1],num_parties,log2arr(v))
-    plt.savefig('graph/test.jpg')
+    plt.savefig('graph/draw3to100_16.jpg')
     #  plt.show()
 
 
@@ -81,7 +82,7 @@ def log2arr(arr):
     return ret
 
 
-# plotTable()
+plotTable()
 
 """
 # comparision table

@@ -5,20 +5,20 @@ import math
 from benchmarking import benchmarking
 
 
-labels = [2, 3, 4, 5, 6]
+labels = [2, 3, 4, 5, 6, 7, 8, 9]
 p = [0.723,6.208,53.457,480.675,4624.506]
 v = [1.255,10.205,94.364,868.456,10579.007]
 s = [1.57,9.308,68.213,527.478,4153.666]
 m = [55.235,73.748,207.831,1260.564,9610.92]
 
-"""
-num_parties = 10
+
+num_parties = 3
 tempP, tempV, tempS, tempM, rep = benchmarking(num_parties)
 print(tempP)
 print(tempV)
 print(tempS/(10**6))
 print(tempM/(10**6))
-"""
+
 
 # 2x2 x-y plot
 def plotTable():
@@ -60,7 +60,7 @@ def log2arr(arr):
     return ret
 
 
-plotTable()
+# plotTable()
 
 
 """

@@ -58,6 +58,12 @@ def benchmarking(n_parties):
     n_mul = temp[8]
     c_info = temp[10]
     Circuit = temp[0]
+
+    # print(rep)
+    # print(n_input)
+    # print(n_output)
+    # print(n_parties)
+    # print(n_mul)
       
     for repetition in range(rep): 
         # Create list of wire data
@@ -160,7 +166,8 @@ def benchmarking(n_parties):
 
         # memory += sys.getsizeof(broadcastc_size) + sys.getsizeof(viewsc_size) + sys.getsizeof(broadcast_size) + sys.getsizeof(views_size_PR)
         # memory = resource.getrusage(resource.RUSAGE_SELF).ru_maxrss
-        proof_size += broadcastc_size + viewsc_size + broadcast_size + views_size_PR
+    proof_size += broadcastc_size + viewsc_size + broadcast_size + views_size_PR
+    print(proof_size)
         
     # preprocessing_time = sum(preprocessing_arr)
     # print('preprocessing time:', preprocessing_time, 'seconds')

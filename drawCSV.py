@@ -16,17 +16,18 @@ v = data[1]
 s = data[2]
 m = data[3] 
 
-num_parties = range(3, 16)
-formatter = ticker.FuncFormatter(lambda x_val, tick_pos: "$2^{{{:.1f}}}$".format(x_val))
+num_parties = range(3, 101)
+formatter = ticker.FuncFormatter(lambda x_val, tick_pos: "{:.1f}".format(2**x_val))
+formatter_time = ticker.FuncFormatter(lambda x_val, tick_pos: "$2^{{{:.0f}}}$".format(x_val))
 
 # 2x2 x-y plot
 def plotTable():
     fig, axs = plt.subplots(2, 2, constrained_layout=True)
     plotSize(axs[0, 0],num_parties,log2arr(s))
-    plotMemory(axs[0, 1],num_parties,log2arr(m))
-    plotPTime(axs[1, 0],num_parties,log2arr(p))
+    plotMemory(axs[1, 0],num_parties,log2arr(m))
+    plotPTime(axs[0, 1],num_parties,log2arr(p))
     plotVTime(axs[1, 1],num_parties,log2arr(v))
-    plt.savefig('graph/drawP3to15_64_.jpg')
+    plt.savefig('graph/drawP3to100.jpg')
     #  plt.show()
 
 
@@ -35,6 +36,8 @@ def plotSize(ax, x, y):
     #ax.plot(x, r, label = '# repetitions')
     ax.plot(x, y)
     ax.yaxis.set_major_formatter(formatter)
+    # ax.yaxis.set_major_locator(ticker.MultipleLocator(20))
+    # ax.set_ylim(0,100)
     ax.set_xlabel('number of parties', fontsize=12)
     ax.set_ylabel('proof size (in MB)', fontsize=12)
     ax.set_title('Proof Size', fontsize=14)
@@ -72,6 +75,11 @@ def log2arr(arr):
         ret.append(math.log(float(i), 2))
     return ret
 
+def log10arr(arr):
+    ret = []
+    for i in arr:
+        ret.append(math.log(float(i), 10))
+    return ret
 
 plotTable()
 
