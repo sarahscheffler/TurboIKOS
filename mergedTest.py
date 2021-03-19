@@ -239,13 +239,12 @@ class TestMPCInTheHead(unittest.TestCase):
                     viewsc_size += COMMIT_BYTES*len(views_committed)
                     # broadcast_size += sum([sum([sum([VALUE_BYTES for v in dict_broadcast[broadcast][i]]) for i in dict_broadcast[broadcast]]) for broadcast in dict_broadcast  if (broadcast!= "round5")]) + sum([VALUE_BYTES for v in dict_broadcast["round5"]])
                     # views_size_PR += sum([sum([VALUE_BYTES for v in  open_views[i]]) for i in range(n_parties-1)]) + SEED_BYTES*(n_parties-1)
-                    
+                    print(dict_broadcast)
                     broadcast_size += sys.getsizeof(dict_broadcast)
-                    views_size_PR += sys.getsizeof(open_views)
                     # print(open_views)
+                    views_size_PR += sys.getsizeof(open_views)
                     # views_size_PR += sum([sum([sys.getsizeof(open_views)]) for i in range(n_parties-1)]) + SEED_BYTES*(n_parties-1)
-                    # views_size_PR += sum([VALUE_BYTES for v in open_views]) + SEED_BYTES*(n_parties-1)
-                    
+                    # views_size_PR += sum([VALUE_BYTES for v in open_views]) + SEED_BYTES*(n_parties-1)                    
 
 
                 #Print statistics
