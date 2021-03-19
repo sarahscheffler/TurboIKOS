@@ -9,6 +9,8 @@ import Preprocessing as pre
 from Cryptodome.Cipher import AES
 import wire
 
+import pickle
+
 def set_inputs(c_info, circuit, wire, num_parties, real_val):
     n_input = c_info['n_input']
 
@@ -109,7 +111,11 @@ def round1(c_info, circuit, wire, party_seeds): #NEW PROTOCOL
     r_broadcast1 = temp[0]
     broadcast1_commit = temp[1]
 
-    return views_commit, broadcast1_commit, r_views, r_broadcast1, views, broadcast1
+    full_round = {'broadcast1': broadcast1, 'broadcast1_commit': broadcast1_commit, 'r_broadcast1': r_broadcast1, 'views': views, 'r_views': r_views}
+    full_round_pickle = pickle.dumps(full_round)
+
+    return views_commit, broadcast1_commit, r_views, r_broadcast1, views, broadcast1, full_round_pickle
+    # return full_round_pickle
 
 """
 Internal round1
@@ -136,7 +142,10 @@ def round3(c_info, zeta, little_alpha):
     r_broadcast2 = temp[0]
     broadcast2_commit = temp[1]
 
-    return broadcast2_commit, r_broadcast2, broadcast2
+    fullr3 = {'broadcast2': broadcast2, 'broadcast2_commit': broadcast2_commit, 'r_broadcast2': r_broadcast2}
+    r3pickle = pickle.dumps(fullr3)
+
+    return broadcast2_commit, r_broadcast2, broadcast2, r3pickle
 
 def round_three_internal(r3):
     #Return broadcast2 r values and broadcast2
@@ -152,6 +161,8 @@ def round5(c_info,big_alpha):
     temp = commit(big_alpha_str)
     r_broadcast3 = temp[0]
     broadcast3_commit = temp[1]
+    
+    r5 = {'broadcast3_commit': broadcast3_commit, 'r_broadcast3': r_broadcast3, 'big_alpha': big_alpha}
 
     return broadcast3_commit, r_broadcast3, big_alpha
 
@@ -189,8 +200,10 @@ input: round1 (output of round_one_internal), round3 (output of round_three_inte
 output: open views, open broadcasts, dictionary of rvals 
 """
 def round_seven(round1, round3, round5, parties_open): 
-    broadcasts = {'round1': round1[3], 'round3': round3[1], 'round5': round5[1]}
-    rval = {'views': round1[0], 'round1': round1[1], 'round3': round3[0], 'round5': round5[0]} #round1, round3, round5 rvals for broadcasts
+    # broadcasts = {'round1': round1[3], 'round3': round3[1], 'round5': round5[1]}
+    broadcasts = [round1[3], round3[1], round5[1]]
+    # rval = {'views': round1[0], 'round1': round1[1], 'round3': round3[0], 'round5': round5[0]} #round1, round3, round5 rvals for broadcasts
+    rval = [round1[0], round1[1], round3[0], round5[0]]
     views = round1[2]
     r_vals = round1[0]
     open_views = []
@@ -198,8 +211,16 @@ def round_seven(round1, round3, round5, parties_open):
     for p in parties_open: 
         open_views.append(views[p])
         open_rval.append(r_vals[p])
-    rval['views'] = open_rval
-    return open_views, rval, broadcasts
+    # rval['views'] = open_rval
+    # return open_views, rval, broadcasts
+
+    rval[0] = open_rval
+    #begin pickle 
+    p_open_views = pickle.dumps(open_views)
+    p_rval = pickle.dumps(rval)
+    p_broadcasts = pickle.dumps(broadcasts)
+    return p_open_views, p_rval, p_broadcasts
+    #end pickle 
                                                                                                                                        
     
 """

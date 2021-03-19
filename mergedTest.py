@@ -13,6 +13,7 @@ import unittest
 import verifier as v
 from Cryptodome.Util.number import bytes_to_long, long_to_bytes
 import math
+import pickle
 
 class TestMPCInTheHead(unittest.TestCase):
     def test_seed(self):
@@ -162,6 +163,8 @@ class TestMPCInTheHead(unittest.TestCase):
                     circuit.compute_output(Circuit, w, n_gate, n_parties)
                     #Commit round one
                     temp = prover.round1(c_info, Circuit, w, party_seeds)
+                    # print(temp)
+                    # print(pickle.loads(temp)) #PICKLE
                     r1 = prover.round_one_external(temp)
                     views_committed = r1[0]
                     broadcast1_committed = r1[1]
@@ -230,10 +233,19 @@ class TestMPCInTheHead(unittest.TestCase):
                     print('prover test passed')
 
                     #Calculate size statistics
+                    # print(dict_broadcast)
+                    # print(pickle.loads(dict_broadcast))
                     broadcastc_size += COMMIT_BYTES*3
                     viewsc_size += COMMIT_BYTES*len(views_committed)
-                    broadcast_size += sum([sum([sum([VALUE_BYTES for v in dict_broadcast[broadcast][i]]) for i in dict_broadcast[broadcast]]) for broadcast in dict_broadcast  if (broadcast!= "round5")]) + sum([VALUE_BYTES for v in dict_broadcast["round5"]])
-                    views_size_PR += sum([sum([VALUE_BYTES for v in  open_views[i]]) for i in range(n_parties-1)]) + SEED_BYTES*(n_parties-1)
+                    # broadcast_size += sum([sum([sum([VALUE_BYTES for v in dict_broadcast[broadcast][i]]) for i in dict_broadcast[broadcast]]) for broadcast in dict_broadcast  if (broadcast!= "round5")]) + sum([VALUE_BYTES for v in dict_broadcast["round5"]])
+                    # views_size_PR += sum([sum([VALUE_BYTES for v in  open_views[i]]) for i in range(n_parties-1)]) + SEED_BYTES*(n_parties-1)
+                    
+                    broadcast_size += sys.getsizeof(dict_broadcast)
+                    views_size_PR += sys.getsizeof(open_views)
+                    # print(open_views)
+                    # views_size_PR += sum([sum([sys.getsizeof(open_views)]) for i in range(n_parties-1)]) + SEED_BYTES*(n_parties-1)
+                    # views_size_PR += sum([VALUE_BYTES for v in open_views]) + SEED_BYTES*(n_parties-1)
+                    
 
 
                 #Print statistics

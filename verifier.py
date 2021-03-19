@@ -8,6 +8,7 @@ from gate import gate
 from gmpy2 import mpz
 import Preprocessing as prepro
 import circuit as CTEST
+import pickle
 
 """
 input: circuit (circuit object), c_info (dict of circuit info), open_parties (list of open parties)
@@ -278,6 +279,14 @@ def check_recompute(c_info, parties, dict_broadcast, recompute_A, recompute_outp
 
 
 def verifier(circuit, c_info, parties, cm_views, cm_broadcast1, cm_round3, cm_round5, open_views, dict_rval, dict_broadcast):
+    open_views = pickle.loads(open_views)
+
+    db = pickle.loads(dict_broadcast)
+    dict_broadcast = {'round1': db[0], 'round3': db[1], 'round5': db[2]}
+
+    drv = pickle.loads(dict_rval)
+    dict_rval = {'views': drv[0], 'round1': drv[1], 'round3': drv[2], 'round5': drv[3]} 
+
     #check commitments
     rebuild = rebuild_commitments(circuit, c_info, parties, open_views, dict_rval, dict_broadcast)
     check_commitment = check_commitments(parties, cm_views, cm_broadcast1, cm_round3, cm_round5, rebuild)
