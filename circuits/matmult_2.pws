@@ -1,0 +1,28 @@
+P V0 = I0 E
+P V1 = I1 E
+P V2 = I2 E
+P V3 = I3 E
+P V4 = I4 E
+P V5 = I5 E
+P V6 = I6 E
+P V7 = I7 E
+// row 0, col 0
+P V8 = V0 * V4 E
+P V9 = V1 * V6 E
+P V10 = V8 + V9 E
+// row 0, col 1
+P V11 = V0 * V5 E
+P V12 = V1 * V7 E
+P V13 = V11 + V12 E
+// row 1, col 0
+P V14 = V2 * V4 E
+P V15 = V3 * V6 E
+P V16 = V14 + V15 E
+// row 1, col 1
+P V17 = V2 * V5 E
+P V18 = V3 * V7 E
+P V19 = V17 + V18 E
+P O20 = V10 E
+P O21 = V13 E
+P O22 = V16 E
+P O23 = V19 E

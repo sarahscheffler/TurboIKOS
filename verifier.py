@@ -282,7 +282,9 @@ def verifier(circuit, c_info, parties, cm_views, cm_broadcast1, cm_round3, cm_ro
     open_views = pickle.loads(open_views)
 
     db = pickle.loads(dict_broadcast)
-    dict_broadcast = {'round1': db[0], 'round3': db[1], 'round5': db[2]}
+    br1 = {'e inputs': db[0], 'e z': db[1], 'e z hat': db[2], 'output shares': db[3]}
+    br2 = {'zeta': db[4], 'little_alpha': db[5]}
+    dict_broadcast = {'round1': br1, 'round3': br2, 'round5': db[6]}
 
     drv = pickle.loads(dict_rval)
     dict_rval = {'views': drv[0], 'round1': drv[1], 'round3': drv[2], 'round5': drv[3]} 
