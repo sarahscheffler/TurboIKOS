@@ -14,6 +14,7 @@ import verifier as v
 from Cryptodome.Util.number import bytes_to_long, long_to_bytes
 import math
 import pickle
+import gmpy2
 
 class TestMPCInTheHead(unittest.TestCase):
     def test_seed(self):
@@ -235,36 +236,43 @@ class TestMPCInTheHead(unittest.TestCase):
                     #Calculate size statistics
                     # print(dict_broadcast)
                     # print(pickle.loads(dict_broadcast))
-                    broadcastc_size += COMMIT_BYTES*3
-                    viewsc_size += COMMIT_BYTES*len(views_committed)
+                    #broadcastc_size += COMMIT_BYTES*3
+                    #viewsc_size += COMMIT_BYTES*len(views_committed)
                     # broadcast_size += sum([sum([sum([VALUE_BYTES for v in dict_broadcast[broadcast][i]]) for i in dict_broadcast[broadcast]]) for broadcast in dict_broadcast  if (broadcast!= "round5")]) + sum([VALUE_BYTES for v in dict_broadcast["round5"]])
                     # views_size_PR += sum([sum([VALUE_BYTES for v in  open_views[i]]) for i in range(n_parties-1)]) + SEED_BYTES*(n_parties-1)
-                    # print(dict_broadcast)
-                    print((dict_broadcast))
-                    print((open_views))
+                    #print(dict_broadcast)
+                    #print(pickle.dumps(r7[4][0]))
+                    print(len(pickle.dumps(r7[4][0][0].value)))
+                    print(len(pickle.dumps(gmpy2.to_binary(r7[4][0][0].value))))
+                    n = pickle.dumps(gmpy2.to_binary(r7[4][0][0].value))
+                    print(Value(gmpy2.from_binary(pickle.loads(n))))
+                    #print(len(pickle.dumps(r7[4][0])))
+                    #print(pickle.dumps(r7[4][0].to_binary()))
+                    #print((open_views))
+                    #print(r7[3])
                     broadcast_size += sys.getsizeof(dict_broadcast)
-                    # print(open_views)
+                    #print(open_views)
                     views_size_PR += sys.getsizeof(open_views)
                     # views_size_PR += sum([sum([sys.getsizeof(open_views)]) for i in range(n_parties-1)]) + SEED_BYTES*(n_parties-1)
                     # views_size_PR += sum([VALUE_BYTES for v in open_views]) + SEED_BYTES*(n_parties-1)                    
 
 
                 #Print statistics
-                print('number of parties to corrupt:', n_parties - 1)
+                #print('number of parties to corrupt:', n_parties - 1)
                 print('number of add gates:', n_gate-n_mul)
                 print('number of mul gates:', n_mul)
 
                 preprocessing_time = sum(preprocessing_arr)
-                print('preprocessing time:', preprocessing_time, 'seconds')
+                #print('preprocessing time:', preprocessing_time, 'seconds')
 
                 run_time = sum(run_time_arr)
-                print('run time:', run_time, 'seconds')
+                #print('run time:', run_time, 'seconds')
                 # Proof size = wire size + circuit size + alpha size + zeta size
 
-                print('broadcast commit size:', broadcastc_size)
-                print('views commit size:', viewsc_size)
-                print('broadcast size:', broadcast_size)
-                print('prover views size:', views_size_PR)
+                #print('broadcast commit size:', broadcastc_size)
+                #print('views commit size:', viewsc_size)
+                #print('broadcast size:', broadcast_size)
+                #print('prover views size:', views_size_PR)
     
 if __name__ == "__main__": 
     unittest.main(argv=[sys.argv[0]])

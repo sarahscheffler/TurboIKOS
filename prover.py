@@ -220,7 +220,7 @@ def round_seven(round1, round3, round5, parties_open):
     p_open_views = pickle.dumps(open_views)
     p_rval = pickle.dumps(rval)
     p_broadcasts = pickle.dumps(broadcasts)
-    return p_open_views, p_rval, p_broadcasts
+    return p_open_views, p_rval, p_broadcasts, open_views, broadcasts
     #end pickle 
                                                                                                                                        
     
