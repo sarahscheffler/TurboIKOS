@@ -8,6 +8,7 @@ from Cryptodome.Util.number import bytes_to_long, long_to_bytes
 import Preprocessing as pre
 from Cryptodome.Cipher import AES
 import wire
+from serial import *
 
 import pickle
 
@@ -215,11 +216,19 @@ def round_seven(round1, round3, round5, parties_open):
     # rval['views'] = open_rval
     # return open_views, rval, broadcasts
 
+    # test = r1['e inputs'][0]
+    # print("TEST BIT LENGTH:", test.value.bit_length())
+    # test = gmpy2.to_binary(test.value)
+    # print("TEST DIGITS: ", test)
+    # t1 = pickle.dumps(test)
+    # print("TEST ONE ELEMENT:", t1)
+    # print("LENGTH TEST ELEMENT:", len(t1))
+
     rval[0] = open_rval
     #begin pickle 
     p_open_views = pickle.dumps(open_views)
     p_rval = pickle.dumps(rval)
-    p_broadcasts = pickle.dumps(broadcasts)
+    p_broadcasts = serial(broadcasts)
     return p_open_views, p_rval, p_broadcasts
     #end pickle 
                                                                                                                                        
