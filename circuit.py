@@ -17,6 +17,7 @@ def parse_bristol(gate, n_parties, i):
     input_stream = sys.argv[i]
     n_mulgate = 0 
     n_addgate = 0
+    n_scagate = 0
     n_inv = 0 
     with open(input_stream, 'r') as f:
         first_line = f.readline().split()
@@ -47,6 +48,7 @@ def parse_bristol(gate, n_parties, i):
                 n_mulgate += 1
             elif operation == 'INV' or operation == 'NOT': 
                 n_inv += 1
+            elif operation == ''
             g = gate(input1, input2, output, n_parties, operation=operation)
             l[i] = g
             i = i + 1

@@ -245,7 +245,8 @@ class TestMPCInTheHead(unittest.TestCase):
                     print(len(pickle.dumps(r7[4][0][0].value)))
                     print(len(pickle.dumps(gmpy2.to_binary(r7[4][0][0].value))))
                     n = pickle.dumps(gmpy2.to_binary(r7[4][0][0].value))
-                    print(Value(gmpy2.from_binary(pickle.loads(n))))
+                    print(r7[4][0][0] == 
+                    Value(gmpy2.from_binary(pickle.loads(n))))
                     #print(len(pickle.dumps(r7[4][0])))
                     #print(pickle.dumps(r7[4][0].to_binary()))
                     #print((open_views))
