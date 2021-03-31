@@ -9,8 +9,8 @@ import gmpy2
 from gmpy2 import mpz
 from Cryptodome.Util.number import bytes_to_long
 
-# field = mpz(2**127-1)
-field = mpz(2)
+field = mpz(2**127-1)
+#field = mpz(2)
 r_state = gmpy2.random_state(bytes_to_long(os.urandom(16)))
 
 def getfield():
@@ -88,6 +88,13 @@ class Value:
             if (not state):
                 state = gmpy2.random_state(bytes_to_long(os.urandom(16)))
             self.value = gmpy2.mpz_random(state, field)
+
+    def getBinRand(self, state = r_state):
+        if (not self.value):
+            # set randomness with seed
+            if (not state):
+                state = gmpy2.random_state(bytes_to_long(os.urandom(16)))
+            self.value = gmpy2.mpz_random(state, 2)
 
     """
     split val into n random shares
