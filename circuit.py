@@ -1,5 +1,6 @@
 import sys
-from Value import Value
+import Value as v
+
 
 """
 input: external file
@@ -48,14 +49,16 @@ def parse_bristol(gate, n_parties, i):
                 n_mulgate += 1
             elif operation == 'INV' or operation == 'NOT': 
                 n_inv += 1
-            elif operation == ''
+            elif operation == 'SCA':
+                input2 = v.Value(input2, v.getfield())
+                n_scagate += 1
             g = gate(input1, input2, output, n_parties, operation=operation)
             l[i] = g
             i = i + 1
             if i == n_gate:
                 break
-    c_info = {'l input': l_input, 'n_gate': n_gate, 'n_wires': n_wires, 'n_output': n_output, 'n_input': n_input, 'n_addgate': n_addgate, 'n_mul': n_mulgate, 'n_inv': n_inv, 'n_parties': n_parties}
-    return l, l_input, l_output, n_gate, n_wires, n_output, n_input, n_addgate, n_mulgate, n_parties, c_info
+    c_info = {'l input': l_input, 'n_gate': n_gate, 'n_wires': n_wires, 'n_output': n_output, 'n_input': n_input, 'n_addgate': n_addgate, 'n_mul': n_mulgate, 'n_inv': n_inv, 'n_parties': n_parties, 'n_sca': n_scagate}
+    return l, l_input, l_output, n_gate, n_wires, n_output, n_input, n_addgate, n_mulgate, n_parties, c_info, n_scagate
 
     """
 	index of array corresponds to topological order of circuit
@@ -119,7 +122,7 @@ input: number of wires
 output: wire data structure (array of dictionaries with keys 'e', 'v', 'lambda, 'lam_hat', 'e_hat' with index of wire#
 """
 def wire_data(n_wires):
-    return [{'e': None, 'v': Value() , 'lambda': None, 'lam_hat': {} , 'e_hat': None}
+    return [{'e': None, 'v': v.Value() , 'lambda': None, 'lam_hat': {} , 'e_hat': None}
                  for i in range(n_wires)]
 
 """
@@ -143,6 +146,10 @@ def compute_output(circuit, wire, n_gate, n_parties):
         if c.operation == 'INV' or c.operation == 'NOT': 
             c.w = wire
             c.inv()
+        # Scalar mult gates (new code)
+        if c.operation == 'SCA':
+            c.w = wire
+            c.sca()
 
 
 def compute_alpha(circuit, epsilon_1, epsilon_2, wire, n_gate, n_parties):

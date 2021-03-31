@@ -233,6 +233,18 @@ def recompute(circuit, c_info, parties, comitted_views, committed_broadcast1, op
                     wire_value[c.z] = wire_value[c.x]
                     lambda_val[c.z] = lambda_val[c.x]
                 e_inputs[c.z] = e_inputs[c.x]
+            
+            #(new code)
+            if c.operation == 'SCA':
+                x_v = wire_value[c.x]
+                const = c.y
+                z_v = x_v * const
+                lamx = lambda_val[c.x]
+                wire_value[c.z] = z_v
+                lambda_val[c.z] = lamx * const
+                x_e= e_inputs[c.x]
+                e_inputs[c.z] = x_e * const  
+
 
             if j == n_gate-1:
                 zeta_broadcast[i] = zeta

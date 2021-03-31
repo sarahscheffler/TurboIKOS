@@ -133,6 +133,15 @@ def PRassignLambda(circuit, wire, n_parties):
                     wire.lambda_val(gate.z)[i] = (wire.lambda_val(gate.x)[i] + Value(1))
                 else: 
                     wire.lambda_val(gate.z)[i] = (wire.lambda_val(gate.x)[i])
+        #(new code)
+        elif gate.operation == 'SCA':
+            if wire.lambda_val(gate.x) == None:
+                x_lambda = [generateNum(i, 'lambda', gate.x) for i in party_master_seed]
+                wire.set_lambda(gate.x, x_lambda)
+            z_lam_share = []
+            for i in range(n_parties):
+                z_lam_share.append(wire.lambda_val(gate.x)[i] *gate.y)
+            wire.set_lambda(gate.z, z_lam_share)
 
         else: 
             try: 
@@ -203,6 +212,13 @@ def rebuildlambda(party, seed, circuit, c_info):
       
         elif gate.operation == "INV" or gate.operation == "NOT":
             if x < n_input and lambda_val[x] == Value(None): 
+                x_lam = generateNum(cipher, 'lambda', x)
+                lambda_val[x] = x_lam
+        
+        #(new code)
+        if gate.operation == "SCA":
+            #calculate lambdas from PR generateNum
+            if x < n_input and lambda_val[x] == Value(None):
                 x_lam = generateNum(cipher, 'lambda', x)
                 lambda_val[x] = x_lam
 

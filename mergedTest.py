@@ -29,6 +29,7 @@ class TestMPCInTheHead(unittest.TestCase):
                 n_output = temp[5]
                 l_output = temp[2]
                 n_mul = temp[8]
+                n_sca = temp[-1]
                 c_info = temp[10]
                 Circuit = temp[0]
 
@@ -136,6 +137,7 @@ class TestMPCInTheHead(unittest.TestCase):
                 n_output = temp[5]
                 l_output = temp[2]
                 n_mul = temp[8]
+                n_sca = temp[-1]
                 c_info = temp[10]
                 Circuit = temp[0]
       
@@ -242,11 +244,11 @@ class TestMPCInTheHead(unittest.TestCase):
                     # views_size_PR += sum([sum([VALUE_BYTES for v in  open_views[i]]) for i in range(n_parties-1)]) + SEED_BYTES*(n_parties-1)
                     #print(dict_broadcast)
                     #print(pickle.dumps(r7[4][0]))
-                    print(len(pickle.dumps(r7[4][0][0].value)))
-                    print(len(pickle.dumps(gmpy2.to_binary(r7[4][0][0].value))))
-                    n = pickle.dumps(gmpy2.to_binary(r7[4][0][0].value))
-                    print(r7[4][0][0] == 
-                    Value(gmpy2.from_binary(pickle.loads(n))))
+                    # print(len(pickle.dumps(r7[4][0][0].value)))
+                    # print(len(pickle.dumps(gmpy2.to_binary(r7[4][0][0].value))))
+                    # n = pickle.dumps(gmpy2.to_binary(r7[4][0][0].value))
+                    # print(r7[4][0][0] == 
+                    # Value(gmpy2.from_binary(pickle.loads(n))))
                     #print(len(pickle.dumps(r7[4][0])))
                     #print(pickle.dumps(r7[4][0].to_binary()))
                     #print((open_views))
@@ -260,8 +262,9 @@ class TestMPCInTheHead(unittest.TestCase):
 
                 #Print statistics
                 #print('number of parties to corrupt:', n_parties - 1)
-                print('number of add gates:', n_gate-n_mul)
+                print('number of add gates:', n_gate-n_mul-n_sca)
                 print('number of mul gates:', n_mul)
+                print('number of sca gates:', n_sca)
 
                 preprocessing_time = sum(preprocessing_arr)
                 #print('preprocessing time:', preprocessing_time, 'seconds')
