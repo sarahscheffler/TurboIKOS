@@ -8,13 +8,19 @@ import gmpy2
 from gmpy2 import mpz
 from Cryptodome.Util.number import bytes_to_long
 
-field = mpz((2**127)-1)
-# field = mpz(2)
+# normal = mpz((2**127)-1)
+lzkp = 61
+field_bits = lzkp
+field = mpz(2**(lzkp))
 r_state = gmpy2.random_state(bytes_to_long(os.urandom(16)))
 
 def getfield():
     global field
     return field
+
+def get_bits():
+    global field_bits
+    return field_bits
 
 class Value:
     def __init__(self, value=None, p=field):

@@ -45,7 +45,8 @@ def generateNum(cipher, num_type, index):
         num_type = 'i'
 
     field = v.getfield()
-    max_16 = (8**16)
+    bits = round(v.get_bits())
+    max_16 = (8**bits) #bad variable name
     if field > max_16: 
         reject_val = (field//max_16)*max_16 #((2^127)-1)
     else: 
@@ -56,6 +57,7 @@ def generateNum(cipher, num_type, index):
     while number >= reject_val:
         attempt += 1
         number = bytes_to_long(cipher.encrypt(pad((num_type + str(index) + str(attempt)).encode(), AES.block_size))) 
+        print(number)
     return Value(number%field)
 
 """

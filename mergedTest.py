@@ -236,28 +236,11 @@ class TestMPCInTheHead(unittest.TestCase):
                     print('prover test passed')
 
                     #Calculate size statistics
-                    # print(dict_broadcast)
-                    # print(pickle.loads(dict_broadcast))
-                    #broadcastc_size += COMMIT_BYTES*3
-                    #viewsc_size += COMMIT_BYTES*len(views_committed)
-                    # broadcast_size += sum([sum([sum([VALUE_BYTES for v in dict_broadcast[broadcast][i]]) for i in dict_broadcast[broadcast]]) for broadcast in dict_broadcast  if (broadcast!= "round5")]) + sum([VALUE_BYTES for v in dict_broadcast["round5"]])
-                    # views_size_PR += sum([sum([VALUE_BYTES for v in  open_views[i]]) for i in range(n_parties-1)]) + SEED_BYTES*(n_parties-1)
-                    #print(dict_broadcast)
-                    #print(pickle.dumps(r7[4][0]))
-                    # print(len(pickle.dumps(r7[4][0][0].value)))
-                    # print(len(pickle.dumps(gmpy2.to_binary(r7[4][0][0].value))))
-                    # n = pickle.dumps(gmpy2.to_binary(r7[4][0][0].value))
-                    # print(r7[4][0][0] == 
-                    # Value(gmpy2.from_binary(pickle.loads(n))))
-                    #print(len(pickle.dumps(r7[4][0])))
-                    #print(pickle.dumps(r7[4][0].to_binary()))
-                    #print((open_views))
-                    #print(r7[3])
-                    broadcast_size += sys.getsizeof(dict_broadcast)
-                    #print(open_views)
+                    broadcastc_size += COMMIT_BYTES*3
+                    viewsc_size += COMMIT_BYTES*len(views_committed)
+                    broadcast_size += len(dict_broadcast)
+
                     views_size_PR += sys.getsizeof(open_views)
-                    # views_size_PR += sum([sum([sys.getsizeof(open_views)]) for i in range(n_parties-1)]) + SEED_BYTES*(n_parties-1)
-                    # views_size_PR += sum([VALUE_BYTES for v in open_views]) + SEED_BYTES*(n_parties-1)                    
 
 
                 #Print statistics
