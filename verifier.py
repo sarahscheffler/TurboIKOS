@@ -278,11 +278,10 @@ def check_recompute(c_info, parties, dict_broadcast, recompute_A, recompute_outp
             assert(recomputed_zeta[i].value == prover_zeta[current_party].value), "Verifier's recomputed zetas does not match prover's zetas."
     return 
 
-
 def verifier(circuit, c_info, parties, cm_views, cm_broadcast1, cm_round3, cm_round5, open_views, dict_rval, dict_broadcast):
     open_views = pickle.loads(open_views)
 
-    db = deserial(dict_broadcast)
+    db = deserial(dict_broadcast, c_info)
     br1 = {'e inputs': db[0], 'e z': db[1], 'e z hat': db[2], 'output shares': db[3]}
     br2 = {'zeta': db[4], 'little_alpha': db[5]}
     dict_broadcast = {'round1': br1, 'round3': br2, 'round5': db[6]}

@@ -233,23 +233,10 @@ class TestMPCInTheHead(unittest.TestCase):
                     print('prover test passed')
 
                     #Calculate size statistics
-                    # print(dict_broadcast)
-                    # print(pickle.loads(dict_broadcast))
                     broadcastc_size += COMMIT_BYTES*3
                     viewsc_size += COMMIT_BYTES*len(views_committed)
-                    # broadcast_size += sum([sum([sum([VALUE_BYTES for v in dict_broadcast[broadcast][i]]) for i in dict_broadcast[broadcast]]) for broadcast in dict_broadcast  if (broadcast!= "round5")]) + sum([VALUE_BYTES for v in dict_broadcast["round5"]])
-                    # views_size_PR += sum([sum([VALUE_BYTES for v in  open_views[i]]) for i in range(n_parties-1)]) + SEED_BYTES*(n_parties-1)
-                    print("BROADCAST:", dict_broadcast)
-                    pb = pickle.loads(dict_broadcast)
-                    print("PICKLE BROADCAST:", pb)
-                    print("ONE VALUE:", len(pb[0][1]))
-                    print('broadcast length:', len(dict_broadcast))
-                    print('views length:', len(open_views))
                     broadcast_size += len(dict_broadcast)
-                    # print(open_views)
                     views_size_PR += sys.getsizeof(open_views)
-                    # views_size_PR += sum([sum([sys.getsizeof(open_views)]) for i in range(n_parties-1)]) + SEED_BYTES*(n_parties-1)
-                    # views_size_PR += sum([VALUE_BYTES for v in open_views]) + SEED_BYTES*(n_parties-1)                    
 
 
                 #Print statistics
