@@ -100,7 +100,7 @@ class TestMPCInTheHead(unittest.TestCase):
                 dict_broadcast = r7[2]
 
                 #verifier test
-                v.verifier(Circuit, c_info, parties_to_open, views_committed, broadcast1_committed, cm_round3, cm_round5, open_views, dict_rval, dict_broadcast)
+                v.verifier(Circuit, c_info, parties_to_open, views_committed, broadcast1_committed, cm_round3, cm_round5, open_views, dict_rval, dict_broadcast,None)
                 print('prover test passed')
     
     
@@ -227,7 +227,7 @@ class TestMPCInTheHead(unittest.TestCase):
                     start_time = time.process_time()
 
                     #verifier test
-                    v.verifier(Circuit, c_info, parties_to_open, views_committed, broadcast1_committed, cm_round3, cm_round5, open_views, dict_rval, dict_broadcast)
+                    v.verifier(Circuit, c_info, parties_to_open, views_committed, broadcast1_committed, cm_round3, cm_round5, open_views, dict_rval, dict_broadcast, None)
 
                     #Set time for verifier
                     verifier_time = time.process_time() - start_time

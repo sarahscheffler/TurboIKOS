@@ -50,7 +50,7 @@ def open(r, v, commit):
 input: c_info (dictionary of circuit info), circuit (circuit object), wire (wire object), party seeds (list of byte strings)
 """
 def round1(c_info, circuit, wire, party_seeds): #NEW PROTOCOL 
-    n_parties, n_gate, n_input, n_output = c_info['n_parties'], c_info['n_gate'], c_info['n_input'], c_info[n]
+    n_parties, n_gate, n_input = c_info['n_parties'], c_info['n_gate'], c_info['n_input']
     
     #broadcast1
     e_inputs = []
@@ -66,7 +66,6 @@ def round1(c_info, circuit, wire, party_seeds): #NEW PROTOCOL
     views_commit = [None]*n_parties
     views = [None]*n_parties
     r_views = [None]*n_parties
-    for i in range()
     output_shares = wire.v(circuit[-1].z)
     for p in range(n_parties):
         #broadcast1 
