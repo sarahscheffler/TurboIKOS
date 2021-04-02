@@ -19,7 +19,6 @@ class gate:
         z_v_arr = [None]*self.n_parties
         # calculate z_v
         for i in range(self.n_parties):
-            print(self.x)
             x_v = self.w.v(self.x)[i]
             y_v = self.w.v(self.y)[i]
             z_v = x_v + y_v
@@ -47,7 +46,6 @@ class gate:
     # assign e value on output wire
     # return e share for broadcast
     def mult(self, mult_count):
-        #alpha_broadcast = []*circuit.n_parties
         z_v_arr = [None]*self.n_parties 
         # calculate z_vi
         x_e = self.w.e(self.x)
@@ -88,9 +86,30 @@ class gate:
         for i in range(self.n_parties):
             if i == 0:
                 self.w.v(self.z)[i] = self.w.v(self.x)[i] + Value(1)
-                # self.w.lambda_val(self.z)[i] = self.w.lambda_val(self.x)[i] + Value(1)
             else:
                 self.w.v(self.z)[i] = self.w.v(self.x)[i]
-                # self.w.lambda_val(self.z)[i] = self.w.lambda_val(self.x)[i]
         self.w.set_e(self.z, self.w.e(self.x))
+
+    # performs Scalar mult (new code)
+    def sca(self):
+        z_v_arr = [None]*self.n_parties
+        const = self.y
+        # calculate z_v
+        for i in range(self.n_parties):
+            x_v = self.w.v(self.x)[i]
+            z_v = x_v * const
+            z_v_arr[i] = z_v
+        # set z_v
+        self.w.set_v(self.z, z_v_arr)
+        # calculate z_e
+        x_e = self.w.e(self.x)
+        if not x_e:
+            x_v = sum(self.w.v(self.x))
+            x_lam = sum(self.w.lambda_val(self.x)) 
+            x_e = (x_v + x_lam)
+            self.w.set_e(self.x, x_e)
+        
+        z_e = sum(self.w.v(self.z)) + sum(self.w.lambda_val(self.z))
+        # set z_e
+        self.w.set_e(self.z, z_e)
        
