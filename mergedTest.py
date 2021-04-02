@@ -245,7 +245,7 @@ class TestMPCInTheHead(unittest.TestCase):
 
                 #Print statistics
                 #print('number of parties to corrupt:', n_parties - 1)
-                print('number of add gates:', n_gate-n_mul-n_sca)
+                # print('number of add gates:', n_gate-n_mul-n_sca)
                 print('number of mul gates:', n_mul)
                 print('number of sca gates:', n_sca)
 

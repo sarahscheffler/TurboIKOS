@@ -315,4 +315,4 @@ def verifier(circuit, c_info, parties, cm_views, cm_broadcast1, cm_round3, cm_ro
     v_recompute = recompute(circuit, c_info, parties, cm_views, cm_broadcast1, open_views, dict_broadcast['round1'], dict_broadcast['round3'], cm_round3)
 
     checkrecompute = check_recompute(c_info, parties, dict_broadcast, v_recompute[0], v_recompute[1], v_recompute[2])
-    print("passed")
+    # print("passed")

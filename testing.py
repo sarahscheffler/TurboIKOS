@@ -41,8 +41,9 @@ class TestMPCInTheHead(unittest.TestCase):
                 viewsc_size = 0
                 broadcast_size = 0
                 views_size_PR = 0
+                proof_size = 0 
 
-                n_parties = 3
+                # n_parties = 3
                 temp = circuit.parse(gate, n_parties)
                 n_wires = temp[4]
                 n_gate = temp[3]
@@ -146,15 +147,15 @@ class TestMPCInTheHead(unittest.TestCase):
                     verifier_time = time.process_time() - start_time
                     verifier_time_arr[repetition] = verifier_time
 
-                    print('prover test passed')
+                    # print('prover test passed')
 
                     #Calculate size statistics
                     broadcastc_size += COMMIT_BYTES*3
                     viewsc_size += COMMIT_BYTES*len(views_committed)
                     broadcast_size += len(dict_broadcast)
-
                     views_size_PR += sys.getsizeof(open_views)
 
+                    proof_size += broadcastc_size + viewsc_size + broadcast_size + views_size_PR
 
                 #Print statistics
                 #print('number of parties to corrupt:', n_parties - 1)
@@ -166,13 +167,21 @@ class TestMPCInTheHead(unittest.TestCase):
                 #print('preprocessing time:', preprocessing_time, 'seconds')
 
                 run_time = sum(run_time_arr)
-                #print('run time:', run_time, 'seconds')
+                # print('run time:', run_time, 'seconds')
                 # Proof size = wire size + circuit size + alpha size + zeta size
 
                 print('broadcast commit size:', broadcastc_size)
                 print('views commit size:', viewsc_size)
                 print('broadcast size:', broadcast_size)
                 print('prover views size:', views_size_PR)
+                print('prover time:', (sum(preprocessing_arr) + sum(run_time_arr)))
+                print('verifier time:', sum(verifier_time_arr))
+                print('proof size:', proof_size)
+
+                print({'proof size': proof_size, 'prover time': (sum(preprocessing_arr) + sum(run_time_arr)), 'verifier time': sum(verifier_time_arr)})
+                
+
+
     
 if __name__ == "__main__": 
     unittest.main(argv=[sys.argv[0]])
