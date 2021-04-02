@@ -19,6 +19,7 @@ class gate:
         z_v_arr = [None]*self.n_parties
         # calculate z_v
         for i in range(self.n_parties):
+            print(self.x)
             x_v = self.w.v(self.x)[i]
             y_v = self.w.v(self.y)[i]
             z_v = x_v + y_v

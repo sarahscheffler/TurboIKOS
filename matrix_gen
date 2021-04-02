@@ -40,12 +40,12 @@ def gen_circuit(n, m, f, A):
     #write gates
     input_w = 0
     internal_w = num_inputs
-    output_w = num_wires - num_outputs + 1
+    output_w = num_wires - num_outputs 
     input_1 = num_inputs
     input_2 = num_inputs + 1
     for i in range(n):
         for j in range(m):
-            f.write("2 1 %d %d %d SCA\n" % (input_w, A[i][j].value, internal_w))
+            f.write("\n2 1 %d %d %d SCA" % (input_w, A[i][j].value, internal_w))
             input_w += 1
             internal_w += 1
         
@@ -53,32 +53,23 @@ def gen_circuit(n, m, f, A):
         
         for i in range(m-1):
             if i == m-2:
-                f.write("2 1 %d %d %d XOR\n" % (input_1, input_2, output_w))
+                f.write("\n2 1 %d %d %d XOR" % (input_1, input_2, output_w))
                 output_w += 1
                 input_1 += 1
                 input_2 = input_1 + 1
             else:
-                f.write("2 1 %d %d %d XOR\n" % (input_1, input_2, internal_w))
+                f.write("\n2 1 %d %d %d XOR" % (input_1, input_2, internal_w))
                 input_1 = internal_w
                 input_2 += 1
                 internal_w += 1
     
     for i in range(m):
-        f.write("2 1 %d %d %d AND\n" % (i, i, internal_w))
+        f.write("\n2 1 %d %d %d AND" % (i, i, internal_w))
         internal_w += 1
-        f.write("2 1 %d %d %d SCA\n" % (i, -1, internal_w))
-        f.write("2 1 %d %d %d XOR\n" % (internal_w-1, internal_w, output_w))
+        f.write("\n2 1 %d %d %d SCA" % (i, -1, internal_w))
+        f.write("\n2 1 %d %d %d XOR" % (internal_w-1, internal_w, output_w))
         internal_w += 1
         output_w += 1
-
-
-
-
-
-
-
-
-
 
 if __name__ == "__main__":
 
@@ -91,5 +82,13 @@ if __name__ == "__main__":
         elif o in ("--col"):
             m = int(a)
     A, s, t = gen_matrix(n,m)
-    with open("matmult_%dx%d.txt" % (n,m), 'w') as f:
+    with open("circuit_%dx%d.txt" % (n,m), 'w') as f:
         gen_circuit(n, m, f, A)
+    with open("input_%dx%d.txt" % (n,m), 'w') as f:
+        for i in s:
+            f.write("%d " % (i[0].value))
+        f.write('\n')
+        for i in t:
+             f.write("%d " % (i[0].value))
+    
+    

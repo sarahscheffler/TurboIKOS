@@ -107,7 +107,21 @@ def parse(gate, n_parties):
             return parse_pws(gate, n_parties, 1)
         else:
             return parse_bristol(gate, n_parties, 1)
-
+def parse_inputs():
+    with open(sys.argv[2], 'r') as f:
+        line = f.readline()
+        inputs_l = (line.split(' '))
+        inputs = []
+        for i in inputs_l:
+            if i != "\n":
+                inputs.append(Value(int(i)))
+        line = f.readline()
+        outputs_l = (line.split(' '))
+        outputs = []
+        for i in outputs_l:
+                if i != "":
+                    outputs.append(Value(int(i)))
+    return inputs, outputs
 def parse_test(gate, n_parties, i):
     with open(sys.argv[i], 'r') as f:
         first_ch = f.readline()[0]
