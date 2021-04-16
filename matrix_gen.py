@@ -2,7 +2,6 @@
 import sys
 import getopt
 import numpy as np
-from . import Value
 import Value as v
 
 #input: n, m
@@ -74,13 +73,6 @@ def gen_circuit(n, m, f, A):
 
 
 
-
-
-
-
-
-
-
 if __name__ == "__main__":
 
     opts, args = getopt.getopt(sys.argv[1:], "", ["row=", "col="])
@@ -92,5 +84,5 @@ if __name__ == "__main__":
         elif o in ("--col"):
             m = int(a)
     A, s, t = gen_matrix(n,m)
-    with open("matmult_%dx%d.txt" % (n,m), 'w') as f:
+    with open("circuits/matmult_%dx%d.txt" % (n,m), 'w') as f:
         gen_circuit(n, m, f, A)
