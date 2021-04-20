@@ -240,7 +240,6 @@ class TestMPCInTheHead(unittest.TestCase):
                     viewsc_size += COMMIT_BYTES*len(views_committed)
                     broadcast_size += len(dict_broadcast)
                     views_size_PR += len(open_views)
-                    # print(open_views)
 
 
                 #Print statistics
@@ -254,7 +253,7 @@ class TestMPCInTheHead(unittest.TestCase):
 
                 run_time = sum(run_time_arr)
                 print('run time:', run_time, 'seconds')
-                Proof size = wire size + circuit size + alpha size + zeta size
+                # Proof size = wire size + circuit size + alpha size + zeta size
 
                 print('broadcast commit size:', broadcastc_size)
                 print('views commit size:', viewsc_size)
@@ -262,9 +261,6 @@ class TestMPCInTheHead(unittest.TestCase):
                 print('prover views size:', views_size_PR)
 
                 output_wire = [w.v(w.n_wire-1-i) for i in range(n_output)]
-                flat_output_wires = serial(output_wire)
-                size_output_wires = len(flat_output_wires)
-                # print(size_output_wires)
 
                 outputs = {'parties': n_parties, 'proof size': size_output_wires + broadcastc_size + broadcast_size + viewsc_size + views_size_PR,'prover time': preprocessing_time + run_time, 'verifier time': sum(verifier_time_arr), \
                             'preprocessing time': preprocessing_time}

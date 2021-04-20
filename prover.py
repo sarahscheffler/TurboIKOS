@@ -200,10 +200,8 @@ input: round1 (output of round_one_internal), round3 (output of round_three_inte
 output: open views, open broadcasts, dictionary of rvals 
 """
 def round_seven(round1, round3, round5, parties_open): 
-    # broadcasts = {'round1': round1[3], 'round3': round3[1], 'round5': round5[1]}
     r1, r3, r5 = round1[3], round3[1], round5[1]
     broadcasts = [r1['e inputs'], r1['e z'], r1['e z hat'], r1['output shares'], r3['zeta'], r3['little_alpha'], r5]
-    # rval = {'views': round1[0], 'round1': round1[1], 'round3': round3[0], 'round5': round5[0]} #round1, round3, round5 rvals for broadcasts
     rval = [round1[0], round1[1], round3[0], round5[0]]
     views = round1[2]
     r_vals = round1[0]
