@@ -212,24 +212,30 @@ def round_seven(round1, round3, round5, parties_open):
     for p in parties_open: 
         open_views.append(views[p])
         open_rval.append(r_vals[p])
-    # rval['views'] = open_rval
-    # return open_views, rval, broadcasts
-
-    # test = r1['e inputs'][0]
-    # print("TEST BIT LENGTH:", test.value.bit_length())
-    # test = gmpy2.to_binary(test.value)
-    # print("TEST DIGITS: ", test)
-    # t1 = pickle.dumps(test)
-    # print("TEST ONE ELEMENT:", t1)
-    # print("LENGTH TEST ELEMENT:", len(t1))
 
     rval[0] = open_rval
     #begin pickle 
-    p_open_views = pickle.dumps(open_views)
-    p_rval = pickle.dumps(rval)
+    #p_open_views = pickle.dumps(open_views)
+    #p_rval = pickle.dumps(rval)
+
+    #print(broadcasts)
+    #print("BROADCAST SIZE ANALASYS:")
+    #print("e inputs (should be 128): ", len(broadcasts[0]))
+    #print("e z (should be 128): ", len(broadcasts[1]))
+    #print("e z hat (should be 128): ", len(broadcasts[2]))
+    #print("output shares (should be 8): ", len(broadcasts[3]))
+    #print("zeta (should be 8):", len(broadcasts[4]))
+    #print("little alpha (should be 128):", len(broadcasts[5]))
+    #print()
+    #print()
+    #print()
+    #print()
 
     p_broadcasts = serial(broadcasts)
-    return p_open_views, p_rval, p_broadcasts
+    #print("serialized bcs: ", len(p_broadcasts))
+    #print("computed bcs: ", sum([len(x) for x in broadcasts])*int(64/8))
+    #return p_open_views, p_rval, p_broadcasts
+    return open_views, rval, p_broadcasts
 
     #end pickle 
                                                                                                                                        

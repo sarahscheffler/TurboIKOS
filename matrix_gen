@@ -82,9 +82,9 @@ if __name__ == "__main__":
         elif o in ("--col"):
             m = int(a)
     A, s, t = gen_matrix(n,m)
-    with open("circuit_%dx%d.txt" % (n,m), 'w') as f:
+    with open("circuits/circuit_%dx%d.txt" % (n,m), 'w') as f:
         gen_circuit(n, m, f, A)
-    with open("input_%dx%d.txt" % (n,m), 'w') as f:
+    with open("circuits/input_%dx%d.txt" % (n,m), 'w') as f:
         for i in s:
             f.write("%d " % (i[0].value))
         f.write('\n')
