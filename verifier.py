@@ -213,7 +213,6 @@ def recompute(circuit, c_info, parties, comitted_views, committed_broadcast1, op
                 x = c.x
                 y = c.y
                 z = c.z
-                # epsilon1[e][num_mult], y_lam, epsilon2[e][num_mult], y_lamh
                 
                 alpha_shares[num_mult][i] = epsilon1[num_mult]*y_lam + (epsilon2[num_mult] * y_lamh) #alpha[nummult][party]
                 A = b_alpha[num_mult]
@@ -222,7 +221,6 @@ def recompute(circuit, c_info, parties, comitted_views, committed_broadcast1, op
                         epsilon1[num_mult] * lambda_z[num_mult] - epsilon2[num_mult] * lam_z_hat[str(num_mult)]
                 
                 if parties[i] == 0: 
-                    #epsilon1[e][num_mult], e_z[num_mult], epsilon1[e][num_mult], e_inputs[x], e_inputs[y], epsilon2[e][num_mult]e_z_hat[num_mult]
                     zeta += epsilon1[num_mult] * e_z[num_mult] - epsilon1[num_mult] * e_inputs[x] * e_inputs[y] + epsilon2[num_mult] * e_z_hat[num_mult]
                 
                 num_mult += 1
@@ -263,7 +261,7 @@ def recompute(circuit, c_info, parties, comitted_views, committed_broadcast1, op
             if parties[p] == 0:
                 sum_smalla -= (gammas[m]*b_alpha[m])
         bigA[p] = sum_smalla
-    return bigA, output_shares, zeta_broadcast #REMOVE OUTPUTS
+    return bigA, output_shares, zeta_broadcast 
 
 """
 ---check_recompute---
@@ -281,8 +279,6 @@ def check_recompute(c_info, parties, dict_broadcast, recompute_A, recompute_outp
     prover_output = dict_broadcast['round1']['output shares']
     prover_zeta = dict_broadcast['round3']['zeta']
 
-    # print(prover_output)
-
     for i in range(len(parties)): 
         current_party = parties[i]
         #check alphas 
@@ -293,14 +289,12 @@ def check_recompute(c_info, parties, dict_broadcast, recompute_A, recompute_outp
     return 
 
 def verifier(circuit, c_info, parties, cm_views, cm_broadcast1, cm_round3, cm_round5, open_views, dict_rval, dict_broadcast,outputs):
-    #open_views = pickle.loads(open_views)
 
     db = deserial(dict_broadcast, c_info)
     br1 = {'e inputs': db[0], 'e z': db[1], 'e z hat': db[2], 'output shares': db[3]}
     br2 = {'zeta': db[4], 'little_alpha': db[5]}
     dict_broadcast = {'round1': br1, 'round3': br2, 'round5': db[6]}
 
-    #drv = pickle.loads(dict_rval)
     drv = dict_rval
     dict_rval = {'views': drv[0], 'round1': drv[1], 'round3': drv[2], 'round5': drv[3]} 
 

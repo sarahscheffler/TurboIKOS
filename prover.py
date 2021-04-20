@@ -49,7 +49,7 @@ def open(r, v, commit):
 """
 input: c_info (dictionary of circuit info), circuit (circuit object), wire (wire object), party seeds (list of byte strings)
 """
-def round1(c_info, circuit, wire, party_seeds): #NEW PROTOCOL 
+def round1(c_info, circuit, wire, party_seeds): 
     n_parties, n_gate, n_input = c_info['n_parties'], c_info['n_gate'], c_info['n_input']
     
     #broadcast1
@@ -214,30 +214,8 @@ def round_seven(round1, round3, round5, parties_open):
         open_rval.append(r_vals[p])
 
     rval[0] = open_rval
-    #begin pickle 
-    #p_open_views = pickle.dumps(open_views)
-    #p_rval = pickle.dumps(rval)
-
-    #print(broadcasts)
-    #print("BROADCAST SIZE ANALASYS:")
-    #print("e inputs (should be 128): ", len(broadcasts[0]))
-    #print("e z (should be 128): ", len(broadcasts[1]))
-    #print("e z hat (should be 128): ", len(broadcasts[2]))
-    #print("output shares (should be 8): ", len(broadcasts[3]))
-    #print("zeta (should be 8):", len(broadcasts[4]))
-    #print("little alpha (should be 128):", len(broadcasts[5]))
-    #print()
-    #print()
-    #print()
-    #print()
-
     p_broadcasts = serial(broadcasts)
-    #print("serialized bcs: ", len(p_broadcasts))
-    #print("computed bcs: ", sum([len(x) for x in broadcasts])*int(64/8))
-    #return p_open_views, p_rval, p_broadcasts
     return open_views, rval, p_broadcasts
-
-    #end pickle 
                                                                                                                                        
     
 """
