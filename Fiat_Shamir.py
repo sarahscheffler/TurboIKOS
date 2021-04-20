@@ -33,7 +33,7 @@ def make_epsilons(r2, num_mult_gates):
         list_epsilon_hat[i] = epsilon_hat
     return list_epsilon, list_epsilon_hat
 
-def make_gammas(round_3, num_mult_gates): #new protocol; have to add epsilon hat 
+def make_gammas(round_3, num_mult_gates): 
     list_gammas = [0 for x in range(num_mult_gates)] #list_gammas[#mult_gate]
     list_epsilonhat = [0 for x in range(num_mult_gates)] #list_gammas[#mult_gate]
     seed(round_3)
