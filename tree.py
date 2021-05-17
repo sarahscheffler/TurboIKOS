@@ -32,6 +32,7 @@ class Tree:
     #tree helper functions
     def get_path_helper(self,l,root,omit,path):
         leaf = 2**(l)
+        #print(leaf)
         if l == 0:
             return path
         if omit < leaf/2:
@@ -39,7 +40,7 @@ class Tree:
             return self.get_path_helper(l-1, root.left, omit, path)
         else:
             path.append([root.left.data, "l"])
-            return self.get_path_helper(l-1, root.right, omit-leaf, path)
+            return self.get_path_helper(l-1, root.right, omit-(leaf/2), path)
 
     def getranbyte(self,num_bytes): 
         x = (os.urandom(num_bytes))
@@ -91,36 +92,32 @@ def get_path(omit, root):
 def recreate_seeds(path):
     l = len(path)
     seeds = [path[-1][0]]
-    print(seeds)
+    #print(seeds)
     if l == 1:
         return seeds
     layer = 1
     for i in range(len(path)-1):
-        print(layer)
+        #print(layer)
         root = Tree()
         root.data = path[len(path)-i-2][0]
         temp = []
         make_helper(layer,root,temp)
-        if path[len(path)-1-i][1] == "l":
-            if path[0][1] == "l" and layer != len(path)-1:
-                seeds = temp +  seeds
-            else:
-                seeds = seeds +  temp
-            #print("l ",seeds)
+
+        if path[len(path)-2-i][1] == "l":
+    
+            seeds = temp +  seeds
+            #print("l ",seeds, layer)
         else:
-            if path[0][1] == "l" and layer != len(path)-1:
-                seeds = seeds +  temp
-            else:
-                seeds = temp + seeds
-            #print("r ",seeds)
+            seeds = seeds + temp
+            #print("r ",seeds, layer)
         layer += 1
     return seeds
 
 if __name__ == "__main__":
-    (seeds, root) = make_tree(8)
+    (seeds, root) = make_tree(5)
     print(seeds)
     print(root.left.data)
-    path = get_path(4, root)
+    path = get_path(3, root)
     print(path)
     recreated_seeds = recreate_seeds(path)
     print(recreated_seeds)
