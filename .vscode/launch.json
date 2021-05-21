@@ -9,7 +9,7 @@
             "type": "python",
             "request": "launch",
             "program": "mergedTest.py",
-            "args" : ["test2.txt"],
+            "args" : ["circuits/matmult_2.pws"],
             "console": "integratedTerminal"
         }
     ]

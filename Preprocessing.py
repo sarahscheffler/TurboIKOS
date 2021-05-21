@@ -6,6 +6,8 @@ from Cryptodome.Util.Padding import pad
 from Cryptodome.Util.number import long_to_bytes, bytes_to_long
 from gmpy2 import mpz, sub
 
+import tree
+
 """
 inputs: num_bytes: (int) number of bytes 
 return: length num_bytes random byte string 
@@ -33,7 +35,8 @@ def generateNum(cipher, num_type, index):
     assert(num_type == 'lambda' or \
          num_type == 'lambda y hat' or \
               num_type == 'lambda z hat' or \
-                  num_type == 'index'), "Type input is invalid"
+                  num_type == 'index' or \
+                      num_type == 'random'), "Type input is invalid"
     
     if num_type == 'lambda': 
         num_type = 'l'
@@ -43,6 +46,8 @@ def generateNum(cipher, num_type, index):
         num_type = 'z'
     elif num_type == 'index':
         num_type = 'i'
+    elif num_type == 'random':
+        num_type = 'r'
 
     field = v.getfield()
     bits = round(v.get_bits())
@@ -66,6 +71,7 @@ functino: generates a list of random strings to be used for PRlambda generation
 """
 def make_party_seeds(n_parties):
     party_master_seed_value = [(getranbyte(16)) for i in range(n_parties)] 
+    # (seeds, root) = tree.make_tree(n_parties)
     return party_master_seed_value
 
 """
@@ -80,8 +86,8 @@ function:
     assign pseudorandom lambdas for prover 
     NOTE: verifier cannot use this function, verifier must use rebuildlambda
 """
-def PRassignLambda(circuit, wire, n_parties):
-    party_master_seed_value = make_party_seeds(n_parties)
+def PRassignLambda(circuit, wire, n_parties, seeds):
+    party_master_seed_value = seeds
     party_master_seed = [AES.new(i, AES.MODE_ECB) for i in party_master_seed_value] 
 
     triples = []
@@ -150,6 +156,11 @@ def PRassignLambda(circuit, wire, n_parties):
             except: 
                 print("Unrecognized gate type")
 
+        # print("gate:", gate)
+        # print("x:", wire.lambda_val(gate.x))
+        # print("y:", wire.lambda_val(gate.y))
+        # print("z:", wire.lambda_val(gate.z))
+
     return triples, party_master_seed_value
 
 """
@@ -166,7 +177,7 @@ output:
 function: 
     for verifier to rebuild the lambda vals in format that verifier can digest 
 """
-def rebuildlambda(party, seed, circuit, c_info):
+def rebuildlambda(party, seed, circuit, wire, c_info):
     n_input = c_info['n_input']
     n_ouput = c_info['n_output']
     c_nmul = c_info['n_mul']
@@ -187,40 +198,43 @@ def rebuildlambda(party, seed, circuit, c_info):
             #calculate lambdas from PR generateNum
             if x < n_input and lambda_val[x] == Value(None):
                 x_lam = generateNum(cipher, 'lambda', x)
-                lambda_val[x] = x_lam
+                wire.set_lambda(x, [x_lam])
             if y < n_input and lambda_val[y] == Value(None):
                 y_lam = generateNum(cipher, 'lambda', y)
-                lambda_val[y] = y_lam
+                wire.set_lambda(y, [y_lam])
+            wire.set_lambda(z, [wire.lambda_val(x)[0] + wire.lambda_val(y)[0]])
         elif gate.operation == "MUL" or gate.operation == "AND": 
             #calculate lambdas 
             if x < n_input and lambda_val[x] == Value(None):
                 x_lam = generateNum(cipher, 'lambda', x)
-                lambda_val[x] = x_lam
+                wire.set_lambda(gate.x, [x_lam])
             if y < n_input and lambda_val[y] == Value(None):
                 y_lam = generateNum(cipher, 'lambda', y)
-                lambda_val[y] = y_lam
+                wire.set_lambda(y, [y_lam])
 
             #set y lam hat
-            if y not in lam_y_hat: 
-                lam_y_hat[str(n_mult)] = generateNum(cipher, 'lambda y hat', n_mult) 
+            if str(n_mult) not in wire.lam_hat(y):
+                lam_y_hat_var = generateNum(cipher, 'lambda y hat', n_mult) 
+                wire.set_lam_hat(y, [lam_y_hat_var], n_mult)
             #set z lam 
             z_lam = generateNum(cipher, 'lambda', z)  
-            lambda_z.append(z_lam)
+            wire.set_lambda(z, [z_lam])
             #set z lam hat 
-            if z not in lam_z_hat:
-                lam_z_hat[str(n_mult)] = generateNum(cipher, 'lambda z hat', n_mult)
+            if str(n_mult) not in wire.lam_hat(z):
+                lamzhat = generateNum(cipher, 'lambda z hat', n_mult)
+                wire.set_lam_hat(z, [lamzhat], n_mult)
             n_mult += 1
       
         elif gate.operation == "INV" or gate.operation == "NOT":
             if x < n_input and lambda_val[x] == Value(None): 
                 x_lam = generateNum(cipher, 'lambda', x)
-                lambda_val[x] = x_lam
+                wire.set_lambda(x, [x_lam])
         
         #(new code)
         if gate.operation == "SCA":
             #calculate lambdas from PR generateNum
             if x < n_input and lambda_val[x] == Value(None):
                 x_lam = generateNum(cipher, 'lambda', x)
-                lambda_val[x] = x_lam
+                wire.set_lambda(x, [x_lam])
 
     return lambda_val, lambda_z, lam_y_hat, lam_z_hat
