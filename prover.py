@@ -29,14 +29,6 @@ def open(r, v, commit):
     return commit == hashlib.sha256(long_to_bytes(r) + v).hexdigest()
 
 """
-input: number of wires
-output: wire data structure (array of dictionaries with keys 'e', 'v', 'lambda, 'lam_hat', 'e_hat' with index of wire#
-"""
-def wire_data(n_wires):
-    return [{'e': None, 'v': v.Value() , 'lambda': None, 'lam_hat': {} , 'e_hat': None}
-                 for i in range(n_wires)]
-
-"""
 set inputs to wire object 
 """
 
@@ -102,12 +94,11 @@ def compute_zeta_share(circuit, wire, alpha, epsilon_1, epsilon_2, n_parties):
                 zeta += (epsilon_1[n] * wire.e(y) - A)* wire.lambda_val(x)[i] + \
                     epsilon_1[n] * wire.e(x) * wire.lambda_val(y)[i] - \
                     epsilon_1[n] * wire.lambda_val(z)[i] - epsilon_2[n] * wire.lam_hat(z)[str(n)][i]     
-                
                 if i == 0:
                     # epsilon_1[e][n], wire.e(z), epsilon_1[e][n], wire.e(x), wire.e(y), epsilon_2[e][n], wire.e_hat(z)
                     zeta += epsilon_1[n] * wire.e(z) - epsilon_1[n]*wire.e(x)*wire.e(y) + epsilon_2[n]*wire.e_hat(z)
                 n+= 1   
-        if j== len(circuit)-1:
+        if j == len(circuit)-1:
             r[i] = (zeta)
     return r
 
@@ -166,8 +157,6 @@ def round1_compute_commits(c_info, parsed_circuit, wire, party_seeds):
     broadcast1_commit = commit_wo_random(e_inputs_str + e_z_str + e_z_hat_str + output_lambda_str)
     views_commit = commit_wo_random(views_str.encode())
 
-    print("output lambda:", output_lambda)
-
     return views_commit, broadcast1_commit, party_seeds, broadcast1_open
 
 """
@@ -194,7 +183,7 @@ round1 internal
 output: views_commit, broadcast1_commit 
 """
 def round1_commits(r1): 
-    round1_commit = ''.join(r1[0]) + r1[1]
+    round1_commit = r1[0] + r1[1]
     return r1[0], r1[1], round1_commit
 
 def round3_compute_commits(c_info, zeta, alpha_broadcast, alpha_shares_mulgate): 
@@ -246,11 +235,11 @@ def full_commit(round1_commits, round3_commits):
 
     full_commit = commit_wo_random((round1_combine + round3_combine).encode())
 
-    print("views commit:", views_commit)
-    print("broadcast1 commit:", broadcast1_commit)
-    print("alpha m commit:", alpha_m_commit)
-    print("alpha m shares commit:", alpha_m_shares_commit)
-    print("zeta commit:", zeta_commit)
+    # print("views commit:", views_commit)
+    # print("broadcast1 commit:", broadcast1_commit)
+    # print("alpha m commit:", alpha_m_commit)
+    # print("alpha m shares commit:", alpha_m_shares_commit)
+    # print("zeta commit:", zeta_commit)
 
     return full_commit, views_commit
 
@@ -273,7 +262,7 @@ def round5(round1, round3, uncorrupted_party, root, seeds):
     
 
 def run_prover(c_info, parsed_circuit, wire, n_parties, inputs, party_seeds, root): 
-    print("---PROVER---") 
+    # print("---PROVER---") 
     n_gate, n_mul = c_info['n_gate'], c_info['n_mul']
 
     set_inputs(c_info, parsed_circuit, wire, n_parties, inputs)

@@ -3,7 +3,7 @@ import math, pickle, gmpy2, argparse
 from objsize import get_deep_size
 from Cryptodome.Util.number import bytes_to_long, long_to_bytes
 
-import circuit, prover, verifier, tree
+import circuit, tilde_prover, tilde_verifier, tree
 from gate import gate
 from wire import Wire 
 from serial import *
@@ -50,10 +50,10 @@ class TestMPCInTheHead(unittest.TestCase):
 
                 expected_output = circuit.compute_output_wires(c_info, Circuit, inputs)
 
-                prover_results = prover.run_prover(c_info, Circuit, w, n_parties, inputs, party_seeds, root)
+                prover_results = tilde_prover.run_prover(c_info, Circuit, w, n_parties, inputs, party_seeds, root)
 
                 # v_circuit = circuit.parse(gate, 1)
-                verifier.run_verifier(c_info, v_circuit[0], prover_results, expected_output)
+                tilde_verifier.run_verifier(c_info, v_circuit[0], prover_results, expected_output)
 
                 print("passed")
     
@@ -124,13 +124,13 @@ class TestMPCInTheHead(unittest.TestCase):
 
                     expected_output = circuit.compute_output_wires(c_info, Circuit, inputs)
 
-                    prover_results = prover.run_prover(c_info, Circuit, w, n_parties, inputs, party_seeds, root)
+                    prover_results = tilde_prover.run_prover(c_info, Circuit, w, n_parties, inputs, party_seeds, root)
 
                     #Start time for verifier
                     start_time = time.process_time()
 
                     #verifier test
-                    verifier.run_verifier(c_info, v_circuit[0], prover_results, expected_output)
+                    tilde_verifier.run_verifier(c_info, v_circuit[0], prover_results, expected_output)
 
                     #Set time for verifier
                     verifier_time = time.process_time() - start_time

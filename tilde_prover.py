@@ -9,7 +9,7 @@ from wire import Wire
 from gate import gate
 from gmpy2 import mpz
 import Preprocessing as prepro
-import circuit
+import circuit as c
 import pickle
 from serial import *
 import prover
@@ -111,11 +111,6 @@ def round1_compute_commits(c_info, parsed_circuit, wire, party_seeds):
     broadcast1_commit = commit_wo_random(e_inputs_str + e_z_str + e_z_hat_str + output_lambda_str)
     views_commit = commit_wo_random(views_str.encode())
 
-    print("output lambda:", output_lambda)
-
-    print("views commit:", views_commit)
-    print("broadcast1 commit:", broadcast1_commit)
-
     return views_commit, broadcast1_commit, party_seeds, broadcast1_open
 
 """
@@ -174,9 +169,9 @@ alpha_m_shares = [alpha_m] (refer to paper)
 def calculate_beta(c_info, circuit, wire, alpha_m_shares):
     n_parties, n_mul, mult_gates = c_info['n_parties'], c_info['n_mul'], c_info['mult_gates']
     
-    beta = [[None*n_parties]*n_parties]
-    for i in n_parties: 
-        for j in n_parties: 
+    beta = [[Value(0) for i in range(n_parties)] for i in range(n_parties)]
+    for i in range(n_parties): 
+        for j in range(n_parties): 
             temp_sum = Value(0) 
             count_mul = 0
             for m in mult_gates: 
@@ -192,20 +187,25 @@ def compute_zeta_share(c_info, circuit, wire, beta, epsilon1, epsilon2):
     zeta_share = [Value(0) for j in range(n_parties)]
 
     for j in range(n_parties): 
+        print("PARTY:", j)
         temp_sum = Value(0)
         count_mul = 0
         for m in mult_gates: 
             x, y, z = m.x, m.y, m.z
             temp_sum += epsilon1[count_mul] * wire.e(z) - epsilon1[count_mul]*wire.e(y)*wire.e(y) + epsilon2[count_mul]*wire.e_hat(z) + \
                             epsilon1[count_mul]*wire.e(y)*wire.lambda_val(x)[j] + epsilon1[count_mul]*wire.e(x)*wire.lambda_val(y)[j] - \
-                                epsilon1[count_mul]*wire.lambda_val(z)[j] - epsilon2[count_mul]*wire.lam_hat(z)[j]
-
+                                epsilon1[count_mul]*wire.lambda_val(z)[j] - epsilon2[count_mul]*wire.lam_hat(z)[str(count_mul)][j]
+            print("temp sum:", temp_sum)
             count_mul += 1
         sum_beta = Value(0)
-        for i in n_parties: 
+        for i in range(n_parties): 
+            print("b:", beta[j][i])
             sum_beta += beta[j][i]
+            print("sum_beta:", sum_beta)
 
         zeta_share[j] = temp_sum - sum_beta
+    
+    print("zeta:", zeta_share)
     
     return zeta_share
 
@@ -214,15 +214,15 @@ def commit_beta_zeta(c_info, beta, zeta_share, seeds): #refer to paper for varia
 
     beta_hashes = []
     capital_H = ''
-    for j in n_parties: 
+    for j in range(n_parties): 
         h_n = b''
-        for i in n_parties: 
-            h_n += long_to_bytes(beta[i][j])
+        for i in range(n_parties): 
+            h_n += long_to_bytes((beta[i][j]).value)
         temp_random = prepro.generateNum(AES.new(seeds[j], AES.MODE_ECB), 'random', 0)
         h_j = commit_w_random(h_n, temp_random)
         beta_hashes.append(h_j)
         capital_H += h_j
-    hat_h = commit_wo_random(capital_H)
+    hat_h = commit_wo_random(capital_H.encode())
 
     zeta_str = b''
     for z in zeta_share: 
@@ -234,8 +234,8 @@ def commit_beta_zeta(c_info, beta, zeta_share, seeds): #refer to paper for varia
 def send_beta(c_info, beta, beta_hashes, uncorrupted_party): 
     n_parties = c_info['n_parties']
 
-    open_beta = [None*n_parties]
-    for j in n_parties:
+    open_beta = [Value(0) for i in range(n_parties)]
+    for j in range(n_parties):
         if j != uncorrupted_party: 
             open_beta[j] = beta[uncorrupted_party][j]
     
@@ -255,9 +255,14 @@ def round3(c_info, circuit, wire, seeds, epsilon1, epsilon2):
     return beta, zeta_share, r3_commits
 
 def full_commit(round1_commits, round3_commits): 
-    round1_combine = round1_commits[2]
+    views_comm, broadcast1_comm, round1_combine = round1_commits[0], round1_commits[1], round1_commits[2]
     hat_h, zeta_commit = round3_commits[0], round3_commits[1]
     round3_combine = hat_h + zeta_commit
+
+    print("views comm:", views_comm)
+    print("broadcast comm:", broadcast1_comm)
+    print("hat h:", hat_h)
+    print("zeta:", zeta_commit)
 
     full_comm = commit_wo_random((round1_combine + round3_combine).encode())
 
@@ -272,7 +277,7 @@ def round5(c_info, round1, round3, uncorrupted_party, root, seeds):
 
     open_path = tree.get_path(uncorrupted_party, root)
     last_hash = commit_wo_random(seeds[uncorrupted_party])
-    open_beta, h_i_star = open_beta(c_info, beta, beta_hashes, uncorrupted_party)
+    open_beta, h_i_star = send_beta(c_info, beta, beta_hashes, uncorrupted_party)
 
     return open_broadcast1, open_path, last_hash, open_beta, h_i_star
 
@@ -283,7 +288,7 @@ def run_prover(c_info, parsed_circuit, wire, n_parties, inputs, party_seeds, roo
 
     set_inputs(c_info, parsed_circuit, wire, n_parties, inputs)
     
-    circuit.compute_output(parsed_circuit, wire, n_gate, n_parties)
+    c.compute_output(parsed_circuit, wire, n_gate, n_parties)
 
     #round1
     r1 = round1_compute_commits(c_info, parsed_circuit, wire, party_seeds)
@@ -296,7 +301,7 @@ def run_prover(c_info, parsed_circuit, wire, n_parties, inputs, party_seeds, roo
     epsilon1, epsilon2 = temp[0], temp[1]
 
     #round 3
-    r3 = round3(c_info, circuit, wire, party_seeds, epsilon1, epsilon2)
+    r3 = round3(c_info, parsed_circuit, wire, party_seeds, epsilon1, epsilon2)
     r3_commits = r3[2]
     round3_combine = r3_commits[0] + r3_commits[1]
     

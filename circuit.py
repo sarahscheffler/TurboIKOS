@@ -1,7 +1,9 @@
 import sys
+import wire
 import Value as v
 
 
+#---PARSING CIRCUIT---
 """
 input: external file
 output: circuit data struct (array of gate objects in topological order
@@ -63,8 +65,8 @@ def parse_bristol(gate, n_parties, i):
             
             if i == n_gate:
                 break
-    c_info = {'l input': l_input, 'n_gate': n_gate, 'n_wires': n_wires, 'n_output': n_output, 'n_input': n_input, 'n_addgate': n_addgate, 'n_mul': n_mulgate, 'n_inv': n_inv, \
-                'n_parties': n_parties, 'n_sca': n_scagate, 'mult_gates': mult_gates}
+    
+    c_info = {'l input': l_input, 'n_gate': n_gate, 'n_wires': n_wires, 'n_output': n_output, 'n_input': n_input, 'n_addgate': n_addgate, 'n_mul': n_mulgate, 'n_inv': n_inv, 'n_parties': n_parties, 'n_sca': n_scagate, 'mult_gates': mult_gates}
     return l, l_input, l_output, n_gate, n_wires, n_output, n_input, n_addgate, n_mulgate, n_parties, c_info, n_scagate
 
     """
@@ -82,6 +84,7 @@ def parse_pws(gate, n_parties, i):
     l_input = []
     l_output = []
     c = []
+    mult_gates = []
     with open(input_stream, 'r') as f:
         for line in f:
             l = line.strip('\n').split(' ')
@@ -100,12 +103,14 @@ def parse_pws(gate, n_parties, i):
                     if l[4] == '*':
                         n_mulgate += 1
                         operation = 'MUL'
+                        g = gate(input1, input2, output, n_parties, operation = operation)
+                        mult_gates.append(g)
                     elif l[4] == '+':
                         n_addgate += 1
                         operation = 'ADD'
                     c.append(gate(input1, input2, output, n_parties, operation = operation))
 
-    c_info = {'l input': l_input, 'n_gate': n_gate, 'n_wires': n_wires, 'n_output': n_output, 'n_input': n_input, 'n_addgate': n_addgate, 'n_mul': n_mulgate, 'n_parties': n_parties}
+    c_info = {'l input': l_input, 'n_gate': n_gate, 'n_wires': n_wires, 'n_output': n_output, 'n_input': n_input, 'n_addgate': n_addgate, 'n_mul': n_mulgate, 'n_parties': n_parties, 'mult_gates': mult_gates}
     return c, l_input, l_output, n_gate, n_wires, n_output, n_input, n_addgate, n_mulgate, n_parties, c_info
 
 def parse(gate, n_parties):
@@ -138,7 +143,54 @@ def parse_test(gate, n_parties, i):
         else:
             return parse_bristol(gate, n_parties, i)
 
+#---FUNCTIONS AVAILABLE TO PROVER AND VERIFIER--- 
+
 """
+input: number of wires
+output: wire data structure (array of dictionaries with keys 'e', 'v', 'lambda, 'lam_hat', 'e_hat' with index of wire#
+"""
+def wire_data(n_wires):
+    return [{'e': None, 'v': v.Value() , 'lambda': None, 'lam_hat': {} , 'e_hat': None}
+                 for i in range(n_wires)]
+
+"""
+computes the expected values for the outputs wires.
+"""
+def compute_output_wires(c_info, circuit, inputs): 
+    n_gate, n_wires, n_input = c_info['n_gate'], c_info['n_wires'], c_info['n_input']
+    n_output = c_info['n_output']
+    # temp_wire = wire.Wire(wire_data(n_wires), 1, n_wires)
+    temp = inputs + [v.Value(0) for i in range(n_wires-n_input)]
+
+    # for i in range(n_input):
+    #     temp_wire.set_v(i, [inputs[i]])
+    
+    count_mul = 0 
+    for i in range(n_gate):
+        c = circuit[i]
+        if c.operation == 'MUL' or c.operation == 'AND': 
+            # c.w = temp_wire
+            temp[c.z] = temp[c.x]*temp[c.y]
+        if c.operation == 'ADD' or c.operation == 'XOR': 
+            # c.w = temp_wire
+            temp[c.z] = temp[c.x]+temp[c.y]
+        if c.operation == 'INV' or c.operation == 'NOT': 
+            # c.w = temp_wire
+            temp[c.z] = (temp[c.x]*(-1))
+        if c.operation == 'SCA':
+            # c.w = temp_wire
+            temp[c.z] = (temp[c.x]*temp[c.y])
+
+    output = []    
+    for o in range(n_wires-n_output, n_wires): 
+        output.append(temp[o])
+    
+    return output
+
+        
+
+"""
+PROVER COMPUTE OUTPUT
 input: circuit object, epsilon1, epsilon2, wire data structure, number of gates, number of parties
 output: array of array of alpha values. row# = mul gate#, col# = party# 
 Write to output wires of each gate and compute alpha values.  
@@ -163,3 +215,30 @@ def compute_output(circuit, wire, n_gate, n_parties):
         if c.operation == 'SCA':
             c.w = wire
             c.sca()
+
+"""
+VERIFIER COMPUTE OUTPUT
+input: circuit object, epsilon1, epsilon2, wire data structure, number of gates, number of parties
+output: array of array of alpha values. row# = mul gate#, col# = party# 
+Write to output wires of each gate and compute alpha values.  
+"""
+def v_compute_output(circuit, wire, n_gate, n_parties):
+    m = 0
+    for i in range(n_gate):
+        c = circuit[i]
+        #MUL gates
+        if c.operation == 'MUL' or c.operation == 'AND':
+            c.w = wire
+            c.v_mult(m)
+            m += 1
+        # ADD gates	
+        if c.operation == 'ADD' or c.operation== 'XOR':
+            c.w = wire
+            c.v_add()
+        if c.operation == 'INV' or c.operation == 'NOT': 
+            c.w = wire
+            c.v_inv()
+        # Scalar mult gates (new code)
+        if c.operation == 'SCA':
+            c.w = wire
+            c.v_sca()

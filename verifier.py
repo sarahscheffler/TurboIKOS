@@ -16,7 +16,7 @@ def compute_uncorrupted(n_parties, open_parties):
     return party
 
 def rebuild_wire(c_info, parsed_circuit, e_inputs, e_z, e_z_hat): 
-    n_gate, n_wires, n_input = c_info['n_gate'], c_info['n_wires'], c_info['n_input']
+    n_gate, n_wires, n_input, n_parties = c_info['n_gate'], c_info['n_wires'], c_info['n_input'], c_info['n_parties']
     wire_data = [{'e': None, 'v': v.Value() , 'lambda': None, 'lam_hat': {} , 'e_hat': None} for i in range(n_wires)] 
     temp_Wire = Wire(wire_data, 1, n_wires)
 
@@ -62,6 +62,7 @@ def v_round1(c_info, v_circuit, open_parties, open_path, open_broadcast1):
 
     wire_objects = [None for x in range(len(open_parties))]
     lambda_w = [[Value(0) for x in range(n_parties)] for x in range(n_output)] 
+    output_e = []
 
     open_views = tree.recreate_seeds(open_path)
 
@@ -69,13 +70,11 @@ def v_round1(c_info, v_circuit, open_parties, open_path, open_broadcast1):
         party_Wire = rebuild_wire(c_info, v_circuit, e_inputs, e_z, e_z_hat)
 
         current_party = open_parties[p]
-        seed = open_views[p] #TODO CHANGE TO TREE
-
-        print("PARTY:", current_party)
+        seed = open_views[p] 
 
         rebuild_lam = prepro.rebuildlambda(current_party, seed, v_circuit, party_Wire, c_info)
         rebuild_inputs(current_party, party_Wire, n_input)
-        ct.compute_output(v_circuit, party_Wire, n_gate, 1)
+        ct.v_compute_output(v_circuit, party_Wire, n_gate, 1)
 
         count_output = 0 
         for i in range(n_gate): 
@@ -84,21 +83,17 @@ def v_round1(c_info, v_circuit, open_parties, open_path, open_broadcast1):
             if z >= n_wires-n_output and z < n_wires: 
                 lambda_w[count_output][current_party] = party_Wire.lambda_val(z)[0]
                 count_output += 1
-
-            # print("gate:", c)
-            # print("x:", party_Wire.lambda_val(c.x))
-            # print("y:", party_Wire.lambda_val(c.y))
-            # print("z:", party_Wire.lambda_val(c.z))
+                if p == 0: 
+                    output_e.append(party_Wire.e(z))
 
         wire_objects[p] = party_Wire
         
-    print(lambda_w)
-    return wire_objects, lambda_w, open_views
+    return wire_objects, lambda_w, open_views, output_e
 
 """
 uncorrupted_view (hashed seed of uncorrupted view), open_views, open_broadcast1 
 """
-def v_compute_r1_commits(c_info, v_circuit, open_parties, uncorrupted_view, open_views, open_broadcast1, v_round1_result): 
+def v_compute_r1_commits(c_info, v_circuit, open_parties, uncorrupted_view, open_views, open_broadcast1, v_round1_result, expected_outputs): 
     #---BEGIN FUNCTIONS---#
     def compute_broadcast(e_type): 
         temp_str = b''
@@ -119,7 +114,7 @@ def v_compute_r1_commits(c_info, v_circuit, open_parties, uncorrupted_view, open
             count += 1
 
     e_inputs, e_z, e_z_hat =  open_broadcast1['e inputs'], open_broadcast1['e z'], open_broadcast1['e z hat']
-    lambda_w = v_round1_result[1]
+    lambda_w, output_e = v_round1_result[1], v_round1_result[3]
 
     e_inputs_str = compute_broadcast(e_inputs)
     e_z_str = compute_broadcast(e_z)
@@ -127,7 +122,7 @@ def v_compute_r1_commits(c_info, v_circuit, open_parties, uncorrupted_view, open
 
     for i in range(len(lambda_w)): 
         temp_sum = sum(lambda_w[i])
-        missing_lambda_w = Value(0) - temp_sum
+        missing_lambda_w = output_e[i] - expected_outputs[i] - temp_sum
         lambda_w[i][uncorrupted_party] = missing_lambda_w
 
     lambda_w_str = b''
@@ -136,6 +131,7 @@ def v_compute_r1_commits(c_info, v_circuit, open_parties, uncorrupted_view, open
             lambda_w_str += long_to_bytes(lambda_w[wire][party].value)
 
     views_commit = commit(views_str.encode())
+
     broadcast1_commit = commit(e_inputs_str + e_z_str + e_z_hat_str + lambda_w_str)
 
     return views_commit, broadcast1_commit
@@ -156,7 +152,7 @@ def v_round3(c_info, parsed_circuit, open_parties, v_r1_result, vr1c, broadcast1
     alpha_m_shares = [[Value(0) for x in range(n_parties)] for x in range(n_mul)]
     zeta = [Value(0) for x in range(n_parties)]
 
-    temp_epsilons = Fiat_Shamir.make_epsilons(r1broadcast_str, n_mul)
+    temp_epsilons = Fiat_Shamir.round2(r1broadcast_str, n_mul)
     epsilon1, epsilon2 = temp_epsilons[0], temp_epsilons[1]
 
     for p in range(len(open_parties)): 
@@ -165,7 +161,7 @@ def v_round3(c_info, parsed_circuit, open_parties, v_r1_result, vr1c, broadcast1
 
         count_mul = 0
         zeta_sum = 0 
-        for j in range(n_gate): 
+        for j in range(len(parsed_circuit)): 
             c = parsed_circuit[j]
             x, y, z = c.x, c.y, c.z
             if c.operation == 'MUL' or c.operation == 'AND': 
@@ -173,16 +169,16 @@ def v_round3(c_info, parsed_circuit, open_parties, v_r1_result, vr1c, broadcast1
                 y_lamh = party_Wire.lam_hat(y)[str(count_mul)][0]
                 alpha_m_shares[count_mul][current_party] = epsilon1[count_mul]*y_lam + (epsilon2[count_mul]*y_lamh)
 
-                zeta_sum += epsilon1[count_mul] * party_Wire.e(y) - alpha_m[current_party]*party_Wire.lambda_val(x)[0] + \
+                zeta_sum += (epsilon1[count_mul] * party_Wire.e(y) - alpha_m[count_mul])*party_Wire.lambda_val(x)[0] + \
                         epsilon1[count_mul] * party_Wire.e(x) * party_Wire.lambda_val(y)[0] - \
                         epsilon1[count_mul] * party_Wire.lambda_val(z)[0] - epsilon2[count_mul] * party_Wire.lam_hat(z)[str(count_mul)][0]
-                
+
                 if current_party == 0: 
                     zeta_sum += epsilon1[count_mul] * party_Wire.e(z) - epsilon1[count_mul]*party_Wire.e(x)*party_Wire.e(y) + epsilon2[count_mul]*party_Wire.e_hat(z)
             
                 count_mul += 1
-    
-        zeta[current_party] = zeta_sum
+        if j == len(parsed_circuit)-1:
+            zeta[current_party] = zeta_sum
 
     return alpha_m_shares, zeta
 
@@ -228,17 +224,17 @@ def check_commits(v_r1_commits_result, v_r3_commits_result, prover_commits):
 
     v_full_commit = commit((views_commit + broadcast1_commit + zeta_commit + alpha_m_commit + alpha_m_shares_commit).encode())
 
-    print("views commit:", views_commit)
-    print("broadcast1 commit:", broadcast1_commit)
-    print("alpha m commit:", alpha_m_commit)
-    print("alpha m shares commit:", alpha_m_shares_commit)
-    print("zeta commit:", zeta_commit)
+    # print("views commit:", views_commit)
+    # print("broadcast1 commit:", broadcast1_commit)
+    # print("alpha m commit:", alpha_m_commit)
+    # print("alpha m shares commit:", alpha_m_shares_commit)
+    # print("zeta commit:", zeta_commit)
 
     assert(prover_commits == v_full_commit), "Commitments do not match"
 
 
-def run_verifier(c_info, circuit, run_prover_output): 
-    print("---VERIFIER---")
+def run_verifier(c_info, circuit, run_prover_output, expected_output): 
+    # print("---VERIFIER---")
 
     full_comm, open_broadcast1, alpha_m = run_prover_output[0], run_prover_output[1], run_prover_output[2]
     views_commit, open_path, open_parties = run_prover_output[3], run_prover_output[4], run_prover_output[5]
@@ -246,9 +242,11 @@ def run_verifier(c_info, circuit, run_prover_output):
 
     e_inputs, e_z, e_z_hat = open_broadcast1['e inputs'], open_broadcast1['e z'], open_broadcast1['e z hat']
 
+    #test 
+
     vr1 = v_round1(c_info, circuit, open_parties, open_path, open_broadcast1) # wire_objects, lambda_w, open_views
     wire_objects, lambda_w, open_views = vr1[0], vr1[1], vr1[2]
-    vcr1c = v_compute_r1_commits(c_info, circuit, open_parties, hidden_seed, open_views, open_broadcast1, vr1) 
+    vcr1c = v_compute_r1_commits(c_info, circuit, open_parties, hidden_seed, open_views, open_broadcast1, vr1, expected_output) 
 
     vr3 = v_round3(c_info, circuit, open_parties, vr1, vcr1c, open_broadcast1, alpha_m)
     vcr3c = v_compute_r3_commits(c_info, circuit, vr3, open_parties, alpha_m)
