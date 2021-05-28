@@ -201,27 +201,21 @@ def v_round3(c_info, parsed_circuit, open_parties, v_r1_result, vr1c, broadcast1
         current_party = open_parties[j]
         party_Wire = wire_objects[j]
 
-        print("PARTY:", current_party)
-
         temp_sum = Value(0)
         count_mul = 0
         for m in mult_gates: 
             x, y, z = m.x, m.y, m.z 
-            temp_sum += epsilon1[count_mul] * party_Wire.e(z) - epsilon1[count_mul]*party_Wire.e(y)*party_Wire.e(y) + epsilon2[count_mul]*party_Wire.e_hat(z) + \
-                            epsilon1[count_mul]*party_Wire.e(y)*party_Wire.lambda_val(x)[0] + epsilon1[count_mul]*party_Wire.e(x)*party_Wire.lambda_val(y)[0] - \
-                                epsilon1[count_mul]*party_Wire.lambda_val(z)[0] - epsilon2[count_mul]*party_Wire.lam_hat(z)[str(count_mul)][0]
-            print("temp sum:", temp_sum)
+            temp_sum += (epsilon1[count_mul]*party_Wire.e(y)*party_Wire.lambda_val(x)[0]) + (epsilon1[count_mul]*party_Wire.e(x)*party_Wire.lambda_val(y)[0]) - \
+                                (epsilon1[count_mul]*party_Wire.lambda_val(z)[0]) - (epsilon2[count_mul]*party_Wire.lam_hat(z)[str(count_mul)][0])
+            if current_party == 0: 
+                temp_sum += (epsilon1[count_mul] * party_Wire.e(z)) - (epsilon1[count_mul]*party_Wire.e(x)*party_Wire.e(y)) + (epsilon2[count_mul]*party_Wire.e_hat(z))
             count_mul += 1
 
-        print("beta:\n", beta, "\n")
         sum_beta = Value(0)
         for i in range(n_parties): 
-            sum_beta += beta[current_party][i]
-            print("sum_beta:", sum_beta)
+            sum_beta += beta[i][current_party]
 
         zeta_share[current_party] = temp_sum - sum_beta
-
-    print("zeta:", zeta_share)
 
     return beta, zeta_share
 
@@ -262,16 +256,16 @@ def check_commits(v_r1_commits_result, v_r3_commits_result, prover_commits):
 
     v_full_commit = commit((views_commit + broadcast1_commit + hat_h + zeta_commit).encode())
 
-    print("views commit:", views_commit)
-    print("broadcast1 commit:", broadcast1_commit)
-    print("hat h:", hat_h)
-    print("zeta commit:", zeta_commit)
+    # print("views commit:", views_commit)
+    # print("broadcast1 commit:", broadcast1_commit)
+    # print("hat h:", hat_h)
+    # print("zeta commit:", zeta_commit)
 
     assert(prover_commits == v_full_commit), "Commitments do not match"
 
 
 def run_verifier(c_info, circuit, run_prover_output, expected_output): 
-    print("---VERIFIER---")
+    # print("---VERIFIER---")
 
     n_parties = c_info['n_parties']
 

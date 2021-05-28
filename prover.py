@@ -100,6 +100,7 @@ def compute_zeta_share(circuit, wire, alpha, epsilon_1, epsilon_2, n_parties):
                 n+= 1   
         if j == len(circuit)-1:
             r[i] = (zeta)
+
     return r
 
 """

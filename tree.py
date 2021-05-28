@@ -115,9 +115,5 @@ def recreate_seeds(path):
 
 if __name__ == "__main__":
     (seeds, root) = make_tree(5)
-    print(seeds)
-    print(root.left.data)
     path = get_path(3, root)
-    print(path)
     recreated_seeds = recreate_seeds(path)
-    print(recreated_seeds)

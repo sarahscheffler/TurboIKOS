@@ -37,9 +37,15 @@ circuits/matmult.py file gained from [PWS Prover Workseet](https://github.com/hy
 
 
 ### Instruction to run test:
+**Run TurboIKOS**
 ```sh
 $ python3 "python file" circuits/"circuit file"
 
 eg.
-$ python3 mergedTest.py circuits/matmult_16.pws
+$ python3 TurboIKOS.py circuits/matmult_16.pws
+```
+
+**Run \tilde{TurboIKOS}**
+```sh
+$ python3 tilde_TurboIKOS.py circuits/matmult_16.pws
 ```

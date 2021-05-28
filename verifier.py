@@ -242,8 +242,6 @@ def run_verifier(c_info, circuit, run_prover_output, expected_output):
 
     e_inputs, e_z, e_z_hat = open_broadcast1['e inputs'], open_broadcast1['e z'], open_broadcast1['e z hat']
 
-    #test 
-
     vr1 = v_round1(c_info, circuit, open_parties, open_path, open_broadcast1) # wire_objects, lambda_w, open_views
     wire_objects, lambda_w, open_views = vr1[0], vr1[1], vr1[2]
     vcr1c = v_compute_r1_commits(c_info, circuit, open_parties, hidden_seed, open_views, open_broadcast1, vr1, expected_output) 

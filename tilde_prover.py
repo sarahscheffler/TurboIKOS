@@ -187,25 +187,22 @@ def compute_zeta_share(c_info, circuit, wire, beta, epsilon1, epsilon2):
     zeta_share = [Value(0) for j in range(n_parties)]
 
     for j in range(n_parties): 
-        print("PARTY:", j)
         temp_sum = Value(0)
         count_mul = 0
         for m in mult_gates: 
             x, y, z = m.x, m.y, m.z
-            temp_sum += epsilon1[count_mul] * wire.e(z) - epsilon1[count_mul]*wire.e(y)*wire.e(y) + epsilon2[count_mul]*wire.e_hat(z) + \
-                            epsilon1[count_mul]*wire.e(y)*wire.lambda_val(x)[j] + epsilon1[count_mul]*wire.e(x)*wire.lambda_val(y)[j] - \
-                                epsilon1[count_mul]*wire.lambda_val(z)[j] - epsilon2[count_mul]*wire.lam_hat(z)[str(count_mul)][j]
-            print("temp sum:", temp_sum)
+            temp_sum += (epsilon1[count_mul]*wire.e(y)*wire.lambda_val(x)[j]) + (epsilon1[count_mul]*wire.e(x)*wire.lambda_val(y)[j]) - \
+                                (epsilon1[count_mul]*wire.lambda_val(z)[j]) - (epsilon2[count_mul]*wire.lam_hat(z)[str(count_mul)][j])
+            
+            if j == 0: 
+                temp_sum += (epsilon1[count_mul] * wire.e(z)) - (epsilon1[count_mul]*wire.e(x)*wire.e(y)) + (epsilon2[count_mul]*wire.e_hat(z))
             count_mul += 1
+        
         sum_beta = Value(0)
         for i in range(n_parties): 
-            print("b:", beta[j][i])
-            sum_beta += beta[j][i]
-            print("sum_beta:", sum_beta)
+            sum_beta += beta[i][j]
 
         zeta_share[j] = temp_sum - sum_beta
-    
-    print("zeta:", zeta_share)
     
     return zeta_share
 
@@ -259,10 +256,10 @@ def full_commit(round1_commits, round3_commits):
     hat_h, zeta_commit = round3_commits[0], round3_commits[1]
     round3_combine = hat_h + zeta_commit
 
-    print("views comm:", views_comm)
-    print("broadcast comm:", broadcast1_comm)
-    print("hat h:", hat_h)
-    print("zeta:", zeta_commit)
+    # print("views comm:", views_comm)
+    # print("broadcast comm:", broadcast1_comm)
+    # print("hat h:", hat_h)
+    # print("zeta:", zeta_commit)
 
     full_comm = commit_wo_random((round1_combine + round3_combine).encode())
 
@@ -283,7 +280,7 @@ def round5(c_info, round1, round3, uncorrupted_party, root, seeds):
 
 
 def run_prover(c_info, parsed_circuit, wire, n_parties, inputs, party_seeds, root):
-    print("---PROVER---")
+    # print("---PROVER---")
     n_gate, n_mul = c_info['n_gate'], c_info['n_mul']
 
     set_inputs(c_info, parsed_circuit, wire, n_parties, inputs)
