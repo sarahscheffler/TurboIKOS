@@ -16,13 +16,13 @@ field = v.getfield()
 """
 function will generate epsilsons for round2. verifier can call make epsilons to check that prover is not cheating, which is why make_epsilons is a separate 
 function rather than being nested in round2 
-inputs: r2 (from func round), num_mult_gates (number of mult gates for epsilon creation?) <-- either move this one to prover or get num of mult gates from another files
+inputs: r1 (byte string from r1), num_mult_gates (number of mult gates for epsilon creation?) <-- either move this one to prover or get num of mult gates from another files
 outputs: 2*num_mult_gates epsilsons*num_epsilons 
 """
-def make_epsilons(r2, num_mult_gates):
+def make_epsilons(r1, num_mult_gates):
     list_epsilon = [0 for x in range(num_mult_gates)]
     list_epsilon_hat = [0 for x in range(num_mult_gates)]
-    seed(r2)
+    seed(r1)
     #generate 128 random bits by using random.getrandbits, splice value 
     for i in range(num_mult_gates):
         epsilon = bin(getrandbits(127))
@@ -57,12 +57,12 @@ def round2(round_1, num_mult_gates):
 
     return make_epsilons(r2.digest(), num_mult_gates)
 
-def round_4(round3, num_mult_gates): 
-    if (type(round3) == bytes):
-        r3 = sha256(round3)
-    else: 
-        r3 = sha256(round3.encode())
-    return make_gammas(r3.digest(), num_mult_gates)
+# def round_4(round3, num_mult_gates): 
+#     if (type(round3) == bytes):
+#         r3 = sha256(round3)
+#     else: 
+#         r3 = sha256(round3.encode())
+#     return make_gammas(r3.digest(), num_mult_gates)
 
 """
 inputs: 
@@ -73,7 +73,7 @@ inputs:
 output: 
     list of parties 
 """
-def round6(round_1, round_3, t, n): #updated round6, generates list of parties to open 
+def round4(round_1, round_3, t, n): #generates list of parties to open 
     #checks type of inputs for sha256 
     if type(round_1) == bytes and type(round_3) == bytes:
         r4 = (sha256(round_1 + round_3)) #sha256 (round_1 || round_3)

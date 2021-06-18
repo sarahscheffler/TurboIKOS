@@ -7,16 +7,20 @@ import Value as v
 from Value import Value 
 import sys, hashlib
 from Cryptodome.Util.number import bytes_to_long, long_to_bytes
+from Cryptodome.Cipher import AES
 
 def commit(s): 
     return hashlib.sha256(s).hexdigest()
+
+def commit_w_random(s, r): 
+    return hashlib.sha256(long_to_bytes(r.value) + s).hexdigest()
 
 def compute_uncorrupted(n_parties, open_parties):
     party = [p for p in range(n_parties) if p not in open_parties][0]
     return party
 
 def rebuild_wire(c_info, parsed_circuit, e_inputs, e_z, e_z_hat): 
-    n_gate, n_wires, n_input, n_parties = c_info['n_gate'], c_info['n_wires'], c_info['n_input'], c_info['n_parties']
+    n_gate, n_wires, n_input = c_info['n_gate'], c_info['n_wires'], c_info['n_input']
     wire_data = [{'e': None, 'v': v.Value() , 'lambda': None, 'lam_hat': {} , 'e_hat': None} for i in range(n_wires)] 
     temp_Wire = Wire(wire_data, 1, n_wires)
 
@@ -93,6 +97,9 @@ def v_round1(c_info, v_circuit, open_parties, open_path, open_broadcast1):
 """
 uncorrupted_view (hashed seed of uncorrupted view), open_views, open_broadcast1 
 """
+"""
+uncorrupted_view (hashed seed of uncorrupted view), open_views, open_broadcast1 
+"""
 def v_compute_r1_commits(c_info, v_circuit, open_parties, uncorrupted_view, open_views, open_broadcast1, v_round1_result, expected_outputs): 
     #---BEGIN FUNCTIONS---#
     def compute_broadcast(e_type): 
@@ -109,6 +116,7 @@ def v_compute_r1_commits(c_info, v_circuit, open_parties, uncorrupted_view, open
     for p in range(n_parties): 
         if p == uncorrupted_party: 
             views_str += uncorrupted_view
+            count += 1
         else: 
             views_str += commit(open_views[count])
             count += 1
@@ -141,93 +149,116 @@ def v_compute_r1_commits(c_info, v_circuit, open_parties, uncorrupted_view, open
 v_r1_result : output from v_round1
 vr1c : output from v_compute_r1_commits
 """
-def v_round3(c_info, parsed_circuit, open_parties, v_r1_result, vr1c, broadcast1_open, alpha_m): 
+def v_round3(c_info, parsed_circuit, open_parties, v_r1_result, vr1c, broadcast1_open, open_beta): 
     wire_objects, open_views = v_r1_result[0], v_r1_result[2]
     n_wires, n_gate, n_mul, n_input = c_info['n_wires'], c_info['n_gate'], c_info['n_mul'], c_info['n_input']
-    n_parties, n_output = c_info['n_parties'], c_info['n_output']
+    n_parties, n_output, mult_gates = c_info['n_parties'], c_info['n_output'], c_info['mult_gates']
 
     r1broadcast_str = vr1c[0] + vr1c[1]
     e_inputs, e_z, e_z_hat =  broadcast1_open['e inputs'], broadcast1_open['e z'], broadcast1_open['e z hat']
 
-    alpha_m_shares = [[Value(0) for x in range(n_parties)] for x in range(n_mul)]
+    alpha_m_shares = [[Value(0) for x in range(n_parties)] for x in range(n_mul)] #alpha_m_shares[count_mul][party]
     zeta = [Value(0) for x in range(n_parties)]
 
     temp_epsilons = Fiat_Shamir.round2(r1broadcast_str, n_mul)
     epsilon1, epsilon2 = temp_epsilons[0], temp_epsilons[1]
 
+    uncorrupted_party = compute_uncorrupted(n_parties, open_parties)
+
+    #compute alpha_m shares
     for p in range(len(open_parties)): 
         current_party = open_parties[p]
         party_Wire = wire_objects[p]
 
         count_mul = 0
-        zeta_sum = 0 
         for j in range(len(parsed_circuit)): 
-            c = parsed_circuit[j]
-            x, y, z = c.x, c.y, c.z
-            if c.operation == 'MUL' or c.operation == 'AND': 
-                y_lam = party_Wire.lambda_val(y)[0]
-                y_lamh = party_Wire.lam_hat(y)[str(count_mul)][0]
-                alpha_m_shares[count_mul][current_party] = epsilon1[count_mul]*y_lam + (epsilon2[count_mul]*y_lamh)
-
-                zeta_sum += (epsilon1[count_mul] * party_Wire.e(y) - alpha_m[count_mul])*party_Wire.lambda_val(x)[0] + \
-                        epsilon1[count_mul] * party_Wire.e(x) * party_Wire.lambda_val(y)[0] - \
-                        epsilon1[count_mul] * party_Wire.lambda_val(z)[0] - epsilon2[count_mul] * party_Wire.lam_hat(z)[str(count_mul)][0]
-
-                if current_party == 0: 
-                    zeta_sum += epsilon1[count_mul] * party_Wire.e(z) - epsilon1[count_mul]*party_Wire.e(x)*party_Wire.e(y) + epsilon2[count_mul]*party_Wire.e_hat(z)
-            
+            m = parsed_circuit[j]
+            x, y, z = m.x, m.y, m.z
+            if m.operation == 'MUL' or m.operation == 'AND':
+                alpha_m_shares[count_mul][current_party] = epsilon1[count_mul]*party_Wire.lambda_val(y)[0] + epsilon2[count_mul]*party_Wire.lam_hat(y)[str(count_mul)][0]
                 count_mul += 1
-        if j == len(parsed_circuit)-1:
-            zeta[current_party] = zeta_sum
 
-    return alpha_m_shares, zeta
+    #compute beta
+    beta = [[Value(0) for i in range(n_parties)] for j in range(n_parties)]
+    beta[uncorrupted_party] = open_beta
+    for i in range(len(open_parties)): 
+        i_party = open_parties[i]
+        i_wire = wire_objects[i]
+        for j in range(len(open_parties)): 
+            j_party = open_parties[j]
+            j_wire = wire_objects[j]
+
+            temp_sum = Value(0)
+            count_mul = 0
+            for m in mult_gates: 
+                temp_sum += alpha_m_shares[count_mul][i_party] * j_wire.lambda_val(m.x)[0]
+                count_mul += 1
+            beta[i_party][j_party] = temp_sum
+
+    #compute zeta shares 
+    zeta_share = [Value(0) for i in range(n_parties)]
+    for j in range(len(open_parties)): 
+        current_party = open_parties[j]
+        party_Wire = wire_objects[j]
+
+        temp_sum = Value(0)
+        count_mul = 0
+        for m in mult_gates: 
+            x, y, z = m.x, m.y, m.z 
+            temp_sum += (epsilon1[count_mul]*party_Wire.e(y)*party_Wire.lambda_val(x)[0]) + (epsilon1[count_mul]*party_Wire.e(x)*party_Wire.lambda_val(y)[0]) - \
+                                (epsilon1[count_mul]*party_Wire.lambda_val(z)[0]) - (epsilon2[count_mul]*party_Wire.lam_hat(z)[str(count_mul)][0])
+            if current_party == 0: 
+                temp_sum += (epsilon1[count_mul] * party_Wire.e(z)) - (epsilon1[count_mul]*party_Wire.e(x)*party_Wire.e(y)) + (epsilon2[count_mul]*party_Wire.e_hat(z))
+            count_mul += 1
+
+        sum_beta = Value(0)
+        for i in range(n_parties): 
+            sum_beta += beta[i][current_party]
+
+        zeta_share[current_party] = temp_sum - sum_beta
+
+    return beta, zeta_share
 
 """
 v_r3_result : output from v_round3
 """
-def v_compute_r3_commits(c_info, parsed_circuit, v_r3_result, open_parties, alpha_m): 
-    n_parties, n_gate = c_info['n_parties'], c_info['n_gate']
-    alpha_m_shares, zeta = v_r3_result[0], v_r3_result[1]
+def v_compute_r3_commits(c_info, parsed_circuit, v_r3_result, open_parties, h_i_star, seeds): 
+    n_parties = c_info['n_parties']
+    beta, zeta_share = v_r3_result[0], v_r3_result[1]
 
-    unopened_party = compute_uncorrupted(n_parties, open_parties)
+    uncorrupted = compute_uncorrupted(n_parties, open_parties)
 
-    #compute missing values 
-    for i in range(len(alpha_m_shares)): 
-        temp_alpha_sum = sum(alpha_m_shares[i])
-        missing_alpha = alpha_m[i] - temp_alpha_sum
-        alpha_m_shares[i][unopened_party] = missing_alpha
+    capital_H = ''
+    for j in range(n_parties):
+        if j == uncorrupted: 
+                capital_H += h_i_star
+        else: 
+            h_n = b''
+            for i in range(n_parties): 
+                h_n += long_to_bytes(beta[i][j].value)
+            temp_random = temp_random = prepro.generateNum(AES.new(seeds[j], AES.MODE_ECB), 'random', 0)
+            h_j = commit_w_random(h_n, temp_random)
+            capital_H += h_j
+    hat_h = commit(capital_H.encode())
 
-    zeta[unopened_party] = Value(0) - sum(zeta)
-
-    #compute commits
-    alpha_m_str = b''
-    alpha_m_shares_str = b''
-    for gate in range(len(alpha_m_shares)):
-        alpha_m_str += long_to_bytes(sum(alpha_m_shares[gate]).value)
-        for party in range(len(alpha_m_shares[0])): 
-            alpha_m_shares_str += long_to_bytes(alpha_m_shares[gate][party].value)
-
+    zeta_share[uncorrupted] = Value(0) - sum(zeta_share)
     zeta_str = b''
-    for party in range(n_parties):
-        zeta_str += long_to_bytes(zeta[party].value)
-
-    alpha_m_commit = commit(alpha_m_str)
-    alpha_m_shares_commit = commit(alpha_m_shares_str)
+    for z in zeta_share:
+        zeta_str += long_to_bytes(z.value)
     zeta_commit = commit(zeta_str)
 
-    return alpha_m_commit, alpha_m_shares_commit, zeta_commit
+    return hat_h, zeta_commit
 
 
 def check_commits(v_r1_commits_result, v_r3_commits_result, prover_commits): 
     views_commit, broadcast1_commit = v_r1_commits_result[0], v_r1_commits_result[1]
-    alpha_m_commit, alpha_m_shares_commit, zeta_commit = v_r3_commits_result[0], v_r3_commits_result[1], v_r3_commits_result[2]
+    hat_h, zeta_commit = v_r3_commits_result[0], v_r3_commits_result[1]
 
-    v_full_commit = commit((views_commit + broadcast1_commit + zeta_commit + alpha_m_commit + alpha_m_shares_commit).encode())
+    v_full_commit = commit((views_commit + broadcast1_commit + hat_h + zeta_commit).encode())
 
     # print("views commit:", views_commit)
     # print("broadcast1 commit:", broadcast1_commit)
-    # print("alpha m commit:", alpha_m_commit)
-    # print("alpha m shares commit:", alpha_m_shares_commit)
+    # print("hat h:", hat_h)
     # print("zeta commit:", zeta_commit)
 
     assert(prover_commits == v_full_commit), "Commitments do not match"
@@ -236,19 +267,33 @@ def check_commits(v_r1_commits_result, v_r3_commits_result, prover_commits):
 def run_verifier(c_info, circuit, run_prover_output, expected_output): 
     # print("---VERIFIER---")
 
-    full_comm, open_broadcast1, alpha_m = run_prover_output[0], run_prover_output[1], run_prover_output[2]
-    views_commit, open_path, open_parties = run_prover_output[3], run_prover_output[4], run_prover_output[5]
-    hidden_seed = run_prover_output[6]
+    n_parties = c_info['n_parties']
+
+    full_com, open_broadcast1, open_path = run_prover_output[0], run_prover_output[1], run_prover_output[2]
+    hidden_seed, open_beta, h_i_star = run_prover_output[3], run_prover_output[4], run_prover_output[5]
+    open_parties = run_prover_output[6]
 
     e_inputs, e_z, e_z_hat = open_broadcast1['e inputs'], open_broadcast1['e z'], open_broadcast1['e z hat']
 
     vr1 = v_round1(c_info, circuit, open_parties, open_path, open_broadcast1) # wire_objects, lambda_w, open_views
     wire_objects, lambda_w, open_views = vr1[0], vr1[1], vr1[2]
+
+    count_index = 0
+    temp = []
+    for i in range(n_parties): 
+        if i in open_parties: 
+            temp.append(open_views[count_index])
+            count_index += 1
+        else: 
+            temp.append(hidden_seed)
+
+    open_views = temp
+
     vcr1c = v_compute_r1_commits(c_info, circuit, open_parties, hidden_seed, open_views, open_broadcast1, vr1, expected_output) 
 
-    vr3 = v_round3(c_info, circuit, open_parties, vr1, vcr1c, open_broadcast1, alpha_m)
-    vcr3c = v_compute_r3_commits(c_info, circuit, vr3, open_parties, alpha_m)
+    vr3 = v_round3(c_info, circuit, open_parties, vr1, vcr1c, open_broadcast1, open_beta)
+    vcr3c = v_compute_r3_commits(c_info, circuit, vr3, open_parties, h_i_star, open_views)
 
-    check_commits(vcr1c, vcr3c, full_comm)
+    check_commits(vcr1c, vcr3c, full_com)
 
 

@@ -8,8 +8,8 @@
             "name": "Python: Current File",
             "type": "python",
             "request": "launch",
-            "program": "mergedTest.py",
-            "args" : ["test2.txt"],
+            "program": "tilde_test.py",
+            "args" : ["circuits/matmult_2.pws"],
             "console": "integratedTerminal"
         }
     ]
