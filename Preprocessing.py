@@ -105,6 +105,7 @@ def PRassignLambda(circuit, wire, n_parties, seeds):
                 z_lam_share.append(wire.lambda_val(gate.x)[i] + wire.lambda_val(gate.y)[i])
             wire.set_lambda(gate.z, z_lam_share)
         elif gate.operation == "MUL" or gate.operation == "AND":
+            print("test:", type(gate.y))
             if wire.lambda_val(gate.x) == None:
                 x_lambda = [generateNum(i, 'lambda', gate.x) for i in party_master_seed]
                 wire.set_lambda(gate.x, x_lambda)
@@ -147,7 +148,7 @@ def PRassignLambda(circuit, wire, n_parties, seeds):
                 wire.set_lambda(gate.x, x_lambda)
             z_lam_share = []
             for i in range(n_parties):
-                z_lam_share.append(wire.lambda_val(gate.x)[i] *gate.y)
+                z_lam_share.append(wire.lambda_val(gate.x)[i] * gate.scalar)
             wire.set_lambda(gate.z, z_lam_share)
 
         else: 

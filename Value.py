@@ -36,16 +36,28 @@ class Value:
     overload arithmetic operation with gmpy2 library
     """
     def __add__(self, other, p = field):
-        return Value(self.add(other.value, p))
+        if type(other) == int:
+            return Value(self.add(other, p))
+        else: 
+            return Value(self.add(other.value, p))
 
     def __radd__(self, other, p = field):
-        return Value(self.add(other, p))
+        if type(other) == int:
+            return Value(self.add(other, p))
+        else: 
+            return Value(self.add(other, p))
         
     def __sub__(self, other, p = field):
-        return Value(self.sub(other.value, p))
+        if type(other) == int:
+            return Value(self.sub(other, p))
+        else: 
+            return Value(self.sub(other.value, p))
 
     def __mul__(self, other, p = field):
-        return Value(self.mul(other.value, p))
+        if type(other) == int:
+            return Value(self.mul(other, p))
+        else: 
+            return Value(self.mul(other.value, p))
 
     """
     overload equality check

@@ -110,7 +110,6 @@ class TestMPCInTheHead(unittest.TestCase):
                     assign_lambda = p.PRassignLambda(Circuit, w, n_parties, party_seeds)
                     triples = assign_lambda[0]
 
-
                     #Assign v values
                     inputs = []
                     for i in range(n_input):

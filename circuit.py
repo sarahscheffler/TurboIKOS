@@ -48,7 +48,11 @@ def parse_bristol(gate, n_parties, i):
             elif int(n[0]) == 1: 
                 input1, input2, output, operation = int(n[2]), None, int(n[3]), n[4]
             
-            g = gate(input1, input2, output, n_parties, operation=operation)
+            if operation == "SCA": 
+                g = gate(input1, None, output, n_parties, operation=operation, scalar=input2)
+            else: 
+                g = gate(input1, input2, output, n_parties, operation=operation)
+            
             l[i] = g
             i = i + 1
 
@@ -60,7 +64,7 @@ def parse_bristol(gate, n_parties, i):
             elif operation == 'INV' or operation == 'NOT': 
                 n_inv += 1
             elif operation == 'SCA':
-                input2 = v.Value(input2, v.getfield())
+                # input2 = v.Value(input2, v.getfield())
                 n_scagate += 1
             
             if i == n_gate:
@@ -168,6 +172,8 @@ def compute_output_wires(c_info, circuit, inputs):
     count_mul = 0 
     for i in range(n_gate):
         c = circuit[i]
+        print("test2:", c.x, c.y)
+        print("WHAT IS C:", c)
         if c.operation == 'MUL' or c.operation == 'AND': 
             # c.w = temp_wire
             temp[c.z] = temp[c.x]*temp[c.y]
@@ -179,7 +185,8 @@ def compute_output_wires(c_info, circuit, inputs):
             temp[c.z] = (temp[c.x]*(-1))
         if c.operation == 'SCA':
             # c.w = temp_wire
-            temp[c.z] = (temp[c.x]*temp[c.y])
+            # temp[c.z] = (temp[c.x]*temp[c.y])
+            temp[c.z] = (temp[c.x]*c.scalar)
 
     output = []    
     for o in range(n_wires-n_output, n_wires): 

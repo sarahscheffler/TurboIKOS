@@ -23,10 +23,11 @@ def rebuild_wire(c_info, parsed_circuit, e_inputs, e_z, e_z_hat):
     count_mul = 0
     for i in range(n_gate): 
         c = parsed_circuit[i]
+        print("TEST C:", c)
         x, y, z = c.x, c.y, c.z 
         if x < n_input: 
             temp_Wire.set_e(x, e_inputs[x])
-        if y < n_input: 
+        if c.operation != "SCA" and y < n_input : 
             temp_Wire.set_e(y, e_inputs[y])
         if c.operation == 'MUL' or c.operation == 'AND': 
             temp_Wire.set_e(z, e_z[count_mul])

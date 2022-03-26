@@ -2,13 +2,14 @@ from Value import Value
 
 class gate:
     # input: 2 inputs, 3 triples/ 0's
-    def __init__(self, input1, input2, output, n_parties, *, wire = None, operation=None):
+    def __init__(self, input1, input2, output, n_parties, *, wire = None, operation=None, scalar=None):
         self.operation = operation
         self.n_parties = n_parties
         self.w = wire
         self.x = input1
         self.y = input2
         self.z = output
+        self.scalar = Value(scalar)
     
     def __repr__(self):
         return 'operation:' + str(self.operation) + ' x:' + str(self.x) + ' y:' + str(self.y) + ' z:' + str(self.z)
@@ -97,7 +98,7 @@ class gate:
     # performs Scalar mult (new code)
     def sca(self):
         z_v_arr = [None]*self.n_parties
-        const = self.y
+        const = self.scalar
         # calculate z_v
         for i in range(self.n_parties):
             x_v = self.w.v(self.x)[i]
@@ -159,7 +160,7 @@ class gate:
     # performs Scalar mult (new code)
     def v_sca(self):
         z_v_arr = [None]*self.n_parties
-        const = self.y
+        const = self.scalar
         # calculate z_v
         for i in range(self.n_parties):
             x_v = self.w.v(self.x)[i]
