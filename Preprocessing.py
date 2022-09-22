@@ -105,7 +105,7 @@ def PRassignLambda(circuit, wire, n_parties, seeds):
                 z_lam_share.append(wire.lambda_val(gate.x)[i] + wire.lambda_val(gate.y)[i])
             wire.set_lambda(gate.z, z_lam_share)
         elif gate.operation == "MUL" or gate.operation == "AND":
-            print("test:", type(gate.y))
+            # print("test:", type(gate.y))
             if wire.lambda_val(gate.x) == None:
                 x_lambda = [generateNum(i, 'lambda', gate.x) for i in party_master_seed]
                 wire.set_lambda(gate.x, x_lambda)
@@ -203,6 +203,9 @@ def rebuildlambda(party, seed, circuit, wire, c_info):
             if y < n_input and lambda_val[y] == Value(None):
                 y_lam = generateNum(cipher, 'lambda', y)
                 wire.set_lambda(y, [y_lam])
+            # print("here wires:", x, y, z)
+            # print("here:", z, wire.lambda_val(x), wire.lambda_val(y))
+            # print("here:", z, wire.lambda_val)
             wire.set_lambda(z, [wire.lambda_val(x)[0] + wire.lambda_val(y)[0]])
         elif gate.operation == "MUL" or gate.operation == "AND": 
             #calculate lambdas 

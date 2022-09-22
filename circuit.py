@@ -172,8 +172,8 @@ def compute_output_wires(c_info, circuit, inputs):
     count_mul = 0 
     for i in range(n_gate):
         c = circuit[i]
-        print("test2:", c.x, c.y)
-        print("WHAT IS C:", c)
+        # print("test2:", c.x, c.y)
+        # print("WHAT IS C:", c)
         if c.operation == 'MUL' or c.operation == 'AND': 
             # c.w = temp_wire
             temp[c.z] = temp[c.x]*temp[c.y]
